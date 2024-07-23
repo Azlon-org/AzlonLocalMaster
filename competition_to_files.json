@@ -1,0 +1,5 @@
+{
+    "house_prices": ["overview.txt", "data_description.txt", "sample_submission.csv", "test.csv", "train.csv"],
+    "titanic": ["overview.txt", "gender_submission.csv", "test.csv", "train.csv"],
+    "predict_future_sales": ["overview.txt", "item_categories.csv", "items.csv", "sales_train.csv", "sample_submission.csv", "shops.csv", "test.csv"]
+}
