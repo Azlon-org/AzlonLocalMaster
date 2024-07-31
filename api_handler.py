@@ -6,7 +6,8 @@ import pdb
 import sys
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
-os.environ['OPENAI_API_KEY'] = 'your_api_key'
+# os.environ['OPENAI_API_KEY'] = 'your_api_key'
+DIR = os.path.dirname(os.path.abspath(__file__))
 
 def generate_response(client, engine, messages, settings, type, timeout):
     print("Generating response for engine:", engine)
@@ -46,9 +47,12 @@ class APIHandler:
         if model not in ['gpt-3.5-turbo', 'gpt-4-turbo', 'gpt-4o']:
             raise NotImplementedError(f"Model {model} not implemented.")
         self.engine = model
-        self.api_key = os.getenv("OPENAI_API_KEY")
-        # self.base_url = "https://api3.apifans.com/v1"
-        self.base_url = None
+        # self.api_key = os.getenv("OPENAI_API_KEY")
+        # self.base_url = None
+        with open(f'{DIR}/api_key.txt', 'r') as f:
+            api_config = f.readlines()
+            self.api_key = api_config[0].strip()
+            self.base_url = api_config[1].strip() if len(api_config) > 1 else None
 
         if not self.api_key:
             raise ValueError("API key not found. Please set the OPENAI_API_KEY environment variable.")
@@ -56,7 +60,7 @@ class APIHandler:
         self.client = openai.OpenAI(api_key=self.api_key, base_url=self.base_url)
         # self.client = openai.OpenAI(api_key=self.api_key)
     
-    def get_output(self, messages, max_tokens=2048, top_p=1.0, temperature=0.0, frequency_penalty=0.0, presence_penalty=0.0, stop=None, type='text'):
+    def get_output(self, messages, max_tokens, top_p=1.0, temperature=0.0, frequency_penalty=0.0, presence_penalty=0.0, stop=None, type='text'):
         settings = {
             'max_tokens': max_tokens,
             'temperature': temperature,

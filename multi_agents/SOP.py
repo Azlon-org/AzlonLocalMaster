@@ -6,7 +6,7 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 import utils
 from typing import Dict, Tuple, List, Optional
-from Agent import Agent
+from Agent import Summarizer, Planner, Developer, Debugger, Reviewer
 from State import State
 
 class SOP:
@@ -34,33 +34,43 @@ class SOP:
         }
 
     # 执行完当前state，并返回新的state
-    def step(self, state: State, agents_team: List[Agent]) -> Tuple[Agent, State]:
+    def step(self, state: State, message: str) -> Tuple[str, State]:
+        print(f"Current State: {state.phase}")
         agents = state.agents # 获取当前State中的Agents
 
         while not state.finished:
-            current_agent = agents[state.current_step % len(agents)] # 获取当前Agent
-            assert type(current_agent) == Agent
+            current_agent_name = agents[state.current_step % len(agents)] # 获取当前Agent
+            if current_agent_name == "Summarizer":
+                current_agent = Summarizer('gpt-4o', 'api')
+            elif current_agent_name == "Planner":
+                current_agent = Planner('gpt-4o', 'api')
+            elif current_agent_name == "Developer":
+                current_agent = Developer('gpt-4o', 'api')
+            elif current_agent_name == "Debugger":
+                current_agent = Debugger('gpt-4o', 'api')
+            elif current_agent_name == "Reviewer":
+                current_agent = Reviewer('gpt-4o', 'api')
             
-            # agent执行step方法，返回action，action是字典，key是agent的role，value是agent的执行结果
-            action = current_agent.step(state)
-            state.update_memory(action)
+            # agent执行action方法，返回result，result是字典，key是agent的role，value是agent的执行结果
+            result = current_agent.action(state)
+            state.update_memory(result)
             state.next_step()
 
-            if state.check_finished(): # 如果State完成，尝试更新State
-                state_info, new_state = self.update_state(state, agents_team)
+            if state.check_finished(): # 如果State完成，尝试更新State，只要step数达到就尝试更新，但不一定成功
+                state_info, new_state = self.update_state(state)
 
         return state_info, new_state
 
-    def check_finished(self, state: State) -> bool:
+    def check_finished(self, state: State):
         # 检查项目是否完成，根据任务阶段和迭代次数确定
         if self.current_iteration >= self.max_iterations:
-            return True
+            self.finished = True
         # 根据具体条件判断当前State是否完成
         if state.phase == "Model Building, Validation, and Prediction" and self.modeling_iterations >= self.max_modeling_iterations:
-            return True
-        return False
+            self.finished = True
+        self.finished = False
 
-    def update_state(self, state: State, agents_team: List[Agent]) -> Tuple[str, Optional[State]]:
+    def update_state(self, state: State) -> Tuple[str, Optional[State]]:
         # 更新State，根据新的参数创建新的State
         self.state_records.append(state) # SOP执行时的State记录 可用来计算iteration
 

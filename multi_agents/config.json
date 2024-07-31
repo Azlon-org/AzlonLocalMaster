@@ -1,0 +1,11 @@
+{
+    "competition": "titanic",
+    "state_to_agents": {
+        "Understand Background": ["Summarizer", "Reviewer"],
+        "Preliminary Exploratory Data Analysis": ["Summarizer", "Planner", "Developer", "Debugger", "Reviewer"],
+        "Data Cleaning": ["Summarizer", "Planner", "Developer", "Debugger", "Reviewer"],
+        "In-depth Exploratory Data Analysis": ["Summarizer", "Planner", "Developer", "Debugger", "Reviewer"],
+        "Feature Engineering": ["Summarizer", "Planner", "Developer", "Debugger", "Reviewer"],
+        "Model Building, Validation, and Prediction": ["Summarizer", "Planner", "Developer", "Debugger", "Reviewer"]
+    }
+}

@@ -17,7 +17,7 @@ class LLM:
         elif type == 'local':
             pass
 
-    def generate(self, prompt: str, history: list, max_tokens: int) -> str:
+    def generate(self, prompt: str, history: list, max_tokens=4096) -> str:
         # Generate text based on prompt
         return multi_chat(prompt, history, max_tokens)
     

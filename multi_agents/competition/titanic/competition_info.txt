@@ -1,0 +1,28 @@
+{
+    "Background": {
+        "Description": "The Titanic competition is a beginner-friendly machine learning challenge on Kaggle. The goal is to predict the survival of passengers on the Titanic using various features such as age, gender, and socio-economic class.",
+        "Historical Context": "The Titanic sank on April 15, 1912, after hitting an iceberg, resulting in the death of 1502 out of 2224 passengers and crew."
+    },
+    "Files": {
+        "train.csv": "Contains details of 891 passengers, including whether they survived.",
+        "test.csv": "Contains details of 418 passengers without survival information.",
+        "gender_submission.csv": "An example submission file assuming all female passengers survived."
+    },
+    "Question": "The main task is to build a predictive model to determine which passengers were more likely to survive the Titanic disaster.",
+    "Target_Variable": "Survived (1 for survived, 0 for deceased)",
+    "Evaluation": {
+        "Metric": "Accuracy (percentage of correctly predicted survival outcomes)"
+    },
+    "Submission_Format": {
+        "File_Format": "CSV with exactly 418 entries plus a header row",
+        "Columns": [
+            "PassengerId",
+            "Survived"
+        ]
+    },
+    "Other_Aspects": {
+        "Getting_Started": "Recommended tutorials and starter notebooks are provided to help beginners.",
+        "Kaggle_Notebooks": "A cloud computational environment for collaborative analysis.",
+        "Support": "Discussion forums and Kaggle contact page for help."
+    }
+}

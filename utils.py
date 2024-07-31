@@ -5,12 +5,19 @@ import subprocess
 import pdb
 import re
 import shutil
+import json
 
 DIR = os.path.dirname(os.path.abspath(__file__))
 PREFIX_STRONG_BASELINE = f'{DIR}/strong_baseline/competition'
 PREFIX_WEAK_BASELINE = f'{DIR}/weak_baseline/competition'
 PREFIX_MULTI_AGENTS = f'{DIR}/multi_agents'
 SEPERATOR_TEMPLATE = '-----------------------------------{step_name}-----------------------------------'
+
+def load_config(file_path: str):
+    assert file_path.endswith('json'), "The configuration file should be in JSON format."
+    with open(file_path, 'r', encoding='utf-8') as f:
+        config = json.load(f)
+    return config
 
 def read_file(file_path: str):
     """
