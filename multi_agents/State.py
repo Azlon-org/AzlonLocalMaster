@@ -10,42 +10,57 @@ from utils import PREFIX_MULTI_AGENTS, load_config
 from prompt import STEPS_IN_CONTEXT_TEMPLATE
 
 class State:
-    def __init__(self, phase, task, workflow=[], message=""):
+    def __init__(self, phase, message=""):
         self.phase = phase
-        self.task = task
-        self.workflow = workflow
-        self.memory = {}   # 用于记录State内部的信息
-        self.message = message  # 用于传递不同State之间的信息 
-        self.report = ""   # 用于记录当前State的总结报告
+        self.memory = [{}]   # 用于记录State内部的信息 当前State的memory在最后一个
+        self.message = message  # 来自上一个State的信息 
         self.current_step = 0  # 在State内部控制步数
         self.score = 0     # 用于记录当前State的评分
         self.finished = False
-        self.agents = load_config(f'{PREFIX_MULTI_AGENTS}/config.json')['state_to_agents'][self.phase] # 用于记录当前State的Agent
+        self.agents = load_config(f'{PREFIX_MULTI_AGENTS}/config.json')['phase_to_agents'][self.phase] # 用于记录当前State的Agent
         self.competition = load_config(f'{PREFIX_MULTI_AGENTS}/config.json')['competition'] 
         self.context = STEPS_IN_CONTEXT_TEMPLATE.format(competition_name=self.competition.replace('_', ' '))
+        self.phase_to_directory = load_config(f'{PREFIX_MULTI_AGENTS}/config.json')['phase_to_directory'] # 记录每个阶段的目录
+        self.restore_dir = ""   # 用于记录当前State的总结报告路径
+
+    # 创建当前State的目录
+    def make_dir(self):
+        dir_name = self.phase_to_directory[self.phase]
+        path_to_dir = f'{PREFIX_MULTI_AGENTS}/competition/{self.competition}/{dir_name}'
+        if not os.path.exists(path_to_dir):
+            os.makedirs(path_to_dir)
+        self.restore_dir = path_to_dir
 
     # 更新State内部的信息
     def update_memory(self, memory): 
         print(f"{self.agents[self.current_step]} updates internal memory in Phase: {self.phase}.")
-        self.memory.update(memory)
+        self.memory[-1].update(memory)
 
-    def restore_memory(self, memory):
-        pass
+    def restore_memory(self):
+        with open(f'{self.restore_dir}/memory.json', 'w') as f:
+            json.dump(self.memory, f)
+        print(f"Memory in Phase: {self.phase} is restored.")
 
-    def send_message(self, message):
-        self.message = message
+    def restore_report(self):
+        report = self.memory[-1]['summarizer'].get('report', '')
+        if len(report) > 0:
+            with open(f'{self.restore_dir}/report.txt', 'w') as f:
+                f.write(report)
+            print(f"Report in Phase: {self.phase} is restored.")
+        else:
+            print(f"No report in Phase: {self.phase} to restore.")
 
-    def get_message(self):
-        return self.message
-
-    def get_report(self):
-        return self.report
+    def send_message(self):
+        message_to_next_state = self.memory[-1]['summarizer'].get('message', '')
+        return message_to_next_state
 
     def next_step(self):
         self.current_step += 1
 
+    def set_score(self):
+        self.score = self.memory[-1]['reviewer']['score'] # 从memory中获取reviewer的评分
+
     def check_finished(self):
         if self.current_step == len(self.agents):
             self.finished = True
-            self.score = self.memory['reviewer']['score'] # 从memory中获取reviewer的评分
         return self.finished

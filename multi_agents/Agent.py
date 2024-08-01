@@ -11,7 +11,7 @@ from LLM import LLM
 from State import State
 from prompt import AGENT_ROLE_TEMPLATE, PROMPT_SUMMARIZER_UNDERSTAND_BACKGROUND, PROMPT_SUMMARIZER_TASK_UNDERSTAND_BACKGROUND
 from prompt import PROMPT_REVIEWER_ROUND1, PROMPT_REVIEWER_ROUND2_EACH_AGENT
-from utils import read_file, PREFIX_MULTI_AGENTS
+from utils import read_file, PREFIX_MULTI_AGENTS, load_config
 
 class Agent:
     def __init__(self, role: str, description: str, model: str, type: str):
@@ -42,30 +42,39 @@ class Summarizer(Agent):
         # 实现总结功能
         # Understand Background 读取overview.txt，生成competition_info.txt
         if state.phase == "Understand Background":
-            path_to_overview = f'{PREFIX_MULTI_AGENTS}/competition/{state.competition}/overview.txt'
-            overview = read_file(path_to_overview)
-            history = []
-            history.append({"role": "system", "content": f"{role_prompt} {self.description}"})
-            round = 0
-            # pdb.set_trace()
-            while True:
-                if round == 0:
-                    task = PROMPT_SUMMARIZER_TASK_UNDERSTAND_BACKGROUND
-                    input = PROMPT_SUMMARIZER_UNDERSTAND_BACKGROUND.format(steps_in_context=state.context, task=task)
-                elif round == 1:
-                    # 获取overview
-                    input = f"\n#############\n# OVERVIEW #\n{overview}"
-                elif round == 2:
-                    break
-                reply, history = self.llm.generate(input, history, max_tokens=4096)
-                round += 1
-            result = reply
-            # summary = reply.split('```json')[1].split('```')[0].strip()
-            summary = json.loads(reply.strip())['final_answer']
-            # pdb.set_trace()
-            with open(f'{PREFIX_MULTI_AGENTS}/competition/{state.competition}/competition_info.txt', 'w') as f:
-                f.write(json.dumps(summary, indent=4))
-            input_used_in_review = overview
+            if len(state.memory) == 1:
+                path_to_overview = f'{PREFIX_MULTI_AGENTS}/competition/{state.competition}/overview.txt'
+                overview = read_file(path_to_overview)
+                history = []
+                history.append({"role": "system", "content": f"{role_prompt} {self.description}"})
+                round = 0
+                # pdb.set_trace()
+                while True:
+                    if round == 0:
+                        task = PROMPT_SUMMARIZER_TASK_UNDERSTAND_BACKGROUND
+                        input = PROMPT_SUMMARIZER_UNDERSTAND_BACKGROUND.format(steps_in_context=state.context, task=task)
+                    elif round == 1:
+                        # 获取overview
+                        input = f"\n#############\n# OVERVIEW #\n{overview}"
+                    elif round == 2:
+                        break
+                    reply, history = self.llm.generate(input, history, max_tokens=4096)
+                    round += 1
+                result = reply
+                try:
+                    summary = json.loads(reply.strip())['final_answer']
+                    # pdb.set_trace()
+                    with open(f'{state.restore_dir}/competition_info.txt', 'w') as f:
+                        f.write(json.dumps(summary, indent=4))
+                except Exception as e:
+                    print(f"Error in json loads reply: {e}")
+                    summary_str = reply.split('```json')[1].split('```')[0].strip()
+                    summary = json.loads(summary_str)['final_answer']
+                    with open(f'{state.restore_dir}/competition_info.txt', 'w') as f:
+                        f.write(json.dumps(summary, indent=4))
+                input_used_in_review = overview
+            else:
+                pass
 
         print(f"State {state.phase} - Agent {self.role} finishes working.")
         return {self.role: {"history": history, "role": self.role, "description": self.description, "task": task, "input": input_used_in_review, "result": result}}
@@ -119,7 +128,7 @@ class Reviewer(Agent):
 
     def _generate_prompt_round2(self, state: State) -> str:
         prompt_round2 = ""
-        for each_agent_memory in state.memory.values():
+        for each_agent_memory in state.memory[-1].values():
             role = each_agent_memory["role"]
             description = each_agent_memory["description"]
             task = each_agent_memory["task"]
@@ -146,10 +155,15 @@ class Reviewer(Agent):
             reply, history = self.llm.generate(input, history, max_tokens=4096)
             round += 1
         result = reply
-        review = json.loads(reply.strip())["final_answer"]
+        try:
+            review = json.loads(reply.strip())["final_answer"]
+        except Exception as e:
+            print(f"Error in json loads reply: {e}")
+            review_str = reply.split('```json')[1].split('```')[0].strip()
+            review = json.loads(review_str)["final_answer"]
         final_score = review["final_score"]
         final_suggestion = review["final_suggestion"]
-        pdb.set_trace()
+        # pdb.set_trace()
 
         print(f"State {state.phase} - Agent {self.role} finishes working.")
         return {self.role: {"history": history, "score": final_score, "suggestion": final_suggestion, "result": result}}

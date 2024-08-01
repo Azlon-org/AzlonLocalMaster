@@ -1,11 +1,28 @@
 {
     "competition": "titanic",
-    "state_to_agents": {
+    "phases": ["Understand Background", "Preliminary Exploratory Data Analysis", "Data Cleaning", "In-depth Exploratory Data Analysis", "Feature Engineering", "Model Building, Validation, and Prediction"],
+    "phase_to_agents": {
         "Understand Background": ["Summarizer", "Reviewer"],
         "Preliminary Exploratory Data Analysis": ["Summarizer", "Planner", "Developer", "Debugger", "Reviewer"],
         "Data Cleaning": ["Summarizer", "Planner", "Developer", "Debugger", "Reviewer"],
         "In-depth Exploratory Data Analysis": ["Summarizer", "Planner", "Developer", "Debugger", "Reviewer"],
         "Feature Engineering": ["Summarizer", "Planner", "Developer", "Debugger", "Reviewer"],
         "Model Building, Validation, and Prediction": ["Summarizer", "Planner", "Developer", "Debugger", "Reviewer"]
+    },
+    "phase_to_iterations": {
+        "Understand Background": 0,
+        "Preliminary Exploratory Data Analysis": 0,
+        "Data Cleaning": 0,
+        "In-depth Exploratory Data Analysis": 0,
+        "Feature Engineering": 0,
+        "Model Building, Validation, and Prediction": 0
+    },
+    "phase_to_directory": {
+        "Understand Background": "understand_background",
+        "Preliminary Exploratory Data Analysis": "pre_eda",
+        "Data Cleaning": "data_cleaning",
+        "In-depth Exploratory Data Analysis": "deep_eda",
+        "Feature Engineering": "feature_engineering",
+        "Model Building, Validation, and Prediction": "model_build_predict"
     }
 }
