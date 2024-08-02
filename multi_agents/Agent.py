@@ -32,6 +32,15 @@ class Agent:
             experience_with_suggestion += PROMPT_EACH_EXPERIENCE_WITH_SUGGESTION.format(index=i, experience=result, suggestion=suggestion, score=score)
         return experience_with_suggestion
 
+    def _parse_json(self, raw_reply: str) -> Dict[str, Any]:
+        try:
+            reply = json.loads(raw_reply.strip())
+        except Exception as e:
+            print(f"Error in json loads reply: {e}")
+            reply_str = raw_reply.split('```json')[1].split('```')[0].strip()
+            reply = json.loads(reply_str)
+        return reply
+
     def action(self, state: State) -> Dict[str, Any]:
         pdb.set_trace()
         print(f"State {state.phase} - Agent {self.role} is executing.")
@@ -56,52 +65,37 @@ class Summarizer(Agent):
         if state.phase == "Understand Background":
             path_to_overview = f'{PREFIX_MULTI_AGENTS}/competition/{state.competition}/overview.txt'
             overview = read_file(path_to_overview)
+            history = []
+            round = 0
             if len(state.memory) == 1: # 如果之前没有memory，说明是第一次执行
-                history = []
                 history.append({"role": "system", "content": f"{role_prompt} {self.description}"})
-                round = 0
                 # pdb.set_trace()
                 while True:
                     if round == 0:
                         task = PROMPT_SUMMARIZER_TASK_UNDERSTAND_BACKGROUND
                         input = PROMPT_SUMMARIZER_UNDERSTAND_BACKGROUND.format(steps_in_context=state.context, task=task)
-                    elif round == 1:
-                        # 获取overview
-                        input = f"\n#############\n# OVERVIEW #\n{overview}"
-                    elif round == 2:
-                        break
-                    reply, history = self.llm.generate(input, history, max_tokens=4096)
+                    elif round == 1: input = f"\n#############\n# OVERVIEW #\n{overview}"
+                    elif round == 2: break
+                    raw_reply, history = self.llm.generate(input, history, max_tokens=4096)
                     round += 1
             else: # 如果之前有memory，拼接之前memory中summarizer的结果作为experience
                 self.description = "You are good at summarizing information and outputting it in JSON format. " \
                                 "You have advanced reasoning abilities and can improve your answers through reflection."
                 experience_with_suggestion = self._gather_experience_with_suggestion(state)
-                history = []
                 history.append({"role": "system", "content": f"{role_prompt} {self.description}"})
-                round = 0
                 while True:
                     if round == 0:
                         task = PROMPT_SUMMARIZER_TASK_UNDERSTAND_BACKGROUND
                         input = PROMPT_SUMMARIZER_UNDERSTAND_BACKGROUND_WITH_EXPERIENCE.format(steps_in_context=state.context, task=task, experience_with_suggestion=experience_with_suggestion)
-                    elif round == 1:
-                        # 获取overview
-                        input = f"\n#############\n# OVERVIEW #\n{overview}"
-                    elif round == 2:
-                        break
-                    reply, history = self.llm.generate(input, history, max_tokens=4096)
+                    elif round == 1: input = f"\n#############\n# OVERVIEW #\n{overview}"
+                    elif round == 2: break
+                    raw_reply, history = self.llm.generate(input, history, max_tokens=4096)
                     round += 1
-            result = reply
-            try:
-                summary = json.loads(reply.strip())['final_answer']
-                # pdb.set_trace()
-                with open(f'{state.restore_dir}/competition_info.txt', 'w') as f:
-                    f.write(json.dumps(summary, indent=4))
-            except Exception as e:
-                print(f"Error in json loads reply: {e}")
-                summary_str = reply.split('```json')[1].split('```')[0].strip()
-                summary = json.loads(summary_str)['final_answer']
-                with open(f'{state.restore_dir}/competition_info.txt', 'w') as f:
-                    f.write(json.dumps(summary, indent=4))
+            result = raw_reply
+            reply = self._parse_json(raw_reply)
+            summary = reply["final_answer"]
+            with open(f'{state.restore_dir}/competition_info.txt', 'w') as f:
+                f.write(json.dumps(summary, indent=4))
             input_used_in_review = overview
 
         print(f"State {state.phase} - Agent {self.role} finishes working.")
@@ -180,15 +174,11 @@ class Reviewer(Agent):
                 input = prompt_round2
             elif round == 2:
                 break
-            reply, history = self.llm.generate(input, history, max_tokens=4096)
+            raw_reply, history = self.llm.generate(input, history, max_tokens=4096)
             round += 1
-        result = reply
-        try:
-            review = json.loads(reply.strip())["final_answer"]
-        except Exception as e:
-            print(f"Error in json loads reply: {e}")
-            review_str = reply.split('```json')[1].split('```')[0].strip()
-            review = json.loads(review_str)["final_answer"]
+        result = raw_reply
+        reply = self._parse_json(raw_reply)
+        review = reply["final_answer"]
         final_score = review["final_score"]
         final_suggestion = review["final_suggestion"]
         # pdb.set_trace()
