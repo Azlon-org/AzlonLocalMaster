@@ -10,6 +10,7 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 from LLM import LLM
 from State import State
 from prompt import AGENT_ROLE_TEMPLATE, PROMPT_SUMMARIZER_UNDERSTAND_BACKGROUND, PROMPT_SUMMARIZER_TASK_UNDERSTAND_BACKGROUND
+from prompt import PROMPT_EACH_EXPERIENCE_WITH_SUGGESTION, PROMPT_SUMMARIZER_UNDERSTAND_BACKGROUND_WITH_EXPERIENCE
 from prompt import PROMPT_REVIEWER_ROUND1, PROMPT_REVIEWER_ROUND2_EACH_AGENT
 from utils import read_file, PREFIX_MULTI_AGENTS, load_config
 
@@ -19,6 +20,17 @@ class Agent:
         self.description = description
         self.llm = LLM(model, type)
         print(f'Agent {self.role} is created.')
+
+    def _gather_experience_with_suggestion(self, state: State) -> str:
+        experience_with_suggestion = ""
+        for i, each_state_memory in enumerate(state.memory):
+            act_agent_memory = each_state_memory.get(self.role, {}) # 获取过去state中当前agent的memory
+            result = act_agent_memory.get("result", "")
+            reviewer_memory = each_state_memory.get("reviewer", {}) # 获取过去state中reviewer的memory
+            suggestion = reviewer_memory.get("suggestion", "")
+            score = reviewer_memory.get("score", 3)
+            experience_with_suggestion += PROMPT_EACH_EXPERIENCE_WITH_SUGGESTION.format(index=i, experience=result, suggestion=suggestion, score=score)
+        return experience_with_suggestion
 
     def action(self, state: State) -> Dict[str, Any]:
         pdb.set_trace()
@@ -42,9 +54,9 @@ class Summarizer(Agent):
         # 实现总结功能
         # Understand Background 读取overview.txt，生成competition_info.txt
         if state.phase == "Understand Background":
-            if len(state.memory) == 1:
-                path_to_overview = f'{PREFIX_MULTI_AGENTS}/competition/{state.competition}/overview.txt'
-                overview = read_file(path_to_overview)
+            path_to_overview = f'{PREFIX_MULTI_AGENTS}/competition/{state.competition}/overview.txt'
+            overview = read_file(path_to_overview)
+            if len(state.memory) == 1: # 如果之前没有memory，说明是第一次执行
                 history = []
                 history.append({"role": "system", "content": f"{role_prompt} {self.description}"})
                 round = 0
@@ -60,21 +72,37 @@ class Summarizer(Agent):
                         break
                     reply, history = self.llm.generate(input, history, max_tokens=4096)
                     round += 1
-                result = reply
-                try:
-                    summary = json.loads(reply.strip())['final_answer']
-                    # pdb.set_trace()
-                    with open(f'{state.restore_dir}/competition_info.txt', 'w') as f:
-                        f.write(json.dumps(summary, indent=4))
-                except Exception as e:
-                    print(f"Error in json loads reply: {e}")
-                    summary_str = reply.split('```json')[1].split('```')[0].strip()
-                    summary = json.loads(summary_str)['final_answer']
-                    with open(f'{state.restore_dir}/competition_info.txt', 'w') as f:
-                        f.write(json.dumps(summary, indent=4))
-                input_used_in_review = overview
-            else:
-                pass
+            else: # 如果之前有memory，拼接之前memory中summarizer的结果作为experience
+                self.description = "You are good at summarizing information and outputting it in JSON format. " \
+                                "You have advanced reasoning abilities and can improve your answers through reflection."
+                experience_with_suggestion = self._gather_experience_with_suggestion(state)
+                history = []
+                history.append({"role": "system", "content": f"{role_prompt} {self.description}"})
+                round = 0
+                while True:
+                    if round == 0:
+                        task = PROMPT_SUMMARIZER_TASK_UNDERSTAND_BACKGROUND
+                        input = PROMPT_SUMMARIZER_UNDERSTAND_BACKGROUND_WITH_EXPERIENCE.format(steps_in_context=state.context, task=task, experience_with_suggestion=experience_with_suggestion)
+                    elif round == 1:
+                        # 获取overview
+                        input = f"\n#############\n# OVERVIEW #\n{overview}"
+                    elif round == 2:
+                        break
+                    reply, history = self.llm.generate(input, history, max_tokens=4096)
+                    round += 1
+            result = reply
+            try:
+                summary = json.loads(reply.strip())['final_answer']
+                # pdb.set_trace()
+                with open(f'{state.restore_dir}/competition_info.txt', 'w') as f:
+                    f.write(json.dumps(summary, indent=4))
+            except Exception as e:
+                print(f"Error in json loads reply: {e}")
+                summary_str = reply.split('```json')[1].split('```')[0].strip()
+                summary = json.loads(summary_str)['final_answer']
+                with open(f'{state.restore_dir}/competition_info.txt', 'w') as f:
+                    f.write(json.dumps(summary, indent=4))
+            input_used_in_review = overview
 
         print(f"State {state.phase} - Agent {self.role} finishes working.")
         return {self.role: {"history": history, "role": self.role, "description": self.description, "task": task, "input": input_used_in_review, "result": result}}
@@ -128,7 +156,7 @@ class Reviewer(Agent):
 
     def _generate_prompt_round2(self, state: State) -> str:
         prompt_round2 = ""
-        for each_agent_memory in state.memory[-1].values():
+        for each_agent_memory in state.memory[-1].values(): # 取当前state的memory
             role = each_agent_memory["role"]
             description = each_agent_memory["description"]
             task = each_agent_memory["task"]

@@ -12,13 +12,21 @@ I am working on a data science competition called "# {competition_name}". I plan
 6. Model Building, Validation, and Prediction
 '''
 
+
+
+PROMPT_SUMMARIZER_TASK_UNDERSTAND_BACKGROUND = '''
+You should conduct a comprehensive analysis of the competition overview, understand the background of the topic, understand how to use different files, clarify the definition and requirements of the problem, obtain information about the data, and identify the target variable, evaluation metrics and submission format. Gather important information regarding Background/Files/Question/Target_Variable/Evaluation/Other aspects.
+'''
+
+
+
 PROMPT_SUMMARIZER_UNDERSTAND_BACKGROUND = '''
 # CONTEXT #
 {steps_in_context}
 Currently, I am at step one: Background Understand.
 #############
 # TASK #
-{task}
+{task} 
 #############
 # RESPONSE: JSON FORMAT #
 {{
@@ -39,9 +47,54 @@ Currently, I am at step one: Background Understand.
 If you understand, please request the Overview of this data science competition from me.
 '''
 
-PROMPT_SUMMARIZER_TASK_UNDERSTAND_BACKGROUND = '''
-You should conduct a comprehensive analysis of the competition overview, understand the background of the topic, understand how to use different files, clarify the definition and requirements of the problem, obtain information about the data, and identify the target variable, evaluation metrics and submission format. Gather important information regarding Background/Files/Question/Target_Variable/Evaluation/Other aspects.
+
+
+PROMPT_EACH_EXPERIENCE_WITH_SUGGESTION = '''
+## EXPERIENCE {index}##
+<EXPERIENCE>
+{experience}
+</EXPERIENCE>
+<SUGGESTION>
+{suggestion}
+</SUGGESTION>
+<SCORE>
+{score}
+</SCORE>
 '''
+
+
+
+PROMPT_SUMMARIZER_UNDERSTAND_BACKGROUND_WITH_EXPERIENCE = '''
+# CONTEXT #
+{steps_in_context}
+Currently, I am at step one: Background Understand.
+#############
+# TASK #
+{task} In the past, you have attempted this task multiple times. However, due to errors in your answers or insufficient quality, you have not succeeded. I will provide you with your previous attempts' experiences and a professional reviewer's suggestions for improvement (PREVIOUS EXPERIENCE WITH SUGGESTION). Based on these, please formulate a new, concise high-level plan to mitigate similar failures and successfully complete the task.
+#############
+# PREVIOUS EXPERIENCE WITH SUGGESTION #
+{experience_with_suggestion}
+#############
+# RESPONSE: JSON FORMAT #
+{{
+    "thought_process": [
+        {{
+            "question": "The input question you must answer",
+            "thought": "You should always think about what to do next",
+            "action": "Describe the action you plan to take",
+            "action_input": "The specific input for the action",
+            "observation": "The expected or actual result of the action"
+        }}
+    ],
+    "final_thought": "Further reflection based on the observation, summarizing the final answer",
+    "final_answer": "The final answer to the original input question"
+}}
+#############
+# START ANALYSIS #
+If you understand, please request the Overview of this data science competition from me.
+'''
+
+
 
 PROMPT_REVIEWER_ROUND1 = '''
 # CONTEXT #
@@ -74,6 +127,8 @@ Please assess the performance of multiple agents in completing Step: {step_name}
 # START EVALUATION #
 If you are ready, please request from me the role, description, input, task and execution result of the agent to be evaluated.
 '''
+
+
 
 PROMPT_REVIEWER_ROUND2_EACH_AGENT = '''
 #############

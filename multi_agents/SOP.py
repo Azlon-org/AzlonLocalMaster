@@ -13,7 +13,6 @@ import pdb
 class SOP:
     def __init__(self, competition: str):
         self.competition = competition
-        self.finished = False
         self.state_records = []
         self.current_state = None
         self.max_iterations = 3  # 最大迭代次数
@@ -58,9 +57,6 @@ class SOP:
                     state.restore_report()
 
         return state_info, new_state
-
-    def check_sop_finished(self, state: State):
-        pass
 
     def update_state(self, state: State) -> Tuple[str, Optional[State]]:
         # 更新State，根据新的参数创建新的State
