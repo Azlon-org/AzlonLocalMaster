@@ -9,9 +9,12 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 from LLM import LLM
 from State import State
+from prompt import REORGANIZE_REPLY
 from prompt import AGENT_ROLE_TEMPLATE, PROMPT_SUMMARIZER_UNDERSTAND_BACKGROUND, PROMPT_SUMMARIZER_TASK_UNDERSTAND_BACKGROUND
 from prompt import PROMPT_EACH_EXPERIENCE_WITH_SUGGESTION, PROMPT_SUMMARIZER_UNDERSTAND_BACKGROUND_WITH_EXPERIENCE
-from prompt import PROMPT_REVIEWER_ROUND1, PROMPT_REVIEWER_ROUND2_EACH_AGENT
+from prompt import PROMPT_PLANNER_TASK, PROMPT_PLANNER
+from prompt import PROMPT_DEVELOPER_TASK, PROMPT_DEVELOPER_CONSTRAINTS, PROMPT_DEVELOPER
+from prompt import PROMPT_REVIEWER_ROUND0, PROMPT_REVIEWER_ROUND1_EACH_AGENT
 from utils import read_file, PREFIX_MULTI_AGENTS, load_config
 
 class Agent:
@@ -37,8 +40,19 @@ class Agent:
             reply = json.loads(raw_reply.strip())
         except Exception as e:
             print(f"Error in json loads reply: {e}")
-            reply_str = raw_reply.split('```json')[1].split('```')[0].strip()
-            reply = json.loads(reply_str)
+            print(f"raw_reply: \n{raw_reply}")
+            try:
+                reply_str = raw_reply.split('```json')[1].split('```')[0].strip()
+                reply = json.loads(reply_str)
+            except Exception as e:
+                print(f"Error in json loads reply_str: {e}")
+                json_reply, _ = self.llm.generate(REORGANIZE_REPLY.format(information=raw_reply), history=[], max_tokens=4096)
+                try:
+                    reply = json_reply.split('```json')[1].split('```')[0].strip()
+                    reply = json.loads(reply)
+                except Exception as e:
+                    print(f"Error in json loads json_reply: {e}")
+                    reply = {}
         return reply
 
     def action(self, state: State) -> Dict[str, Any]:
@@ -94,43 +108,112 @@ class Summarizer(Agent):
             result = raw_reply
             reply = self._parse_json(raw_reply)
             summary = reply["final_answer"]
-            with open(f'{state.restore_dir}/competition_info.txt', 'w') as f:
-                f.write(json.dumps(summary, indent=4))
+            with open(f'{state.competition_dir}/competition_info.json', 'w') as f:
+                json.dump(summary, f, indent=4)
+            with open(f'{state.restore_dir}/{self.role}_reply.txt', 'w') as f:
+                f.write(raw_reply)
             input_used_in_review = overview
 
         print(f"State {state.phase} - Agent {self.role} finishes working.")
-        return {self.role: {"history": history, "role": self.role, "description": self.description, "task": task, "input": input_used_in_review, "result": result}}
+        return {self.role: {"history": history, "role": self.role, "description": self.description, "task": task, "input": input_used_in_review, "summary": summary, "result": result}}
 
 class Planner(Agent):
-    def __init__(self, model: str):  
+    def __init__(self, model: str, type: str):  
         super().__init__(
             role="planner",
             description="You are good at planning tasks and creating roadmaps.",
-            model=model
-        )
-
-    def _execute(self, state: State, role_prompt: str) -> Dict[str, Any]:
-        # 实现规划功能
-        return {self.role: "plan"}
-
-class Developer(Agent):
-    def __init__(self, model: str, type: str):  
-        super().__init__(
-            role="developer",
-            description="You are skilled at writing and implementing code.",
             model=model,
             type=type
         )
 
     def _execute(self, state: State, role_prompt: str) -> Dict[str, Any]:
+        # 实现规划功能
+        history = []
+        round = 0
+        with open(f'{state.competition_dir}/competition_info.json', 'r') as f:
+            competition_info = json.load(f)
+        if len(state.memory) == 1: # 如果之前没有memory，说明是第一次执行
+            history.append({"role": "system", "content": f"{role_prompt} {self.description}"})
+            while True:
+                if round == 0:
+                    task = PROMPT_PLANNER_TASK.format(step_name=state.phase)
+                    input = PROMPT_PLANNER.format(steps_in_context=state.context, step_name=state.phase, competition_info=competition_info, task=task)
+                elif round == 1:
+                    break
+                raw_reply, history = self.llm.generate(input, history, max_tokens=4096)
+                round += 1
+        else:
+            pass
+        result = raw_reply
+        reply = self._parse_json(raw_reply)
+        plan = reply["final_answer"]
+        # pdb.set_trace()
+        with open(f'{state.restore_dir}/plan.json', 'w') as f:
+            json.dump(plan, f, indent=4) # 保存规划结果
+        with open(f'{state.restore_dir}/{self.role}_reply.txt', 'w') as f:
+            f.write(raw_reply)
+
+        print(f"State {state.phase} - Agent {self.role} finishes working.")
+        return {self.role: {"history": history, "role": self.role, "description": self.description, "task": task, "plan": plan, "result": result}}
+
+class Developer(Agent):
+    def __init__(self, model: str, type: str):  
+        super().__init__(
+            role="developer",
+            description="You are skilled at writing and implementing code according to plan.",
+            model=model,
+            type=type
+        )
+
+    def _generate_prompt_round1(self, state: State) -> str:
+        prompt_round1 = ""
+        if state.phase in ["Preliminary Exploratory Data Analysis", "Data Cleaning"]:
+            train_data = read_file(f'{state.competition_dir}/train.csv')
+            sample_train_data = train_data[:11]
+            test_data = read_file(f'{state.competition_dir}/test.csv')
+            sample_test_data = test_data[:11]
+            prompt_round1 = f"\n#############\n# TRAIN DATA WITH FEATURES #\n{sample_train_data}\n\n#############\n# TEST DATA WITH FEATURES #\n{sample_test_data}"
+        elif state.phase in ["In-depth Exploratory Data Analysis", "Feature Engineering"]:
+            pass
+        elif state.phase in ["Model Building, Validation, and Prediction"]:
+            pass
+
+        return prompt_round1
+
+    def _execute(self, state: State, role_prompt: str) -> Dict[str, Any]:
         # 实现开发功能
-        return {self.role: "develop"}
+        history = []
+        round = 0
+        restore_path = state.restore_dir
+        competition_path = state.competition_dir
+        task = PROMPT_DEVELOPER_TASK
+        constraints = PROMPT_DEVELOPER_CONSTRAINTS.format(restore_path=restore_path, competition_path=competition_path, step_name=state.phase)
+        with open(f'{state.competition_dir}/competition_info.json', 'r') as f:
+            competition_info = json.load(f)
+        plan = state.memory[-1]["planner"]["plan"]
+        if len(state.memory) == 1: # 如果之前没有memory，说明是第一次执行
+            history.append({"role": "system", "content": f"{role_prompt} {self.description}"})
+            while True:
+                if round == 0:
+                    input = PROMPT_DEVELOPER.format(steps_in_context=state.context, step_name=state.phase, competition_info=competition_info, plan=plan, constraints=constraints, task=task)
+                elif round == 1:
+                    prompt_round1 = self._generate_prompt_round1(state)
+                    input = prompt_round1
+                elif round == 2:
+                    break
+                raw_reply, history = self.llm.generate(input, history, max_tokens=4096)
+                round += 1
+        else:
+            pass
+        with open(f'{state.restore_dir}/{self.role}_reply.txt', 'w') as f:
+            f.write(raw_reply)
+        return {}
 
 class Debugger(Agent):
     def __init__(self, model: str, type: str):  
         super().__init__(
             role="debugger",
-            description="You are expert at finding and fixing bugs in code.",
+            description="You are expert at fixing bugs in code.",
             model=model,
             type=type
         )
@@ -148,30 +231,30 @@ class Reviewer(Agent):
             type=type
         )
 
-    def _generate_prompt_round2(self, state: State) -> str:
-        prompt_round2 = ""
+    def _generate_prompt_round1(self, state: State) -> str:
+        prompt_round1 = ""
         for each_agent_memory in state.memory[-1].values(): # 取当前state的memory
             role = each_agent_memory["role"]
             description = each_agent_memory["description"]
             task = each_agent_memory["task"]
             input = each_agent_memory["input"]
             result = each_agent_memory["result"]
-            prompt_round2 += PROMPT_REVIEWER_ROUND2_EACH_AGENT.format(role=role.upper(), description=description, task=task, input=input, result=result)
+            prompt_round1 += PROMPT_REVIEWER_ROUND1_EACH_AGENT.format(role=role.upper(), description=description, task=task, input=input, result=result)
         
-        return prompt_round2
+        return prompt_round1
     
     def _execute(self, state: State, role_prompt: str) -> Dict[str, Any]:
         # 实现评价功能
         # 第二轮输入：state的memory中过去每个agent的role_description, task, input, result
-        prompt_round2 = self._generate_prompt_round2(state)
+        prompt_round1 = self._generate_prompt_round1(state)
         history = []
         history.append({"role": "system", "content": f"{role_prompt} {self.description}"})
         round = 0
         while True:
             if round == 0:
-                input = PROMPT_REVIEWER_ROUND1.format(steps_in_context=state.context, step_name=state.phase)
+                input = PROMPT_REVIEWER_ROUND0.format(steps_in_context=state.context, step_name=state.phase)
             elif round == 1:
-                input = prompt_round2
+                input = prompt_round1
             elif round == 2:
                 break
             raw_reply, history = self.llm.generate(input, history, max_tokens=4096)
@@ -182,6 +265,10 @@ class Reviewer(Agent):
         final_score = review["final_score"]
         final_suggestion = review["final_suggestion"]
         # pdb.set_trace()
+        with open(f'{state.restore_dir}/review.json', 'w') as f:
+            json.dump(review, f, indent=4)
+        with open(f'{state.restore_dir}/{self.role}_reply.txt', 'w') as f:
+            f.write(raw_reply)
 
         print(f"State {state.phase} - Agent {self.role} finishes working.")
         return {self.role: {"history": history, "score": final_score, "suggestion": final_suggestion, "result": result}}

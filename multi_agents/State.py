@@ -12,7 +12,7 @@ from prompt import STEPS_IN_CONTEXT_TEMPLATE
 class State:
     def __init__(self, phase, message=""):
         self.phase = phase
-        self.memory = [{}]   # 用于记录State内部的信息 当前State的memory在最后一个
+        self.memory = [{}]   # 用于记录State内部的信息 只存相同phase的 当前State的memory在最后一个
         self.message = message  # 来自上一个State的信息 
         self.current_step = 0  # 在State内部控制步数
         self.score = 0     # 用于记录当前State的评分
@@ -21,7 +21,11 @@ class State:
         self.competition = load_config(f'{PREFIX_MULTI_AGENTS}/config.json')['competition'] 
         self.context = STEPS_IN_CONTEXT_TEMPLATE.format(competition_name=self.competition.replace('_', ' '))
         self.phase_to_directory = load_config(f'{PREFIX_MULTI_AGENTS}/config.json')['phase_to_directory'] # 记录每个阶段的目录
-        self.restore_dir = ""   # 用于记录当前State的总结报告路径
+        self.restore_dir = ""   # 用于记录当前State的文件保存路径
+        self.competition_dir = f'{PREFIX_MULTI_AGENTS}/competition/{self.competition}' # 用于记录当前competition的路径（import data的路径）
+
+    def __str__(self):
+        return f"State: {self.phase}, Current Step: {self.current_step}, Current Agent: {self.agents[self.current_step]}, Finished: {self.finished}"
 
     # 创建当前State的目录
     def make_dir(self):
@@ -38,7 +42,7 @@ class State:
 
     def restore_memory(self):
         with open(f'{self.restore_dir}/memory.json', 'w') as f:
-            json.dump(self.memory, f)
+            json.dump(self.memory, f, indent=4)
         print(f"Memory in Phase: {self.phase} is restored.")
 
     def restore_report(self):

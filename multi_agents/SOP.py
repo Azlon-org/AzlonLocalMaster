@@ -9,6 +9,7 @@ from typing import Dict, Tuple, List, Optional
 from Agent import Agent, Summarizer, Planner, Developer, Debugger, Reviewer
 from State import State
 import pdb
+import copy
 
 class SOP:
     def __init__(self, competition: str):
@@ -36,7 +37,7 @@ class SOP:
     # 执行完当前state，并返回新的state
     def step(self, state: State) -> Tuple[str, State]:
         state.make_dir() # 创建当前State的目录
-        print(f"Current State: {state.phase}")
+        print(f"Current State: {state}")
         agents = state.agents # 获取当前State中的Agents
 
         pdb.set_trace()
@@ -60,7 +61,7 @@ class SOP:
 
     def update_state(self, state: State) -> Tuple[str, Optional[State]]:
         # 更新State，根据新的参数创建新的State
-        self.state_records.append(state) # SOP执行时的State记录 可用来计算iteration
+        self.state_records.append(copy.deepcopy(state)) # 深拷贝state 并加入state_records 可用于计算iterations
 
         if state.phase == "Model Building, Validation, and Prediction":
             if state.score < 3 and self.phase_to_iterations[state.phase] < self.max_iterations:
@@ -78,7 +79,8 @@ class SOP:
                 next_phase = state.phase # 如果评分低于3，继续当前阶段
                 update_state_info = "Repeat"
                 new_state = State(phase=state.phase, message="") 
-                new_state.memory = state.memory # 保留memory
+                new_state.memory = copy.deepcopy(state.memory) # 深拷贝memory
+                new_state.memory.append({})  # 在列表中加入一个空dict
             else:
                 if state.score >= 3: # 如果评分大于等于3，进入下一个阶段
                     assert self.phase_to_iterations[state.phase] <= self.max_iterations

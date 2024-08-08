@@ -1,0 +1,12 @@
+{
+    "Background": "The competition is based on the Titanic disaster, aiming to predict passenger survival using machine learning.",
+    "Files": {
+        "train.csv": "Contains training data with survival outcomes.",
+        "test.csv": "Contains test data without survival outcomes.",
+        "gender_submission.csv": "Example submission file."
+    },
+    "Question": "Build a predictive model to determine which passengers survived the Titanic disaster.",
+    "Target_Variable": "Survived (1 for survived, 0 for deceased)",
+    "Evaluation": "Accuracy (percentage of correctly predicted survival statuses)",
+    "Submission_Format": "CSV file with columns 'PassengerId' and 'Survived', containing 418 entries plus a header row."
+}

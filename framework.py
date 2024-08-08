@@ -11,7 +11,8 @@ import pdb
 if __name__ == '__main__':
     competition = load_config(f'{PREFIX_MULTI_AGENTS}/config.json')['competition']
     sop = SOP(competition)
-    start_state = State(phase="Understand Background")
+    # start_state = State(phase="Understand Background")
+    start_state = State(phase="Preliminary Exploratory Data Analysis")
     start_message = ""
     new_state = start_state
 
@@ -25,7 +26,6 @@ if __name__ == '__main__':
             print("Failed to update state.")
             exit()
         if state_info == 'Complete':
-            sop.finished = True
             print(f"Competition {competition} SOP is completed.")
             break
     

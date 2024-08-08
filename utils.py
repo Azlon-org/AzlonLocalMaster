@@ -59,7 +59,7 @@ def read_image(prompt, image_path):
     base64_image = encode_image(image_path)
     api_handler = APIHandler('gpt-4o')
     messages=[
-        {"role": "system", "content": "You are a helpful assistant."},
+        {"role": "system", "content": "You are a professional data analyst."},
         {
             "role": "user", 
             "content": [
