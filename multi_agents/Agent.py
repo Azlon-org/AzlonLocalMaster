@@ -1,10 +1,12 @@
 import os
 import sys
-from typing import Dict, List, Any
+from typing import Dict, List, Tuple, Any
 import pdb
 import json
 import re
 import copy
+import shutil
+import subprocess
 
 sys.path.append('..')
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
@@ -167,7 +169,7 @@ class Developer(Agent):
             type=type
         )
 
-    def _is_previous_code(self, state: State) -> List[bool, str]:
+    def _is_previous_code(self, state: State) -> Tuple[bool, str, str]:
         all_phases = load_config(f'{PREFIX_MULTI_AGENTS}/config.json')['phases']
         current_phase_index = all_phases.index(state.phase)
         previous_phase = all_phases[current_phase_index + 1]
@@ -191,7 +193,7 @@ class Developer(Agent):
         previous_run_code = [line for line in previous_run_code if line != '']
         return previous_run_code
 
-    def _generate_code_file(self, state: State, raw_reply) -> None:
+    def _generate_code_file(self, state: State, raw_reply) -> Tuple[str, str]:
         is_previous_code, path_to_previous_code, _ = self._is_previous_code(state)
         if is_previous_code:
             with open(path_to_previous_code, 'r', encoding='utf-8') as f_1:
@@ -203,8 +205,8 @@ class Developer(Agent):
             previous_code = []
             previous_run_code = []
         # code with output
-        path_to_code = f'{state.restore_dir}/{state.phase}_code.py'
-        path_to_run_code = f'{state.restore_dir}/{state.phase}_run_code.py'
+        path_to_code = f'{state.restore_dir}/{state.dir_name}_code.py'
+        path_to_run_code = f'{state.restore_dir}/{state.dir_name}_run_code.py'
 
         # Extract code from the file
         pattern = r"```python(.*?)```\n"
@@ -216,17 +218,59 @@ class Developer(Agent):
         
         # Enclose the code in a function
         code_lines = [f"    {line}\n" for line in code_lines]
-        code_lines = ["def generated_code_function():\n"] + previous_code + code_lines
+        code_with_output_lines = ["def generated_code_function():\n"] + previous_code + code_lines
         run_code_lines = ["def generated_code_function():\n"] + previous_run_code + code_lines
 
         # Write the code to a python file
         with open(path_to_code, 'w', encoding='utf-8') as f_w:
-            f_w.write(''.join(code_lines))
+            f_w.write(''.join(code_with_output_lines))
             f_w.write('\n\nif __name__ == "__main__":\n    generated_code_function()')
         # Write the run code to a python file
         with open(path_to_run_code, 'w', encoding='utf-8') as f_w:
             f_w.write(''.join(run_code_lines))
             f_w.write('\n\nif __name__ == "__main__":\n    generated_code_function()')
+        
+        return path_to_code, path_to_run_code
+
+    def _code_run(self, state: State, path_to_run_code: str) -> str:
+        # Delete previous images files
+        if 'eda' in state.restore_dir:
+            images_dir = f'{state.restore_dir}/images/'
+            for filename in os.listdir(images_dir):
+                image_path = os.path.join(images_dir, filename)
+                try:
+                    if os.path.isfile(image_path) or os.path.islink(image_path):
+                        os.remove(image_path)  # Delete file
+                    elif os.path.isdir(image_path):
+                        shutil.rmtree(image_path)  # Delete directory
+                except Exception as e:
+                    print(f"Failed to delete {image_path}. Reason: {e}")
+            print(f"All files in directory '{images_dir}' have been deleted successfully.")
+
+        # Run the code
+        result = subprocess.run(['python3', path_to_run_code], capture_output=True, text=True)
+        error_flag = False
+        path_to_error = f'{state.restore_dir}/{state.dir_name}_error.txt'
+        path_to_output = f'{state.restore_dir}/{state.dir_name}_output.txt'
+        if result.stderr:
+            print("Error encountered during code execution.")
+            with open(path_to_error, 'w') as f:
+                f.write(result.stderr)
+            error_flag = True
+        else:
+            print("Code executed successfully without errors.")
+            try:
+                # Delete error file.
+                os.remove(path_to_error)
+                print(f"File '{path_to_error}' has been deleted successfully.")
+            except FileNotFoundError:
+                print(f"File '{path_to_error}' doesn't exist, you don't need to delete it.")
+
+        # Write the output to a file
+        with open(path_to_output, 'w') as file:
+            file.write(result.stdout)
+
+        return error_flag
 
     def _generate_prompt_round1(self, state: State) -> str:
         prompt_round1 = ""
@@ -279,20 +323,10 @@ class Developer(Agent):
             pass
         with open(f'{state.restore_dir}/{self.role}_reply.txt', 'w') as f:
             f.write(raw_reply)
+        path_to_code, path_to_run_code = self._generate_code_file(state, raw_reply)
+        error_flag = self._code_run(state, path_to_run_code)
         return {}
-
-class Debugger(Agent):
-    def __init__(self, model: str, type: str):  
-        super().__init__(
-            role="debugger",
-            description="You are expert at fixing bugs in code.",
-            model=model,
-            type=type
-        )
-
-    def _execute(self, state: State, role_prompt: str) -> Dict[str, Any]:
-        # 实现调试功能
-        return {self.role: "debug"}
+    
 
 class Reviewer(Agent):
     def __init__(self, model: str, type: str):  

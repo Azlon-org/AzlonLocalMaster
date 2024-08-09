@@ -1,29 +1,45 @@
-{
-    "Objectives": [
-        "Understand the basic structure of the dataset.",
-        "Identify initial patterns and relationships in the data.",
-        "Detect any obvious data quality issues."
-    ],
-    "Methods": [
-        "Load the dataset and display the first few rows to get an initial sense of the data.",
-        "Use summary statistics to understand the distribution of numerical features.",
-        "Generate frequency tables for categorical features to understand their distribution.",
-        "Visualize the data using histograms, bar plots, and box plots to identify patterns and outliers.",
-        "Check for missing values and understand their distribution across the dataset."
-    ],
-    "HandlingMethods": {
-        "NumericalData": [
-            "Use summary statistics (mean, median, standard deviation, etc.) to understand the distribution.",
-            "Visualize using histograms and box plots to identify patterns and outliers."
-        ],
-        "CategoricalData": [
-            "Generate frequency tables to understand the distribution.",
-            "Visualize using bar plots to identify patterns."
+[
+    {
+        "task": "Load and inspect the dataset",
+        "method": [
+            "Use pandas to load the train.csv and test.csv files.",
+            "Display the first few rows of each dataset using the head() method.",
+            "Check the dimensions of the datasets using the shape attribute."
         ]
     },
-    "ProjectRequirementsAndResourceConstraints": [
-        "Ensure that the analysis can be performed using available computational resources.",
-        "Keep the analysis simple and focused, avoiding overly complex methods at this stage.",
-        "Allocate sufficient time for each task to ensure thorough analysis without rushing."
-    ]
-}
+    {
+        "task": "Understand the data types and basic statistics",
+        "method": [
+            "Use the info() method to get an overview of the data types and non-null counts.",
+            "Use the describe() method to get summary statistics for numerical features."
+        ]
+    },
+    {
+        "task": "Identify missing values",
+        "method": [
+            "Use the isnull() method combined with sum() to count missing values in each column.",
+            "Visualize missing values using a heatmap (e.g., seaborn's heatmap)."
+        ]
+    },
+    {
+        "task": "Explore categorical features",
+        "method": [
+            "Use the value_counts() method to get the distribution of categorical features.",
+            "Visualize the distribution of categorical features using bar plots."
+        ]
+    },
+    {
+        "task": "Explore numerical features",
+        "method": [
+            "Plot histograms for numerical features to understand their distributions.",
+            "Use box plots to identify potential outliers in numerical features."
+        ]
+    },
+    {
+        "task": "Examine relationships between features and the target variable",
+        "method": [
+            "Use groupby() and mean() to explore the relationship between categorical features and the target variable (Survived).",
+            "Use scatter plots or pair plots to examine relationships between numerical features and the target variable."
+        ]
+    }
+]

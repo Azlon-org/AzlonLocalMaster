@@ -1,6 +1,7 @@
 import os
 import sys
 import json
+import pdb
 
 sys.path.append('..')
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
@@ -23,16 +24,18 @@ class State:
         self.phase_to_directory = load_config(f'{PREFIX_MULTI_AGENTS}/config.json')['phase_to_directory'] # 记录每个阶段的目录
         self.restore_dir = ""   # 用于记录当前State的文件保存路径
         self.competition_dir = f'{PREFIX_MULTI_AGENTS}/competition/{self.competition}' # 用于记录当前competition的路径（import data的路径）
+        self.dir_name = self.phase_to_directory[self.phase]
 
     def __str__(self):
         return f"State: {self.phase}, Current Step: {self.current_step}, Current Agent: {self.agents[self.current_step]}, Finished: {self.finished}"
 
     # 创建当前State的目录
     def make_dir(self):
-        dir_name = self.phase_to_directory[self.phase]
-        path_to_dir = f'{PREFIX_MULTI_AGENTS}/competition/{self.competition}/{dir_name}'
+        path_to_dir = f'{self.competition_dir}/{self.dir_name}'
         if not os.path.exists(path_to_dir):
             os.makedirs(path_to_dir)
+        if 'eda' in self.dir_name and not os.path.exists(f'{path_to_dir}/images'):
+            os.makedirs(f'{path_to_dir}/images')
         self.restore_dir = path_to_dir
 
     # 更新State内部的信息

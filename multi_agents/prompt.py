@@ -246,10 +246,10 @@ Please assess the performance of multiple agents in completing Step: {step_name}
     ],
     "final_thought": str="Further reflection based on the observation, summarizing the final answer",
     "final_answer": {{
-	    "final_score": int="The final score you assign to the evaluated agents, only one score in range 1-5",
 	    "final_suggestion": {{
             str="agent name": str="Specific suggestions for improving the performance of the agent"
-        }}
+        }},
+        "final_score": int="The final score you assign to the evaluated agents, only one score in range 1-5"
     }}
 }}
 #############
