@@ -113,7 +113,7 @@ If you understand, please request the Overview of this data science competition 
 
 
 PROMPT_PLANNER_TASK = '''
-Design a reasonable, clear, and efficient plan for the current development step: {step_name}. The Developer will develop according to the specific steps in your plan. Start by outlining the step objectives, then specify the methods to be used, considering factors such as data types, project requirements, and resource constraints.
+Design a reasonable, clear, detailed and efficient plan for the current development step: {step_name}. The Developer will develop according to the specific tasks in your plan. Start by outlining the task objectives, then specify the methods to be used, considering factors such as data types, project requirements, and resource constraints.
 <example> In the data cleaning step, you can detail how to handle missing values and other data integrity issues. </example>
 You need to clearly delineate the tasks specific to this step and avoid tasks related to other steps.
 <example> In the in-depth EDA step, focus on analyzing the distribution and statistical properties of features without deleting or reducing features (which belongs to the feature engineering step). </example>
@@ -143,7 +143,12 @@ Currently, I am at step: {step_name}.
         }}
     ],
     "final_thought": str="Further reflection based on the observation, summarizing the final answer",
-    "final_answer": str="The final answer to the original input question"
+    "final_answer": list=[
+        {{
+            "task": str="The specific task to be performed",
+            "method": list=["Methods to be used"],
+        }}
+    ]
 }}
 #############
 # START PLANNING #
@@ -151,7 +156,7 @@ Currently, I am at step: {step_name}.
 
 
 PROMPT_DEVELOPER_TASK = '''
-Develop a solution based on the plan provided by the Planner. Implement the specific steps outlined in the plan, ensuring that the code is clear, concise, and efficient. You must consider the data types, project requirements, and resource constraints. Ensure that the code is well-documented and can be easily understood by others.
+Develop a solution based on the plan provided by the Planner. Implement the specific tasks outlined in the plan, ensuring that the code is clear, concise, and efficient. You must consider the data types, project requirements, and resource constraints. Ensure that the code is well-documented and can be easily understood by others.
 '''
 
 PROMPT_DEVELOPER_CONSTRAINTS = '''
@@ -165,6 +170,10 @@ PROMPT_DEVELOPER_CONSTRAINTS = '''
 - Always consider the runtime and efficiency of your code when writing code, especially for data visualization, handling large datasets, or complex algorithms.
 <example>
 Data visualization: When using libraries such as seaborn or matplotlib to create plots, consider turning off unnecessary details (e.g., annot=False in heatmaps), especially when the number of data points is large.
+</example>
+- Always consider resource constraints and limit the number of generated images to ensure that they do not exceed 10 when performing Exploratory Data Analysis (EDA), 
+<example>
+When using the matplotlib library for visualizing multiple subplots, if you need to display relationships between multiple variables, you can set up subplots within a single figure window instead of generating separate plots for each variable relationship. This approach not only makes effective use of visual space but also adheres to the rule of limiting the number of generated plots. For example, if there are 12 variable combinations, you can choose the most critical 10 combinations to display.
 </example>
 ## CODING RULES ##
 - Always use `print()` function if you need to print a value. 
@@ -200,18 +209,18 @@ Currently, I am at step: {step_name}.
 {task}
 #############
 # RESPONSE: BLOCK (CODE & EXPLANATION) #
-STEP 1:
+TASK 1:
 THOUGHT PROCESS
 CODE
 EXPLANATION
-STEP 2:
+TASK 2:
 THOUGHT PROCESS
 CODE
 EXPLANATION
 ...
 #############
 # START CODING #
-If you understand, please request all the features of the data and 10 data samples in both training data and test data from me.
+If you understand, please request the code and insight from previous steps, all the features of the data and 10 data samples in both training data and test data from me.
 '''
 
 

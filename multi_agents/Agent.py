@@ -1,8 +1,10 @@
 import os
 import sys
-from typing import Dict, Any
+from typing import Dict, List, Any
 import pdb
 import json
+import re
+import copy
 
 sys.path.append('..')
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
@@ -165,14 +167,84 @@ class Developer(Agent):
             type=type
         )
 
+    def _is_previous_code(self, state: State) -> List[bool, str]:
+        all_phases = load_config(f'{PREFIX_MULTI_AGENTS}/config.json')['phases']
+        current_phase_index = all_phases.index(state.phase)
+        previous_phase = all_phases[current_phase_index + 1]
+        previous_dir_name = state.phase_to_directory[previous_phase]
+        path_to_previous_code = f'{state.competition_dir}/{previous_dir_name}/{previous_dir_name}_code.py'
+        path_to_previous_run_code = f'{state.competition_dir}/{previous_dir_name}/{previous_dir_name}_run_code.py'
+        return os.path.exists(path_to_previous_code), path_to_previous_code, path_to_previous_run_code
+
+    def _delete_output_in_code(self, state: State, previous_code) -> str:
+        previous_run_code = copy.deepcopy(previous_code)
+        for i, line in enumerate(previous_run_code):
+            if line.strip().startswith('for') and previous_run_code[i+1].strip().startswith('print'):
+                previous_run_code[i] = ''
+            elif line.strip().startswith('print'):
+                previous_run_code[i] = ''
+            elif line.strip().startswith('plt.show'):
+                previous_run_code[i] = ''
+            elif line.strip().startswith('plt.save'):
+                previous_run_code[i] = ''
+        # 删除空行
+        previous_run_code = [line for line in previous_run_code if line != '']
+        return previous_run_code
+
+    def _generate_code_file(self, state: State, raw_reply) -> None:
+        is_previous_code, path_to_previous_code, _ = self._is_previous_code(state)
+        if is_previous_code:
+            with open(path_to_previous_code, 'r', encoding='utf-8') as f_1:
+                previous_code = f_1.readlines()
+                previous_code = previous_code[:-2] # 删除最后两行
+                previous_code = previous_code[1:] # 删除第一行
+            previous_run_code = self._delete_output_in_code(state, previous_code) # 删除output
+        else:
+            previous_code = []
+            previous_run_code = []
+        # code with output
+        path_to_code = f'{state.restore_dir}/{state.phase}_code.py'
+        path_to_run_code = f'{state.restore_dir}/{state.phase}_run_code.py'
+
+        # Extract code from the file
+        pattern = r"```python(.*?)```\n"
+        matches = re.findall(pattern, raw_reply, re.DOTALL)
+        code_lines = []
+        # pdb.set_trace()
+        for match in matches:
+            code_lines.extend(match.split('\n'))
+        
+        # Enclose the code in a function
+        code_lines = [f"    {line}\n" for line in code_lines]
+        code_lines = ["def generated_code_function():\n"] + previous_code + code_lines
+        run_code_lines = ["def generated_code_function():\n"] + previous_run_code + code_lines
+
+        # Write the code to a python file
+        with open(path_to_code, 'w', encoding='utf-8') as f_w:
+            f_w.write(''.join(code_lines))
+            f_w.write('\n\nif __name__ == "__main__":\n    generated_code_function()')
+        # Write the run code to a python file
+        with open(path_to_run_code, 'w', encoding='utf-8') as f_w:
+            f_w.write(''.join(run_code_lines))
+            f_w.write('\n\nif __name__ == "__main__":\n    generated_code_function()')
+
     def _generate_prompt_round1(self, state: State) -> str:
         prompt_round1 = ""
+        # 读取上一个阶段的code
+        is_previous_code, path_to_previous_code, _ = self._is_previous_code(state)
+        if is_previous_code:
+            previous_code = read_file(path_to_previous_code) # 有output的code嵌入到prompt中
+        else:
+            previous_code = "There is no code file in the previous phase."
+        prompt_round1 += f"\n#############\n# CODE FROM PREVIOUS PHASE #\n{previous_code}"
+
+        # 读取train.csv和test.csv
         if state.phase in ["Preliminary Exploratory Data Analysis", "Data Cleaning"]:
             train_data = read_file(f'{state.competition_dir}/train.csv')
             sample_train_data = train_data[:11]
             test_data = read_file(f'{state.competition_dir}/test.csv')
             sample_test_data = test_data[:11]
-            prompt_round1 = f"\n#############\n# TRAIN DATA WITH FEATURES #\n{sample_train_data}\n\n#############\n# TEST DATA WITH FEATURES #\n{sample_test_data}"
+            prompt_round1 += f"\n#############\n# TRAIN DATA WITH FEATURES #\n{sample_train_data}\n\n#############\n# TEST DATA WITH FEATURES #\n{sample_test_data}"
         elif state.phase in ["In-depth Exploratory Data Analysis", "Feature Engineering"]:
             pass
         elif state.phase in ["Model Building, Validation, and Prediction"]:
