@@ -24,7 +24,7 @@ def understand_background(competition, i):
 {steps_in_context}
 Currently, I am at step one: Background Understand.
 #############
-# OBJECTIVE #
+# TASK #
 I want you to conduct a comprehensive analysis of the competition overview, understand the background of the topic, understand how to use different files, clarify the definition and requirements of the problem, obtain information about the data, and identify the target variable, evaluation metrics and submission format. Gather important information regarding Background/Files/Question/Target_Variable/Evaluation/Other aspects.
 #############
 # RESPONSE: JSON FORMAT #

@@ -183,7 +183,7 @@ keyboard_arrow_up
 
 Anna Montoya, DataCanary. (2016). House Prices - Advanced Regression Techniques. Kaggle. https://kaggle.com/competitions/house-prices-advanced-regression-techniques
 #############
-# OBJECTIVE #
+# TASK #
 I will provide you with [COMPETITIOM INFORMATION] and all the files you need (overview.txt, data_description.txt, gender_submission.csv, test.csv, train.csv). Please complete this competition for me. You must write the code and give proper explanations, but do not run the code.
 #############
 # CONSTRAINTS #

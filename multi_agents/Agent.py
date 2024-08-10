@@ -17,7 +17,7 @@ from prompt import REORGANIZE_REPLY
 from prompt import AGENT_ROLE_TEMPLATE, PROMPT_SUMMARIZER_UNDERSTAND_BACKGROUND, PROMPT_SUMMARIZER_TASK_UNDERSTAND_BACKGROUND
 from prompt import PROMPT_EACH_EXPERIENCE_WITH_SUGGESTION, PROMPT_SUMMARIZER_UNDERSTAND_BACKGROUND_WITH_EXPERIENCE
 from prompt import PROMPT_PLANNER_TASK, PROMPT_PLANNER
-from prompt import PROMPT_DEVELOPER_TASK, PROMPT_DEVELOPER_CONSTRAINTS, PROMPT_DEVELOPER
+from prompt import PROMPT_DEVELOPER_TASK, PROMPT_DEVELOPER_CONSTRAINTS, PROMPT_DEVELOPER, PROMPT_DEVELOPER_DEBUG
 from prompt import PROMPT_REVIEWER_ROUND0, PROMPT_REVIEWER_ROUND1_EACH_AGENT
 from utils import read_file, PREFIX_MULTI_AGENTS, load_config
 
@@ -223,16 +223,16 @@ class Developer(Agent):
 
         # Write the code to a python file
         with open(path_to_code, 'w', encoding='utf-8') as f_w:
-            f_w.write(''.join(code_with_output_lines))
+            f_w.write("".join(code_with_output_lines))
             f_w.write('\n\nif __name__ == "__main__":\n    generated_code_function()')
         # Write the run code to a python file
         with open(path_to_run_code, 'w', encoding='utf-8') as f_w:
-            f_w.write(''.join(run_code_lines))
+            f_w.write("".join(run_code_lines))
             f_w.write('\n\nif __name__ == "__main__":\n    generated_code_function()')
         
         return path_to_code, path_to_run_code
 
-    def _code_run(self, state: State, path_to_run_code: str) -> str:
+    def _run_code(self, state: State, path_to_run_code: str) -> str:
         # Delete previous images files
         if 'eda' in state.restore_dir:
             images_dir = f'{state.restore_dir}/images/'
@@ -271,13 +271,54 @@ class Developer(Agent):
             file.write(result.stdout)
 
         return error_flag
+    
+    def _debug_code(self, state: State, debug_history: list, raw_reply: str) -> str:
+        is_previous_code, path_to_previous_code, _ = self._is_previous_code(state)
+        if is_previous_code:
+            with open(path_to_previous_code, 'r', encoding='utf-8') as f_1:
+                previous_code = f_1.readlines()
+            # 放在prompt里的previous code要做处理
+            previous_code = previous_code[:-2] # 删除最后两行
+            previous_code = previous_code[1:] # 删除第一行
+            for i, line in enumerate(previous_code):
+                # 删除每行第一个'\t'
+                if line.startswith('\t'):
+                    previous_code[i] = line[1:]
+            previous_code = "".join(previous_code+'\n')
+        else:
+            previous_code = "There is no code file in the previous phase."
+        # Extract code from the file
+        pattern = r"```python(.*?)```\n"
+        matches = re.findall(pattern, raw_reply, re.DOTALL)
+        code_lines = []
+        for match in matches:
+            code_lines.extend(match.split('\n'))
+        wrong_code = "".join(code_lines+'\n') # 这里的code是有错误的
+        # 读取error和output
+        path_to_error = f'{state.restore_dir}/{state.dir_name}_error.txt'
+        path_to_output = f'{state.restore_dir}/{state.dir_name}_output.txt'
+        error_message = read_file(path_to_error)
+        output_message = read_file(path_to_output)
+        input = PROMPT_DEVELOPER_DEBUG.format(previous_code=previous_code, wrong_code=wrong_code, output_message=output_message, error_message=error_message)
+
+        reply, debug_history = self.llm.generate(input, debug_history, max_tokens=4096)
+        return reply, debug_history
 
     def _generate_prompt_round1(self, state: State) -> str:
         prompt_round1 = ""
         # 读取上一个阶段的code
         is_previous_code, path_to_previous_code, _ = self._is_previous_code(state)
         if is_previous_code:
-            previous_code = read_file(path_to_previous_code) # 有output的code嵌入到prompt中
+            with open(path_to_previous_code, 'r', encoding='utf-8') as f_1:
+                previous_code = f_1.readlines()
+            # 放在prompt里的previous code要做处理
+            previous_code = previous_code[:-2] # 删除最后两行
+            previous_code = previous_code[1:] # 删除第一行
+            for i, line in enumerate(previous_code):
+                # 删除每行第一个'\t'
+                if line.startswith('\t'):
+                    previous_code[i] = line[1:]
+            previous_code = "".join(previous_code+'\n')
         else:
             previous_code = "There is no code file in the previous phase."
         prompt_round1 += f"\n#############\n# CODE FROM PREVIOUS PHASE #\n{previous_code}"
@@ -297,9 +338,11 @@ class Developer(Agent):
         return prompt_round1
 
     def _execute(self, state: State, role_prompt: str) -> Dict[str, Any]:
-        # 实现开发功能
+        # 实现开发和调试功能
         history = []
+        debug_history = []
         round = 0
+        max_tries = 5
         restore_path = state.restore_dir
         competition_path = state.competition_dir
         task = PROMPT_DEVELOPER_TASK
@@ -309,23 +352,34 @@ class Developer(Agent):
         plan = state.memory[-1]["planner"]["plan"]
         if len(state.memory) == 1: # 如果之前没有memory，说明是第一次执行
             history.append({"role": "system", "content": f"{role_prompt} {self.description}"})
-            while True:
+            while round <= 1+max_tries:
                 if round == 0:
                     input = PROMPT_DEVELOPER.format(steps_in_context=state.context, step_name=state.phase, competition_info=competition_info, plan=plan, constraints=constraints, task=task)
+                    raw_reply, history = self.llm.generate(input, history, max_tokens=4096)
                 elif round == 1:
                     prompt_round1 = self._generate_prompt_round1(state)
                     input = prompt_round1
-                elif round == 2:
-                    break
-                raw_reply, history = self.llm.generate(input, history, max_tokens=4096)
+                    raw_reply, history = self.llm.generate(input, history, max_tokens=4096)
+                elif round >= 2:
+                    with open(f'{state.restore_dir}/{self.role}_reply.txt', 'w') as f:
+                        f.write(raw_reply)
+                    print(f"The {round-1}th try.")
+                    path_to_code, path_to_run_code = self._generate_code_file(state, raw_reply)
+                    error_flag = self._run_code(state, path_to_run_code)
+                    if error_flag:
+                        raw_reply, debug_history = self._debug_code(state, debug_history, raw_reply) # 这里我先把develop和debug解耦 后续便于加上retrieve history然后debug
+                    else:
+                        break
                 round += 1
         else:
             pass
-        with open(f'{state.restore_dir}/{self.role}_reply.txt', 'w') as f:
-            f.write(raw_reply)
-        path_to_code, path_to_run_code = self._generate_code_file(state, raw_reply)
-        error_flag = self._code_run(state, path_to_run_code)
-        return {}
+
+        if round <= 1+max_tries:
+            print(f"State {state.phase} - Agent {self.role} finishes working.")
+        else:
+            print(f"State {state.phase} - Agent {self.role} finishes working with error.")
+
+        return {self.role: {"history": history, "role": self.role, "description": self.description, "task": task, "result": raw_reply}}
     
 
 class Reviewer(Agent):
@@ -339,6 +393,8 @@ class Reviewer(Agent):
 
     def _generate_prompt_round1(self, state: State) -> str:
         prompt_round1 = ""
+        evaluated_agents = state.memory[-1].keys() # 获取过去state的memory中的所有agent
+        print(f"Evaluating agents: {evaluated_agents}")
         for each_agent_memory in state.memory[-1].values(): # 取当前state的memory
             role = each_agent_memory["role"]
             description = each_agent_memory["description"]

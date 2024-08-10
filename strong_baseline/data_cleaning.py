@@ -31,7 +31,7 @@ So far I have completed the first two steps to get competition information on Ba
 # COMPETITION INFORMATION #
 {competition_info}
 #############
-# OBJECTIVE #
+# TASK #
 I will provide you with [COMPETITION INFORMATION], all the code, explanations and insight for the Preliminary Exploratory Data Analysis (Preliminary EDA) step, all the features of the data and the first 10 data entries of the training set. Please complete the Data Cleaning step, you must write the code with appropriate explanations and ensure the output new code is executable in the same Jupyter notebook with the previous tasks code have been executed, but do not run the code.
 # CONSTRAINTS #
 - Always use `print()` function if you need to print a value.

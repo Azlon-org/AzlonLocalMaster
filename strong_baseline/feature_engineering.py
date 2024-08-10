@@ -31,7 +31,7 @@ So far I have completed the previous four steps to get competition information o
 # COMPETITION INFORMATION #
 {competition_info}
 #############
-# OBJECTIVE #
+# TASK #
 I will provide you with all the code and explanations for the [COMPETITION INFORMATION], Preliminary Exploratory Data Analysis (Preliminary EDA), Data Cleaning and In-depth Exploratory Data Analysis (In-depth EDA) steps, all the features of the data and the first 10 data entries of the cleaned training set. Please complete the Feature Engineering step, you must write the code with appropriate explanations and make sure that the output new code is executable in the same Jupyter notebook as the previous task code has been executed, but do not run the code.
 # CONSTRAINTS #
 - Always use `print()` function if you need to print a value.

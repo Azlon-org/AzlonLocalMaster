@@ -31,7 +31,7 @@ So far I have completed the first three steps to get competition information on 
 # COMPETITION INFORMATION #
 {competition_info}
 #############
-# OBJECTIVE #
+# TASK #
 I will provide you with all the code and explanations for the [COMPETITION INFORMATION], Preliminary Exploratory Data Analysis (Preliminary EDA) and Data Cleaning steps, all the features of the data and the first 10 data entries of the cleaned training set. Please complete the In-depth Exploratory Data Analysis (In-depth EDA) step, you must write the code with appropriate explanations and make sure that the output new code is executable in the same Jupyter notebook as the previous task code has been executed, but do not run the code.
 #############
 # CONSTRAINTS #
@@ -146,7 +146,7 @@ def get_insight_deep_eda(competition, i):
 {steps_in_context}
 Currently I have completed the forth step of In-depth EDA and get some data analysis images.
 #############
-# OBJECTIVE #
+# TASK #
 Please carefully analyze this data analysis chart and summarize the important information it contains to assist with the next step of Feature Engineering.
 '''
     images_info = []
@@ -168,7 +168,7 @@ Please carefully analyze this data analysis chart and summarize the important in
 {steps_in_context}
 Currently I have completed the forth step of In-depth EDA, get some data analysis images and output information.
 #############
-# OBJECTIVE #
+# TASK #
 I will provide you with code and explanations in In-depth EDA step ([DEEP EDA CODE]), the output information after code execution ([DEEP EDA OUTPUT]) and detailed analysis about data analysis images ([ANALYSIS OF IMAGES]). Please summarize the insights obtained after this step is completed comprehensively but concisely to help with the next step of Feature Engineering (Less than 300 words).
 #############
 # DEEP EDA CODE #

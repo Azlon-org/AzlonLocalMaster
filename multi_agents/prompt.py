@@ -224,6 +224,33 @@ If you understand, please request the code and insight from previous steps, all 
 '''
 
 
+PROMPT_DEVELOPER_DEBUG = '''
+# CONTEXT #
+I'm getting an error executing the code you generated.
+#############
+# TASK #
+please modify the code according to the output messages ([OUTPUT MESSAGES]) and error messages ([ERROR MESSAGES]). You must follow these steps:
+1. Analyze and find out which code block causes the error.
+2. Think about how to correct the code block.
+3. Output the code blocks after correction.
+Note that you are not allowed to output previous code repeatedly.
+#############
+# PREVIOUS CODE #
+{previous_code}
+#############
+# WRONG CODE #
+{wrong_code}
+#############
+# OUTPUT MESSAGES #
+{output_messages}
+#############
+# ERROR MESSAGES #
+{error_messages}
+#############
+# CORRECTED CODE #
+'''
+
+
 
 PROMPT_REVIEWER_ROUND0 = '''
 # CONTEXT #

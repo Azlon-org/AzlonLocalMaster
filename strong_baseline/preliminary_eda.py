@@ -30,7 +30,7 @@ Currently I have completed the first step of Background Understanding and got co
 # COMPETITION INFORMATION #
 {competition_info}
 #############
-# OBJECTIVE #
+# TASK #
 I will provide you with [COMPETITION INFORMATION], all the features of the data and the first 10 data entries of the training set. Please complete the Preliminary Exploratory Data Analysis (Preliminary EDA) step, you must write the code and give proper explanations, but do not run the code.
 #############
 # CONSTRAINTS #
@@ -134,7 +134,7 @@ def get_insight_pre_eda(competition, i):
 {steps_in_context}
 Currently I have completed the second step of Preliminary EDA and get some data analysis images.
 #############
-# OBJECTIVE #
+# TASK #
 Please carefully analyze this data analysis chart and summarize the important information it contains to assist with the next step of Data Cleaning.
 '''
     images_info = []
@@ -156,7 +156,7 @@ Please carefully analyze this data analysis chart and summarize the important in
 {steps_in_context}
 Currently I have completed the second step of Preliminary EDA, get some data analysis images and output information.
 #############
-# OBJECTIVE #
+# TASK #
 I will provide you with code and explanations in Preliminary EDA step ([PRELIMINARY EDA CODE]), the output information after code execution ([PRELIMINARY EDA OUTPUT]) and detailed analysis about data analysis images ([ANALYSIS OF IMAGES]). Please summarize the insights obtained after this step is completed comprehensively but concisely to help with the next step of Data Cleaning (Less than 300 words).
 #############
 # PRELIMINARY EDA CODE #

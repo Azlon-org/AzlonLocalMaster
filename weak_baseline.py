@@ -17,7 +17,7 @@ This is the {i}-th time I ask you to complete the competition.
 # OVERVIEW #
 {overview}
 #############
-# OBJECTIVE #
+# TASK #
 I will provide you with [OVERVIEW] and all the files you need ({files_str}). Please complete this competition for me. You must write the code and give proper explanations, but do not run the code.
 #############
 # CONSTRAINTS #

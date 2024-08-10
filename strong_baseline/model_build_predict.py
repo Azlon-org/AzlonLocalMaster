@@ -31,7 +31,7 @@ So far I have completed the previous five steps to get competition information o
 # COMPETITION INFORMATION #
 {competition_info}
 #############
-# OBJECTIVE #
+# TASK #
 I will provide you with all the code and explanations for the [COMPETITION INFORMATION], Preliminary Exploratory Data Analysis (Preliminary EDA), Data Cleaning, In-depth Exploratory Data Analysis (In-depth EDA) and Feature Engineering steps, all the features of the data and the first 10 data entries of the processed training set. Please complete the Model Building, Validation, and Prediction step, you must write the code with appropriate explanations and make sure that the output new code is executable in the same Jupyter notebook as the previous task code has been executed, but do not run the code.
 # CONSTRAINTS #
 - If attribute like `Id` is in the test set, the prediction result should have exactly the same attribute (`Id` or attribute represents the index of the data entry) as the test set.
