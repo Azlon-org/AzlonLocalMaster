@@ -232,8 +232,9 @@ I'm getting an error executing the code you generated.
 please modify the code according to the output messages ([OUTPUT MESSAGES]) and error messages ([ERROR MESSAGES]). You must follow these steps:
 1. Analyze and find out which code block causes the error.
 2. Think about how to correct the code block.
-3. Output the code blocks after correction.
-Note that you are not allowed to output previous code repeatedly.
+4. Correct the wrong code block.
+3. Output the all the code blocks after correction.
+Note that you are not allowed to output PREVIOUS CODE repeatedly.
 #############
 # PREVIOUS CODE #
 {previous_code}
@@ -247,7 +248,7 @@ Note that you are not allowed to output previous code repeatedly.
 # ERROR MESSAGES #
 {error_messages}
 #############
-# CORRECTED CODE #
+# CODE AFTER CORRECTION #
 '''
 
 
@@ -276,7 +277,9 @@ Please assess the performance of multiple agents in completing Step: {step_name}
 	    "final_suggestion": {{
             str="agent name": str="Specific suggestions for improving the performance of the agent"
         }},
-        "final_score": int="The final score you assign to the evaluated agents, only one score in range 1-5"
+        "final_score": {{
+            str="agent name": int="The final score you assign to the evaluated agent, only one score in range 1-5"
+        }}
     }}
 }}
 #############

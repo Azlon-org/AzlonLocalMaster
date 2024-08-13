@@ -116,7 +116,7 @@ class Summarizer(Agent):
                 json.dump(summary, f, indent=4)
             with open(f'{state.restore_dir}/{self.role}_reply.txt', 'w') as f:
                 f.write(raw_reply)
-            input_used_in_review = overview
+            input_used_in_review = f"   <overview>\n{overview}\n    </overview>"
 
         print(f"State {state.phase} - Agent {self.role} finishes working.")
         return {self.role: {"history": history, "role": self.role, "description": self.description, "task": task, "input": input_used_in_review, "summary": summary, "result": result}}
@@ -157,8 +157,10 @@ class Planner(Agent):
         with open(f'{state.restore_dir}/{self.role}_reply.txt', 'w') as f:
             f.write(raw_reply)
 
+        input_used_in_review = f"   <competition_info>\n{competition_info}\n    </competition_info>"
+
         print(f"State {state.phase} - Agent {self.role} finishes working.")
-        return {self.role: {"history": history, "role": self.role, "description": self.description, "task": task, "plan": plan, "result": result}}
+        return {self.role: {"history": history, "role": self.role, "description": self.description, "task": task, "input": input_used_in_review, "plan": plan, "result": result}}
 
 class Developer(Agent):
     def __init__(self, model: str, type: str):  
@@ -284,7 +286,7 @@ class Developer(Agent):
                 # 删除每行第一个'\t'
                 if line.startswith('\t'):
                     previous_code[i] = line[1:]
-            previous_code = "".join(previous_code+'\n')
+            previous_code = "\n".join(previous_code)
         else:
             previous_code = "There is no code file in the previous phase."
         # Extract code from the file
@@ -293,13 +295,13 @@ class Developer(Agent):
         code_lines = []
         for match in matches:
             code_lines.extend(match.split('\n'))
-        wrong_code = "".join(code_lines+'\n') # 这里的code是有错误的
+        wrong_code = "\n".join(code_lines) # 这里的code是有错误的
         # 读取error和output
         path_to_error = f'{state.restore_dir}/{state.dir_name}_error.txt'
         path_to_output = f'{state.restore_dir}/{state.dir_name}_output.txt'
-        error_message = read_file(path_to_error)
-        output_message = read_file(path_to_output)
-        input = PROMPT_DEVELOPER_DEBUG.format(previous_code=previous_code, wrong_code=wrong_code, output_message=output_message, error_message=error_message)
+        error_messages = read_file(path_to_error)
+        output_messages = read_file(path_to_output)
+        input = PROMPT_DEVELOPER_DEBUG.format(previous_code=previous_code, wrong_code=wrong_code, output_messages=output_messages, error_messages=error_messages)
 
         reply, debug_history = self.llm.generate(input, debug_history, max_tokens=4096)
         return reply, debug_history
@@ -374,12 +376,16 @@ class Developer(Agent):
         else:
             pass
 
+        with open(f'{state.restore_dir}/debug_history.json', 'w') as f:
+            json.dump(debug_history, f, indent=4)
+
         if round <= 1+max_tries:
             print(f"State {state.phase} - Agent {self.role} finishes working.")
         else:
             print(f"State {state.phase} - Agent {self.role} finishes working with error.")
 
-        return {self.role: {"history": history, "role": self.role, "description": self.description, "task": task, "result": raw_reply}}
+        input_used_in_review = f"   <competition_info>\n{competition_info}\n    </competition_info>\n   <plan>\n{plan}\n    </plan>"
+        return {self.role: {"history": history, "role": self.role, "description": self.description, "task": task, "input": input_used_in_review, "result": raw_reply}}
     
 
 class Reviewer(Agent):
@@ -391,9 +397,18 @@ class Reviewer(Agent):
             type=type
         )
 
-    def _generate_prompt_round1(self, state: State) -> str:
-        prompt_round1 = ""
-        evaluated_agents = state.memory[-1].keys() # 获取过去state的memory中的所有agent
+    def _merge_dicts(dicts):
+        merged_dict = {"final_suggestion": {}, "final_score": {}}
+        for d in dicts:
+            for key in d["final_suggestion"]:
+                merged_dict["final_suggestion"][key] = d["final_suggestion"][key]
+            for key in d["final_score"]:
+                merged_dict["final_score"][key] = d["final_score"][key]
+        return merged_dict
+
+    def _generate_prompt_for_agents(self, state: State) -> str:
+        prompt_for_agents = []
+        evaluated_agents = list(state.memory[-1].keys()) # 获取过去state的memory中的所有agent
         print(f"Evaluating agents: {evaluated_agents}")
         for each_agent_memory in state.memory[-1].values(): # 取当前state的memory
             role = each_agent_memory["role"]
@@ -401,36 +416,42 @@ class Reviewer(Agent):
             task = each_agent_memory["task"]
             input = each_agent_memory["input"]
             result = each_agent_memory["result"]
-            prompt_round1 += PROMPT_REVIEWER_ROUND1_EACH_AGENT.format(role=role.upper(), description=description, task=task, input=input, result=result)
-        
-        return prompt_round1
+            prompt_for_agent = PROMPT_REVIEWER_ROUND1_EACH_AGENT.format(role=role.upper(), description=description, task=task, input=input, result=result)
+            prompt_for_agents.append(prompt_for_agent)
+        return prompt_for_agents
     
     def _execute(self, state: State, role_prompt: str) -> Dict[str, Any]:
         # 实现评价功能
         # 第二轮输入：state的memory中过去每个agent的role_description, task, input, result
-        prompt_round1 = self._generate_prompt_round1(state)
+        prompt_for_agents = self._generate_prompt_for_agents(state)
         history = []
+        all_raw_reply = []
         history.append({"role": "system", "content": f"{role_prompt} {self.description}"})
         round = 0
-        while True:
+        while round <= len(prompt_for_agents):
             if round == 0:
                 input = PROMPT_REVIEWER_ROUND0.format(steps_in_context=state.context, step_name=state.phase)
-            elif round == 1:
-                input = prompt_round1
-            elif round == 2:
-                break
+            elif round >= 1:
+                input = prompt_for_agents[round-1]
             raw_reply, history = self.llm.generate(input, history, max_tokens=4096)
+            if round >= 1:
+                all_raw_reply.append(raw_reply)
             round += 1
-        result = raw_reply
-        reply = self._parse_json(raw_reply)
-        review = reply["final_answer"]
-        final_score = review["final_score"]
-        final_suggestion = review["final_suggestion"]
+
+        all_reply = []
+        pdb.set_trace()
+        for each_raw_reply in all_raw_reply:
+            reply = self._parse_json(each_raw_reply)
+            all_reply.append(reply)
+
+        review = self._merge_dicts(all_reply)
+        final_score = review['final_score']
+        final_suggestion = review['final_suggestion']
         # pdb.set_trace()
         with open(f'{state.restore_dir}/review.json', 'w') as f:
             json.dump(review, f, indent=4)
         with open(f'{state.restore_dir}/{self.role}_reply.txt', 'w') as f:
-            f.write(raw_reply)
+            f.write("\n\n\n".join(all_raw_reply))
 
         print(f"State {state.phase} - Agent {self.role} finishes working.")
-        return {self.role: {"history": history, "score": final_score, "suggestion": final_suggestion, "result": result}}
+        return {self.role: {"history": history, "score": final_score, "suggestion": final_suggestion, "result": review}}

@@ -6,7 +6,7 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 from utils import PREFIX_MULTI_AGENTS, load_config
 from typing import Dict, Tuple, List, Optional
-from Agent import Agent, Summarizer, Planner, Developer, Debugger, Reviewer
+from Agent import Agent, Summarizer, Planner, Developer, Reviewer
 from State import State
 import pdb
 import copy
@@ -27,8 +27,6 @@ class SOP:
             return Planner('gpt-4o', 'api')
         elif agent_name == "Developer":
             return Developer('gpt-4o', 'api')
-        elif agent_name == "Debugger":
-            return Debugger('gpt-4o', 'api')
         elif agent_name == "Reviewer":
             return Reviewer('gpt-4o', 'api')
         else:

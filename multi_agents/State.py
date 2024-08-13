@@ -65,7 +65,11 @@ class State:
         self.current_step += 1
 
     def set_score(self):
-        self.score = self.memory[-1]['reviewer']['score'] # 从memory中获取reviewer的评分
+        final_score = self.memory[-1]['reviewer']['score'] # 从memory中获取reviewer的评分
+        total = 0.0
+        for score in final_score.values():
+            total += score
+        self.score = total / len(final_score)
 
     def check_finished(self):
         if self.current_step == len(self.agents):
