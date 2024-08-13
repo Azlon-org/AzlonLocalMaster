@@ -6,7 +6,7 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 from utils import PREFIX_MULTI_AGENTS, load_config
 from typing import Dict, Tuple, List, Optional
-from Agent import Agent, Summarizer, Planner, Developer, Reviewer
+from Agent import Agent, Reader, Planner, Developer, Reviewer, Summarizer
 from State import State
 import pdb
 import copy
@@ -21,14 +21,16 @@ class SOP:
         self.phase_to_iterations = load_config(f'{PREFIX_MULTI_AGENTS}/config.json')['phase_to_iterations'] # 记录每个阶段迭代次数
 
     def _create_agents(self, agent_name: str) -> Agent:
-        if agent_name == "Summarizer":
-            return Summarizer('gpt-4o', 'api')
+        if agent_name == "Reader":
+            return Reader('gpt-4o', 'api')
         elif agent_name == "Planner":
             return Planner('gpt-4o', 'api')
         elif agent_name == "Developer":
             return Developer('gpt-4o', 'api')
         elif agent_name == "Reviewer":
             return Reviewer('gpt-4o', 'api')
+        elif agent_name == "Summarizer":
+            return Summarizer('gpt-4o', 'api')
         else:
             raise Exception(f"Unknown agent: {agent_name}")
 
@@ -44,8 +46,8 @@ class SOP:
             current_agent = self._create_agents(current_agent_name) # 创建当前Agent
             
             # agent执行action方法，返回result，result是字典，key是agent的role，value是agent的执行结果等信息
-            result = current_agent.action(state)
-            state.update_memory(result)
+            action_result = current_agent.action(state)
+            state.update_memory(action_result)
             state.next_step()
 
             if state.check_finished(): # 如果State完成，尝试更新State，只要step数达到就尝试更新，但不一定成功

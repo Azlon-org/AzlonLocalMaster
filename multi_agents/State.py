@@ -43,6 +43,7 @@ class State:
         print(f"{self.agents[self.current_step]} updates internal memory in Phase: {self.phase}.")
         self.memory[-1].update(memory)
 
+    # 存储memory
     def restore_memory(self):
         with open(f'{self.restore_dir}/memory.json', 'w') as f:
             json.dump(self.memory, f, indent=4)
@@ -51,7 +52,7 @@ class State:
     def restore_report(self):
         report = self.memory[-1]['summarizer'].get('report', '')
         if len(report) > 0:
-            with open(f'{self.restore_dir}/report.txt', 'w') as f:
+            with open(f'{self.restore_dir}/Report.txt', 'w') as f:
                 f.write(report)
             print(f"Report in Phase: {self.phase} is restored.")
         else:

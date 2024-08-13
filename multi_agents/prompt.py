@@ -50,11 +50,11 @@ Please reorganize the following information into a JSON format (quote in ```json
 # START REORGANIZING #
 '''
 
-PROMPT_SUMMARIZER_TASK_UNDERSTAND_BACKGROUND = '''
+PROMPT_READER_TASK = '''
 Conduct a comprehensive analysis of the competition overview, understand the background of the topic, understand how to use different files, clarify the definition and requirements of the problem, obtain information about the data, and identify the target variable, evaluation metrics and submission format. Gather important information regarding Background/Files/Question/Target_Variable/Evaluation/Other aspects.
 '''
 
-PROMPT_SUMMARIZER_UNDERSTAND_BACKGROUND = '''
+PROMPT_READER = '''
 # CONTEXT #
 {steps_in_context}
 Currently, I am at step: Background Understand.
@@ -81,7 +81,7 @@ Currently, I am at step: Background Understand.
 If you understand, please request the Overview of this data science competition from me.
 '''
 
-PROMPT_SUMMARIZER_UNDERSTAND_BACKGROUND_WITH_EXPERIENCE = '''
+PROMPT_READER_WITH_EXPERIENCE = '''
 # CONTEXT #
 {steps_in_context}
 Currently, I am at step one: Background Understand.
@@ -124,6 +124,9 @@ PROMPT_PLANNER = '''
 # CONTEXT #
 {steps_in_context}
 Currently, I am at step: {step_name}.
+#############
+# MESSAGE FROM LAST STEP #
+{message}
 #############
 # COMPETITION INFORMATION #
 {competition_info}
@@ -195,6 +198,9 @@ PROMPT_DEVELOPER = '''
 # CONTEXT #
 {steps_in_context}
 Currently, I am at step: {step_name}.
+#############
+# MESSAGE FROM LAST STEP #
+{message}
 #############
 # COMPETITION INFORMATION #
 {competition_info}
@@ -304,3 +310,40 @@ PROMPT_REVIEWER_ROUND1_EACH_AGENT = '''
 </EXECUTION RESULT>
 '''
 
+
+PROMPT_SUMMARIZER_ROUND0 = '''
+# CONTEXT #
+{steps_in_context}
+Currently, I am at step: {step_name}.
+#############
+# FIRST TASK #
+Please thoroughly review the trajectory of all agents performing tasks in the current step and compile a detailed report summarizing the following key information:
+1. The current step being performed.
+2. The plan designed by the planner to complete this step.
+3. A detailed account of how the developer implemented the plan:
+    - Describe the methods and approaches used for each task in the plan.
+4. The reviewer's evaluations and suggestions for the agents.
+#############
+# RESPONSE: MARKDOWN FORMAT #
+# START SUMMARIZE REPORT #
+If you are ready, please request from me the trajectory of all agents performing tasks in the current step.
+'''
+
+PROMPT_SUMMARIZER_ROUND2_RESPONSE_FORMAT = '''
+{{
+    "thought_process": list=[
+        {{
+            "question": str="The input question you must answer",
+            "thought": str="You should always think about what to do next",
+            "action": str="Describe the action you plan to take",
+            "action_input": str="The specific input for the action",
+            "observation": str="The expected or actual result of the action"
+        }}
+    ],
+    "final_thought": str="Further reflection based on the observation, summarizing the final answer",
+    "final_answer": {{
+        "Agent Planner": str="Key message sent to Agent Planner in the next step",
+        "Agent Developer": str="Key message sent to Agent Developer in the next step"
+    }}
+}}
+'''

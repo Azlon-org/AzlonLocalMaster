@@ -12,7 +12,8 @@ if __name__ == '__main__':
     competition = load_config(f'{PREFIX_MULTI_AGENTS}/config.json')['competition']
     sop = SOP(competition)
     # start_state = State(phase="Understand Background")
-    start_state = State(phase="Preliminary Exploratory Data Analysis")
+    # start_state = State(phase="Preliminary Exploratory Data Analysis")
+    start_state = State(phase="Data Cleaning")
     start_message = ""
     new_state = start_state
 

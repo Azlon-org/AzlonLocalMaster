@@ -14,11 +14,12 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 from LLM import LLM
 from State import State
 from prompt import REORGANIZE_REPLY
-from prompt import AGENT_ROLE_TEMPLATE, PROMPT_SUMMARIZER_UNDERSTAND_BACKGROUND, PROMPT_SUMMARIZER_TASK_UNDERSTAND_BACKGROUND
-from prompt import PROMPT_EACH_EXPERIENCE_WITH_SUGGESTION, PROMPT_SUMMARIZER_UNDERSTAND_BACKGROUND_WITH_EXPERIENCE
+from prompt import AGENT_ROLE_TEMPLATE, PROMPT_READER, PROMPT_READER_TASK
+from prompt import PROMPT_EACH_EXPERIENCE_WITH_SUGGESTION, PROMPT_READER_WITH_EXPERIENCE
 from prompt import PROMPT_PLANNER_TASK, PROMPT_PLANNER
 from prompt import PROMPT_DEVELOPER_TASK, PROMPT_DEVELOPER_CONSTRAINTS, PROMPT_DEVELOPER, PROMPT_DEVELOPER_DEBUG
 from prompt import PROMPT_REVIEWER_ROUND0, PROMPT_REVIEWER_ROUND1_EACH_AGENT
+from prompt import PROMPT_SUMMARIZER_ROUND0, PROMPT_SUMMARIZER_ROUND2_RESPONSE_FORMAT
 from utils import read_file, PREFIX_MULTI_AGENTS, load_config
 
 class Agent:
@@ -68,58 +69,58 @@ class Agent:
     def _execute(self, state: State, role_prompt: str) -> Dict[str, Any]:
         raise NotImplementedError("Subclasses should implement this!")
 
-class Summarizer(Agent):
-    def __init__(self, model: str, type: str):  
+
+class Reader(Agent):
+    def __init__(self, model: str, type: str):
         super().__init__(
-            role="summarizer",
-            description="You are good at summarizing information and outputting it in JSON format.",
+            role="reader",
+            description="You are good at reading document, summarizing information and outputting it in JSON format.",
             model=model,
             type=type
         )
-
+    
     def _execute(self, state: State, role_prompt: str) -> Dict[str, Any]:
-        # 实现总结功能
+        path_to_overview = f'{PREFIX_MULTI_AGENTS}/competition/{state.competition}/overview.txt'
+        overview = read_file(path_to_overview)
+        history = []
+        round = 0
         # Understand Background 读取overview.txt，生成competition_info.txt
-        if state.phase == "Understand Background":
-            path_to_overview = f'{PREFIX_MULTI_AGENTS}/competition/{state.competition}/overview.txt'
-            overview = read_file(path_to_overview)
-            history = []
-            round = 0
-            if len(state.memory) == 1: # 如果之前没有memory，说明是第一次执行
-                history.append({"role": "system", "content": f"{role_prompt} {self.description}"})
-                # pdb.set_trace()
-                while True:
-                    if round == 0:
-                        task = PROMPT_SUMMARIZER_TASK_UNDERSTAND_BACKGROUND
-                        input = PROMPT_SUMMARIZER_UNDERSTAND_BACKGROUND.format(steps_in_context=state.context, task=task)
-                    elif round == 1: input = f"\n#############\n# OVERVIEW #\n{overview}"
-                    elif round == 2: break
-                    raw_reply, history = self.llm.generate(input, history, max_tokens=4096)
-                    round += 1
-            else: # 如果之前有memory，拼接之前memory中summarizer的结果作为experience
-                self.description = "You are good at summarizing information and outputting it in JSON format. " \
-                                "You have advanced reasoning abilities and can improve your answers through reflection."
-                experience_with_suggestion = self._gather_experience_with_suggestion(state)
-                history.append({"role": "system", "content": f"{role_prompt} {self.description}"})
-                while True:
-                    if round == 0:
-                        task = PROMPT_SUMMARIZER_TASK_UNDERSTAND_BACKGROUND
-                        input = PROMPT_SUMMARIZER_UNDERSTAND_BACKGROUND_WITH_EXPERIENCE.format(steps_in_context=state.context, task=task, experience_with_suggestion=experience_with_suggestion)
-                    elif round == 1: input = f"\n#############\n# OVERVIEW #\n{overview}"
-                    elif round == 2: break
-                    raw_reply, history = self.llm.generate(input, history, max_tokens=4096)
-                    round += 1
-            result = raw_reply
-            reply = self._parse_json(raw_reply)
-            summary = reply["final_answer"]
-            with open(f'{state.competition_dir}/competition_info.json', 'w') as f:
-                json.dump(summary, f, indent=4)
-            with open(f'{state.restore_dir}/{self.role}_reply.txt', 'w') as f:
-                f.write(raw_reply)
-            input_used_in_review = f"   <overview>\n{overview}\n    </overview>"
+        if len(state.memory) == 1: # 如果之前没有memory，说明是第一次执行
+            history.append({"role": "system", "content": f"{role_prompt} {self.description}"})
+            # pdb.set_trace()
+            while True:
+                if round == 0:
+                    task = PROMPT_READER_TASK
+                    input = PROMPT_READER.format(steps_in_context=state.context, task=task)
+                elif round == 1: input = f"\n#############\n# OVERVIEW #\n{overview}"
+                elif round == 2: break
+                raw_reply, history = self.llm.generate(input, history, max_tokens=4096)
+                round += 1
+        else: # 如果之前有memory，拼接之前memory中reader的结果作为experience
+            self.description = "You are good at reading document, summarizing information and outputting it in JSON format." \
+                            "You have advanced reasoning abilities and can improve your answers through reflection."
+            experience_with_suggestion = self._gather_experience_with_suggestion(state)
+            history.append({"role": "system", "content": f"{role_prompt} {self.description}"})
+            while True:
+                if round == 0:
+                    task = PROMPT_READER_TASK
+                    input = PROMPT_READER_WITH_EXPERIENCE.format(steps_in_context=state.context, task=task, experience_with_suggestion=experience_with_suggestion)
+                elif round == 1: input = f"\n#############\n# OVERVIEW #\n{overview}"
+                elif round == 2: break
+                raw_reply, history = self.llm.generate(input, history, max_tokens=4096)
+                round += 1
+        result = raw_reply
+        reply = self._parse_json(raw_reply)
+        summary = reply["final_answer"]
+        with open(f'{state.competition_dir}/competition_info.json', 'w') as f:
+            json.dump(summary, f, indent=4)
+        with open(f'{state.restore_dir}/{self.role}_reply.txt', 'w') as f:
+            f.write(raw_reply)
+        input_used_in_review = f"   <overview>\n{overview}\n    </overview>"
 
         print(f"State {state.phase} - Agent {self.role} finishes working.")
         return {self.role: {"history": history, "role": self.role, "description": self.description, "task": task, "input": input_used_in_review, "summary": summary, "result": result}}
+
 
 class Planner(Agent):
     def __init__(self, model: str, type: str):  
@@ -141,7 +142,7 @@ class Planner(Agent):
             while True:
                 if round == 0:
                     task = PROMPT_PLANNER_TASK.format(step_name=state.phase)
-                    input = PROMPT_PLANNER.format(steps_in_context=state.context, step_name=state.phase, competition_info=competition_info, task=task)
+                    input = PROMPT_PLANNER.format(steps_in_context=state.context, step_name=state.phase, message=state.message, competition_info=competition_info, task=task)
                 elif round == 1:
                     break
                 raw_reply, history = self.llm.generate(input, history, max_tokens=4096)
@@ -356,7 +357,7 @@ class Developer(Agent):
             history.append({"role": "system", "content": f"{role_prompt} {self.description}"})
             while round <= 1+max_tries:
                 if round == 0:
-                    input = PROMPT_DEVELOPER.format(steps_in_context=state.context, step_name=state.phase, competition_info=competition_info, plan=plan, constraints=constraints, task=task)
+                    input = PROMPT_DEVELOPER.format(steps_in_context=state.context, step_name=state.phase, message=state.message, competition_info=competition_info, plan=plan, constraints=constraints, task=task)
                     raw_reply, history = self.llm.generate(input, history, max_tokens=4096)
                 elif round == 1:
                     prompt_round1 = self._generate_prompt_round1(state)
@@ -397,7 +398,7 @@ class Reviewer(Agent):
             type=type
         )
 
-    def _merge_dicts(dicts):
+    def _merge_dicts(self, dicts: List[Dict[str, Any]]) -> Dict[str, Any]:
         merged_dict = {"final_suggestion": {}, "final_score": {}}
         for d in dicts:
             for key in d["final_suggestion"]:
@@ -406,7 +407,7 @@ class Reviewer(Agent):
                 merged_dict["final_score"][key] = d["final_score"][key]
         return merged_dict
 
-    def _generate_prompt_for_agents(self, state: State) -> str:
+    def _generate_prompt_for_agents(self, state: State) -> List[str]:
         prompt_for_agents = []
         evaluated_agents = list(state.memory[-1].keys()) # 获取过去state的memory中的所有agent
         print(f"Evaluating agents: {evaluated_agents}")
@@ -439,10 +440,10 @@ class Reviewer(Agent):
             round += 1
 
         all_reply = []
-        pdb.set_trace()
+        # pdb.set_trace()
         for each_raw_reply in all_raw_reply:
             reply = self._parse_json(each_raw_reply)
-            all_reply.append(reply)
+            all_reply.append(reply['final_answer'])
 
         review = self._merge_dicts(all_reply)
         final_score = review['final_score']
@@ -455,3 +456,54 @@ class Reviewer(Agent):
 
         print(f"State {state.phase} - Agent {self.role} finishes working.")
         return {self.role: {"history": history, "score": final_score, "suggestion": final_suggestion, "result": review}}
+
+
+class Summarizer(Agent):
+    def __init__(self, model: str, type: str):  
+        super().__init__(
+            role="summarizer",
+            description="You are good at summarizing the trajectory of multiple agents, synthesize report and summarize key information.",
+            model=model,
+            type=type
+        )
+
+    def _generate_prompt_round1(self, state: State) -> str:
+        prompt_round1 = ""
+        current_memory = state.memory[-1]
+        for role, memory in current_memory.items():
+            trajectory = json.dumps(memory.get("history", []), indent=4)
+            prompt_round1 += f"\n#############\n# TRAJECTORY OF AGENT {role.upper()} #\n{trajectory}"
+
+        return prompt_round1
+
+    def _execute(self, state: State, role_prompt: str) -> Dict[str, Any]:
+        # 实现总结功能 阅读当前state的memory 生成report/message
+        history = []
+        round = 0
+        if len(state.memory) == 1: # 如果之前没有memory，说明是第一次执行
+            history.append({"role": "system", "content": f"{role_prompt} {self.description}"})
+            while True:
+                if round == 0:
+                    input = PROMPT_SUMMARIZER_ROUND0.format(steps_in_context=state.context, step_name=state.phase)
+                elif round == 1:
+                    prompt_round1 = self._generate_prompt_round1(state)
+                    input = prompt_round1
+                elif round == 2:
+                    report = raw_reply
+                    input = "#############\n# SECOND TASK #\n" \
+                            "Using the report you have written, identify and convey the most helpful information for the agents in the upcoming step. " \
+                            "Deliver this information in the form of a clear and concise message to the agents." \
+                            "#############\n# RESPONSE: JSON FORMAT #\n"
+                    input += PROMPT_SUMMARIZER_ROUND2_RESPONSE_FORMAT
+                elif round == 3:
+                    raw_message = raw_reply
+                    break
+                raw_reply, history = self.llm.generate(input, history, max_tokens=4096)
+                round += 1
+
+        message = self._parse_json(raw_message)
+        with open(f'{state.restore_dir}/{self.role}_reply.txt', 'w') as f:
+            f.write(report+'\n\n\n'+raw_message)
+
+        print(f"State {state.phase} - Agent {self.role} finishes working.")
+        return {self.role: {"history": history, "report": report, "message": message}}
