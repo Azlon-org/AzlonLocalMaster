@@ -155,6 +155,7 @@ Currently, I am at step: {step_name}.
 }}
 #############
 # START PLANNING #
+If you understand, please request the plans for the previous steps from me. Your plan should closely follow the previous steps, maintain logical consistency, and avoid any duplication of tasks.
 '''
 
 

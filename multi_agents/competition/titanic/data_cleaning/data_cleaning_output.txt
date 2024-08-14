@@ -1,0 +1,326 @@
+Missing values in training data:
+ PassengerId      0
+Survived         0
+Pclass           0
+Name             0
+Sex              0
+Age            177
+SibSp            0
+Parch            0
+Ticket           0
+Fare             0
+Cabin          687
+Embarked         2
+dtype: int64
+Missing values in test data:
+ PassengerId      0
+Pclass           0
+Name             0
+Sex              0
+Age             86
+SibSp            0
+Parch            0
+Ticket           0
+Fare             1
+Cabin          327
+Embarked         0
+dtype: int64
+Missing values in training data after imputation:
+ PassengerId    0
+Survived       0
+Pclass         0
+Name           0
+Sex            0
+Age            0
+SibSp          0
+Parch          0
+Ticket         0
+Fare           0
+Cabin          0
+Embarked       0
+dtype: int64
+Missing values in test data after imputation:
+ PassengerId    0
+Pclass         0
+Name           0
+Sex            0
+Age            0
+SibSp          0
+Parch          0
+Ticket         0
+Fare           0
+Cabin          0
+Embarked       0
+dtype: int64
+PassengerId       int64
+Survived          int64
+Pclass         category
+Name             object
+Sex              object
+Age             float64
+SibSp             int64
+Parch             int64
+Ticket           object
+Fare            float64
+Cabin            object
+Embarked         object
+dtype: object
+PassengerId       int64
+Pclass         category
+Name             object
+Sex              object
+Age             float64
+SibSp             int64
+Parch             int64
+Ticket           object
+Fare            float64
+Cabin            object
+Embarked         object
+dtype: object
+Duplicates in training data: 0
+Duplicates in test data: 0
+    Age AgeBin     Fare    Cabin Deck
+0  22.0  Adult   7.2500  Unknown    U
+1  38.0  Adult  71.2833      C85    C
+2  26.0  Adult   7.9250  Unknown    U
+3  35.0  Adult  53.1000     C123    C
+4  35.0  Adult   8.0500  Unknown    U
+    Age       AgeBin     Fare    Cabin Deck
+0  34.5        Adult   7.8292  Unknown    U
+1  47.0  Middle-Aged   7.0000  Unknown    U
+2  62.0       Senior   9.6875  Unknown    U
+3  27.0        Adult   8.6625  Unknown    U
+4  22.0        Adult  12.2875  Unknown    U
+<class 'pandas.core.frame.DataFrame'>
+RangeIndex: 891 entries, 0 to 890
+Data columns (total 14 columns):
+ #   Column       Non-Null Count  Dtype   
+---  ------       --------------  -----   
+ 0   PassengerId  891 non-null    int64   
+ 1   Survived     891 non-null    int64   
+ 2   Pclass       891 non-null    category
+ 3   Name         891 non-null    object  
+ 4   Sex          891 non-null    object  
+ 5   Age          891 non-null    float64 
+ 6   SibSp        891 non-null    int64   
+ 7   Parch        891 non-null    int64   
+ 8   Ticket       891 non-null    object  
+ 9   Fare         891 non-null    float64 
+ 10  Cabin        891 non-null    object  
+ 11  Embarked     891 non-null    object  
+ 12  AgeBin       891 non-null    category
+ 13  Deck         891 non-null    object  
+dtypes: category(2), float64(2), int64(4), object(6)
+memory usage: 85.7+ KB
+None
+   PassengerId  Survived Pclass                                               Name     Sex   Age  ...            Ticket     Fare    Cabin  Embarked AgeBin Deck
+0            1         0      3                            Braund, Mr. Owen Harris    male  22.0  ...         A/5 21171   7.2500  Unknown         S  Adult    U
+1            2         1      1  Cumings, Mrs. John Bradley (Florence Briggs Th...  female  38.0  ...          PC 17599  71.2833      C85         C  Adult    C
+2            3         1      3                             Heikkinen, Miss. Laina  female  26.0  ...  STON/O2. 3101282   7.9250  Unknown         S  Adult    U
+3            4         1      1       Futrelle, Mrs. Jacques Heath (Lily May Peel)  female  35.0  ...            113803  53.1000     C123         S  Adult    C
+4            5         0      3                           Allen, Mr. William Henry    male  35.0  ...            373450   8.0500  Unknown         S  Adult    U
+
+[5 rows x 14 columns]
+<class 'pandas.core.frame.DataFrame'>
+RangeIndex: 418 entries, 0 to 417
+Data columns (total 13 columns):
+ #   Column       Non-Null Count  Dtype   
+---  ------       --------------  -----   
+ 0   PassengerId  418 non-null    int64   
+ 1   Pclass       418 non-null    category
+ 2   Name         418 non-null    object  
+ 3   Sex          418 non-null    object  
+ 4   Age          418 non-null    float64 
+ 5   SibSp        418 non-null    int64   
+ 6   Parch        418 non-null    int64   
+ 7   Ticket       418 non-null    object  
+ 8   Fare         418 non-null    float64 
+ 9   Cabin        418 non-null    object  
+ 10  Embarked     418 non-null    object  
+ 11  AgeBin       418 non-null    category
+ 12  Deck         418 non-null    object  
+dtypes: category(2), float64(2), int64(3), object(6)
+memory usage: 37.2+ KB
+None
+   PassengerId Pclass                                          Name     Sex   Age  SibSp  Parch   Ticket     Fare    Cabin Embarked       AgeBin Deck
+0          892      3                              Kelly, Mr. James    male  34.5      0      0   330911   7.8292  Unknown        Q        Adult    U
+1          893      3              Wilkes, Mrs. James (Ellen Needs)  female  47.0      1      0   363272   7.0000  Unknown        S  Middle-Aged    U
+2          894      2                     Myles, Mr. Thomas Francis    male  62.0      0      0   240276   9.6875  Unknown        Q       Senior    U
+3          895      3                              Wirz, Mr. Albert    male  27.0      0      0   315154   8.6625  Unknown        S        Adult    U
+4          896      3  Hirvonen, Mrs. Alexander (Helga E Lindqvist)  female  22.0      1      1  3101298  12.2875  Unknown        S        Adult    U
+
+    1. Identified missing values in 'Age', 'Cabin', and 'Embarked' columns.
+    2. Imputed missing values in 'Age' and 'Fare' columns with the median.
+    3. Imputed missing values in 'Embarked' column with the most frequent value.
+    4. Filled missing values in 'Cabin' column with 'Unknown'.
+    5. Converted 'Pclass' column to categorical data type.
+    6. Removed duplicate rows.
+    7. Validated ranges and categories for each feature.
+    8. Created age bins for 'Age' column.
+    9. Replaced zero values in 'Fare' column with the median.
+    10. Extracted deck information from 'Cabin' column.
+    11. Performed final check to ensure data consistency.
+    
+Missing values in training data:
+ PassengerId      0
+Survived         0
+Pclass           0
+Name             0
+Sex              0
+Age            177
+SibSp            0
+Parch            0
+Ticket           0
+Fare             0
+Cabin          687
+Embarked         2
+dtype: int64
+Missing values in test data:
+ PassengerId      0
+Pclass           0
+Name             0
+Sex              0
+Age             86
+SibSp            0
+Parch            0
+Ticket           0
+Fare             1
+Cabin          327
+Embarked         0
+dtype: int64
+Missing values in training data after imputation:
+ PassengerId    0
+Survived       0
+Pclass         0
+Name           0
+Sex            0
+Age            0
+SibSp          0
+Parch          0
+Ticket         0
+Fare           0
+Cabin          0
+Embarked       0
+dtype: int64
+Missing values in test data after imputation:
+ PassengerId    0
+Pclass         0
+Name           0
+Sex            0
+Age            0
+SibSp          0
+Parch          0
+Ticket         0
+Fare           0
+Cabin          0
+Embarked       0
+dtype: int64
+PassengerId       int64
+Survived          int64
+Pclass         category
+Name             object
+Sex              object
+Age             float64
+SibSp             int64
+Parch             int64
+Ticket           object
+Fare            float64
+Cabin            object
+Embarked         object
+dtype: object
+PassengerId       int64
+Pclass         category
+Name             object
+Sex              object
+Age             float64
+SibSp             int64
+Parch             int64
+Ticket           object
+Fare            float64
+Cabin            object
+Embarked         object
+dtype: object
+Duplicates in training data: 0
+Duplicates in test data: 0
+    Age AgeBin     Fare    Cabin Deck
+0  22.0  Adult   7.2500  Unknown    U
+1  38.0  Adult  71.2833      C85    C
+2  26.0  Adult   7.9250  Unknown    U
+3  35.0  Adult  53.1000     C123    C
+4  35.0  Adult   8.0500  Unknown    U
+    Age       AgeBin     Fare    Cabin Deck
+0  34.5        Adult   7.8292  Unknown    U
+1  47.0  Middle-Aged   7.0000  Unknown    U
+2  62.0       Senior   9.6875  Unknown    U
+3  27.0        Adult   8.6625  Unknown    U
+4  22.0        Adult  12.2875  Unknown    U
+<class 'pandas.core.frame.DataFrame'>
+RangeIndex: 891 entries, 0 to 890
+Data columns (total 14 columns):
+ #   Column       Non-Null Count  Dtype   
+---  ------       --------------  -----   
+ 0   PassengerId  891 non-null    int64   
+ 1   Survived     891 non-null    int64   
+ 2   Pclass       891 non-null    category
+ 3   Name         891 non-null    object  
+ 4   Sex          891 non-null    object  
+ 5   Age          891 non-null    float64 
+ 6   SibSp        891 non-null    int64   
+ 7   Parch        891 non-null    int64   
+ 8   Ticket       891 non-null    object  
+ 9   Fare         891 non-null    float64 
+ 10  Cabin        891 non-null    object  
+ 11  Embarked     891 non-null    object  
+ 12  AgeBin       891 non-null    category
+ 13  Deck         891 non-null    object  
+dtypes: category(2), float64(2), int64(4), object(6)
+memory usage: 85.7+ KB
+None
+   PassengerId  Survived Pclass                                               Name     Sex   Age  ...            Ticket     Fare    Cabin  Embarked AgeBin Deck
+0            1         0      3                            Braund, Mr. Owen Harris    male  22.0  ...         A/5 21171   7.2500  Unknown         S  Adult    U
+1            2         1      1  Cumings, Mrs. John Bradley (Florence Briggs Th...  female  38.0  ...          PC 17599  71.2833      C85         C  Adult    C
+2            3         1      3                             Heikkinen, Miss. Laina  female  26.0  ...  STON/O2. 3101282   7.9250  Unknown         S  Adult    U
+3            4         1      1       Futrelle, Mrs. Jacques Heath (Lily May Peel)  female  35.0  ...            113803  53.1000     C123         S  Adult    C
+4            5         0      3                           Allen, Mr. William Henry    male  35.0  ...            373450   8.0500  Unknown         S  Adult    U
+
+[5 rows x 14 columns]
+<class 'pandas.core.frame.DataFrame'>
+RangeIndex: 418 entries, 0 to 417
+Data columns (total 13 columns):
+ #   Column       Non-Null Count  Dtype   
+---  ------       --------------  -----   
+ 0   PassengerId  418 non-null    int64   
+ 1   Pclass       418 non-null    category
+ 2   Name         418 non-null    object  
+ 3   Sex          418 non-null    object  
+ 4   Age          418 non-null    float64 
+ 5   SibSp        418 non-null    int64   
+ 6   Parch        418 non-null    int64   
+ 7   Ticket       418 non-null    object  
+ 8   Fare         418 non-null    float64 
+ 9   Cabin        418 non-null    object  
+ 10  Embarked     418 non-null    object  
+ 11  AgeBin       418 non-null    category
+ 12  Deck         418 non-null    object  
+dtypes: category(2), float64(2), int64(3), object(6)
+memory usage: 37.2+ KB
+None
+   PassengerId Pclass                                          Name     Sex   Age  SibSp  Parch   Ticket     Fare    Cabin Embarked       AgeBin Deck
+0          892      3                              Kelly, Mr. James    male  34.5      0      0   330911   7.8292  Unknown        Q        Adult    U
+1          893      3              Wilkes, Mrs. James (Ellen Needs)  female  47.0      1      0   363272   7.0000  Unknown        S  Middle-Aged    U
+2          894      2                     Myles, Mr. Thomas Francis    male  62.0      0      0   240276   9.6875  Unknown        Q       Senior    U
+3          895      3                              Wirz, Mr. Albert    male  27.0      0      0   315154   8.6625  Unknown        S        Adult    U
+4          896      3  Hirvonen, Mrs. Alexander (Helga E Lindqvist)  female  22.0      1      1  3101298  12.2875  Unknown        S        Adult    U
+
+    1. Identified missing values in 'Age', 'Cabin', and 'Embarked' columns.
+    2. Imputed missing values in 'Age' and 'Fare' columns with the median.
+    3. Imputed missing values in 'Embarked' column with the most frequent value.
+    4. Filled missing values in 'Cabin' column with 'Unknown'.
+    5. Converted 'Pclass' column to categorical data type.
+    6. Removed duplicate rows.
+    7. Validated ranges and categories for each feature.
+    8. Created age bins for 'Age' column.
+    9. Replaced zero values in 'Fare' column with the median.
+    10. Extracted deck information from 'Cabin' column.
+    11. Performed final check to ensure data consistency.
+    

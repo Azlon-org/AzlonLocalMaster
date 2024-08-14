@@ -1,0 +1,49 @@
+[
+    {
+        "task": "Identify Missing Values",
+        "method": [
+            "Use .isnull().sum() to identify columns with missing values and the number of missing entries."
+        ]
+    },
+    {
+        "task": "Handle Missing Values",
+        "method": [
+            "For numerical features: Consider mean, median, or mode imputation.",
+            "For categorical features: Consider imputation with the most frequent category or a placeholder value like 'Unknown'."
+        ]
+    },
+    {
+        "task": "Correct Data Types",
+        "method": [
+            "Use .astype() to convert columns to appropriate data types if necessary."
+        ]
+    },
+    {
+        "task": "Address Inconsistencies and Errors",
+        "method": [
+            "Check for and handle any duplicate rows using .duplicated() and .drop_duplicates().",
+            "Validate ranges and categories for each feature."
+        ]
+    },
+    {
+        "task": "Feature-Specific Cleaning",
+        "method": [
+            "For the 'Age' column: Consider creating age bins if the distribution is highly skewed.",
+            "For the 'Fare' column: Handle any outliers or zero values appropriately.",
+            "For the 'Cabin' column: Extract deck information if useful and handle missing values.",
+            "For the 'Embarked' column: Impute missing values with the most frequent port of embarkation."
+        ]
+    },
+    {
+        "task": "Ensure Data Consistency",
+        "method": [
+            "Perform a final check using .info() and .head() to ensure all columns are clean and data types are correct."
+        ]
+    },
+    {
+        "task": "Document Cleaning Process",
+        "method": [
+            "Maintain a detailed log of all cleaning steps, including the rationale for each decision and any challenges encountered."
+        ]
+    }
+]

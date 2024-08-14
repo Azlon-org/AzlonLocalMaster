@@ -35,8 +35,8 @@ class Agent:
             act_agent_memory = each_state_memory.get(self.role, {}) # 获取过去state中当前agent的memory
             result = act_agent_memory.get("result", "")
             reviewer_memory = each_state_memory.get("reviewer", {}) # 获取过去state中reviewer的memory
-            suggestion = reviewer_memory.get("suggestion", "")
-            score = reviewer_memory.get("score", 3)
+            suggestion = reviewer_memory.get("final_suggestion", "").get(f"agent_{self.role}", "")
+            score = reviewer_memory.get("final_score", 3).get(f"agent_{self.role}", 3)
             experience_with_suggestion += PROMPT_EACH_EXPERIENCE_WITH_SUGGESTION.format(index=i, experience=result, suggestion=suggestion, score=score)
         return experience_with_suggestion
 
@@ -49,6 +49,7 @@ class Agent:
             try:
                 reply_str = raw_reply.split('```json')[1].split('```')[0].strip()
                 reply = json.loads(reply_str)
+                assert 'final_answer' in reply # 保证是正确的json格式
             except Exception as e:
                 print(f"Error in json loads reply_str: {e}")
                 json_reply, _ = self.llm.generate(REORGANIZE_REPLY.format(information=raw_reply), history=[], max_tokens=4096)
@@ -131,6 +132,17 @@ class Planner(Agent):
             type=type
         )
 
+    def _get_previous_plan(self, state: State) -> Dict[str, Any]:
+        previous_phase = state.get_previous_phase()
+        previous_dir_name = state.phase_to_directory[previous_phase]
+        path_to_previous_plan = f'{state.competition_dir}/{previous_dir_name}/plan.json'
+        if os.path.exists(path_to_previous_plan):
+            with open(path_to_previous_plan, 'r') as f:
+                previous_plan = json.load(f)
+        else:
+            previous_plan = "There is no plan in the previous step."
+        return previous_plan
+
     def _execute(self, state: State, role_prompt: str) -> Dict[str, Any]:
         # 实现规划功能
         history = []
@@ -144,6 +156,8 @@ class Planner(Agent):
                     task = PROMPT_PLANNER_TASK.format(step_name=state.phase)
                     input = PROMPT_PLANNER.format(steps_in_context=state.context, step_name=state.phase, message=state.message, competition_info=competition_info, task=task)
                 elif round == 1:
+                    input = f"\n#############\n# PREVIOUS PLAN #\n{self._get_previous_plan(state)}"
+                elif round == 2:
                     break
                 raw_reply, history = self.llm.generate(input, history, max_tokens=4096)
                 round += 1
@@ -173,9 +187,7 @@ class Developer(Agent):
         )
 
     def _is_previous_code(self, state: State) -> Tuple[bool, str, str]:
-        all_phases = load_config(f'{PREFIX_MULTI_AGENTS}/config.json')['phases']
-        current_phase_index = all_phases.index(state.phase)
-        previous_phase = all_phases[current_phase_index + 1]
+        previous_phase = state.get_previous_phase()
         previous_dir_name = state.phase_to_directory[previous_phase]
         path_to_previous_code = f'{state.competition_dir}/{previous_dir_name}/{previous_dir_name}_code.py'
         path_to_previous_run_code = f'{state.competition_dir}/{previous_dir_name}/{previous_dir_name}_run_code.py'
@@ -321,7 +333,7 @@ class Developer(Agent):
                 # 删除每行第一个'\t'
                 if line.startswith('\t'):
                     previous_code[i] = line[1:]
-            previous_code = "".join(previous_code+'\n')
+            previous_code = "\n".join(previous_code)
         else:
             previous_code = "There is no code file in the previous phase."
         prompt_round1 += f"\n#############\n# CODE FROM PREVIOUS PHASE #\n{previous_code}"
@@ -363,9 +375,9 @@ class Developer(Agent):
                     prompt_round1 = self._generate_prompt_round1(state)
                     input = prompt_round1
                     raw_reply, history = self.llm.generate(input, history, max_tokens=4096)
-                elif round >= 2:
                     with open(f'{state.restore_dir}/{self.role}_reply.txt', 'w') as f:
                         f.write(raw_reply)
+                elif round >= 2:
                     print(f"The {round-1}th try.")
                     path_to_code, path_to_run_code = self._generate_code_file(state, raw_reply)
                     error_flag = self._run_code(state, path_to_run_code)

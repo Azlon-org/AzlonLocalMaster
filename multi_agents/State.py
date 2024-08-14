@@ -38,6 +38,12 @@ class State:
             os.makedirs(f'{path_to_dir}/images')
         self.restore_dir = path_to_dir
 
+    def get_previous_phase(self):
+        phases = load_config(f'{PREFIX_MULTI_AGENTS}/config.json')['phases']
+        current_phase_index = phases.index(self.phase)
+        previous_phase = phases[current_phase_index - 1]
+        return previous_phase
+
     # 更新State内部的信息
     def update_memory(self, memory): 
         print(f"{self.agents[self.current_step]} updates internal memory in Phase: {self.phase}.")
