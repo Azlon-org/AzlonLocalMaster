@@ -69,26 +69,35 @@ class SOP:
                 next_phase = "Feature Engineering"
                 self.phase_to_iterations[state.phase] += 1
             else:
-                # Model Building, Validation, and Prediction通过，完成此阶段
-                next_phase = "Complete"
-                new_state = None
+                if state.score >= 3:
+                    # Model Building, Validation, and Prediction通过，完成此阶段
+                    next_phase = "Complete"
+                    new_state = None
+                else:
+                    update_state_info = "Fail"
+                    new_state = None
         else:
+            if state.phase == "Feature Engineering":
+                if self.state_records[-2].phase == "Model Building, Validation, and Prediction":
+                    pass
+                else:
+                    self.phase_to_iterations[state.phase] += 1
             # 其他步骤
-            self.phase_to_iterations[state.phase] += 1 # 记录已经迭代的次数 假设已经迭代三次，我要知道，第三次是否成功
+            else:
+                self.phase_to_iterations[state.phase] += 1 # 记录已经迭代的次数 假设已经迭代三次，我要知道，第三次是否成功
             if state.score < 3 and self.phase_to_iterations[state.phase] < self.max_iterations:
                 next_phase = state.phase # 如果评分低于3，继续当前阶段
                 update_state_info = "Repeat"
-                new_state = State(phase=state.phase, message="") 
+                new_state = State(phase=state.phase) 
                 new_state.memory = copy.deepcopy(state.memory) # 深拷贝memory
                 new_state.memory.append({})  # 在列表中加入一个空dict
             else:
                 if state.score >= 3: # 如果评分大于等于3，进入下一个阶段
-                    assert self.phase_to_iterations[state.phase] <= self.max_iterations
                     update_state_info = "Success"
                     next_phase = self.get_next_phase(state.phase)
                     new_state = State(phase=next_phase, message=state.send_message())
                 else:
-                    update_state_info = "Error"
+                    update_state_info = "Fail"
                     new_state = None
             next_phase = self.get_next_phase(state.phase)
 

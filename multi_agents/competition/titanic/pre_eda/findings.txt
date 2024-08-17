@@ -1,0 +1,16 @@
+
+    Key Findings from Preliminary EDA:
+    1. The training dataset contains 891 rows and 12 columns, while the test dataset contains 418 rows and 11 columns.
+    2. There are missing values in the 'Age', 'Cabin', and 'Embarked' columns in the training dataset.
+    3. The 'Survived' column is the target variable with 0 indicating not survived and 1 indicating survived.
+    4. The 'Pclass', 'Sex', and 'Embarked' columns are categorical features.
+    5. The 'Age', 'Fare', 'SibSp', and 'Parch' columns are numerical features.
+    6. The distribution of the target variable 'Survived' shows that more passengers did not survive.
+    7. Initial correlation analysis shows that 'Fare' and 'Pclass' have some correlation with 'Survived'.
+    
+    Potential Areas for Further Investigation:
+    1. Investigate the impact of missing values and decide on appropriate imputation methods.
+    2. Explore feature engineering opportunities, such as creating new features from existing ones.
+    3. Perform in-depth analysis of the relationship between 'Survived' and other features.
+    4. Consider interactions between features and their combined effect on survival.
+    

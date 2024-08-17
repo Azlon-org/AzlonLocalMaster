@@ -25,33 +25,85 @@ PROMPT_EACH_EXPERIENCE_WITH_SUGGESTION = '''
 </SCORE>
 '''
 
-REORGANIZE_REPLY = '''
+REORGANIZE_REPLY_TYPE1 = '''
 # TASK #
-Please reorganize the following information into a JSON format (quote in ```json ```). You need to organize the information in a clear and concise manner, ensuring that the content is logically structured and easy to understand. You must ensure that the information is complete and accurate.
+Please extract essential information and reorganize into a JSON format. You need to organize the information in a clear and concise manner, ensuring that the content is logically structured and easy to understand. You must ensure that the essential information is complete and accurate.
 #############
 # INFORMATION #
 {information}
 #############
 # RESPONSE: JSON FORMAT #
+```json
 {{
-    "thought_process": list=[
-        {{
-            "question": str="The input question you must answer",
-            "thought": str="You should always think about what to do next",
-            "action": str="Describe the action you plan to take",
-            "action_input": str="The specific input for the action",
-            "observation": str="The expected or actual result of the action"
-        }}
-    ],
-    "final_thought": str="Further reflection based on the observation, summarizing the final answer",
-    "final_answer": str="The final answer to the original input question"
+    "final_thought": str="Summarize your understanding and confirm that you now have the final answer.",
+    "final_answer": str="Provide the final answer to the original task."
 }}
+```
 #############
 # START REORGANIZING #
 '''
 
+REORGANIZE_REPLY_TYPE2 = '''
+# TASK #
+Please extract essential information and reorganize into a JSON format. You need to organize the information in a clear and concise manner, ensuring that the content is logically structured and easy to understand. You must ensure that the essential information is complete and accurate.
+#############
+# INFORMATION #
+{information}
+#############
+# RESPONSE: JSON FORMAT #
+```json
+{{
+    "final_thought": str="Summarize your understanding and confirm that you now have the final answer.",
+    "final_answer": {{
+	    "final_suggestion": {{
+            str="agent name": str="Specific suggestions for improving the agent's performance"
+        }},
+        "final_score": {{
+            str="agent name": int="The final score you assign to the evaluated agent, only one score in range 1-5"
+        }}
+    }}
+}}
+```
+#############
+# START REORGANIZING #
+'''
+
+
+REORGANIZE_REPLY_TYPE3 = '''
+# TASK #
+Please extract essential information and reorganize into a JSON format. You need to organize the information in a clear and concise manner, ensuring that the content is logically structured and easy to understand. You must ensure that the essential information is complete and accurate.
+#############
+# INFORMATION #
+{information}
+#############
+# RESPONSE: JSON FORMAT #
+```json
+{{
+    "final_thought": str="Summarize your understanding and confirm that you now have the final answer.",
+    "final_answer": list=[
+        {{
+            "task": str="The specific task to be performed",
+            "method": list=["Methods to be used"],
+        }}
+    ]
+}}
+```
+#############
+# START REORGANIZING #
+'''
+
+
 PROMPT_READER_TASK = '''
-Conduct a comprehensive analysis of the competition overview, understand the background of the topic, understand how to use different files, clarify the definition and requirements of the problem, obtain information about the data, and identify the target variable, evaluation metrics and submission format. Gather important information regarding Background/Files/Question/Target_Variable/Evaluation/Other aspects.
+Please conduct a comprehensive analysis of the competition, focusing on the following aspects:
+1. Competition Overview: Understand the background and context of the topic.
+2. Files: Analyze each provided file, detailing its purpose and how it should be used in the competition.
+3. Problem Definition: Clarify the problem's definition and requirements.
+4. Data Information: Gather detailed information about the data, including its structure and contents.
+5. Target Variable: Identify the target variable that needs to be predicted or optimized.
+6. Evaluation Metrics: Determine the evaluation metrics that will be used to assess the submissions.
+7. Submission Format: Understand the required format for the final submission.
+8. Other Key Aspects: Highlight any other important aspects that could influence the approach to the competition.
+Ensure that the analysis is thorough, with a strong emphasis on understanding the purpose and usage of each file provided.
 '''
 
 PROMPT_READER = '''
@@ -63,23 +115,34 @@ Currently, I am at step: Background Understand.
 {task} 
 #############
 # RESPONSE: JSON FORMAT #
+```json
 {{
     "thought_process": list=[
         {{
-            "question": str="The input question you must answer",
-            "thought": str="You should always think about what to do next",
-            "action": str="Describe the action you plan to take",
-            "action_input": str="The specific input for the action",
-            "observation": str="The expected or actual result of the action"
+            "thought": str="Reflect on the current situation and consider how to proceed in fulfilling the user's requirements.",
+            "action": str="Describe the action you plan to take to meet the user's needs.",
+            "observation": str="Note the expected or actual results of the action."
         }}
     ],
-    "final_thought": str="Further reflection based on the observation, summarizing the final answer",
-    "final_answer": str="The final answer to the original input question"
+    "final_thought": str="Summarize your understanding and confirm that you now have the final answer.",
+    "final_answer": str="Provide the final answer to the original task."
 }}
+```
 #############
 # START ANALYSIS #
-If you understand, please request the Overview of this data science competition from me.
+If you understand, please request the overview of this data science competition from me.
 '''
+
+# ## Thought Process ##
+# (This Thought/Action/Observation sequence may repeat as needed.)
+# - Thought: str="Reflect on the current situation and consider how to proceed in fulfilling the user's requirements."
+# - Action: str="Describe the action you plan to take to meet the user's needs."
+# - Observation: str="Note the expected or actual results of the action."
+# ## Final Thought ##
+# str="Summarize your understanding and confirm that you now have the final answer."
+# ## Final Answer ##
+# str="Provide the final answer to the original task."
+
 
 PROMPT_READER_WITH_EXPERIENCE = '''
 # CONTEXT #
@@ -93,19 +156,19 @@ Currently, I am at step one: Background Understand.
 {experience_with_suggestion}
 #############
 # RESPONSE: JSON FORMAT #
+```json
 {{
     "thought_process": list=[
         {{
-            "question": str="The input question you must answer",
-            "thought": str="You should always think about what to do next",
-            "action": str="Describe the action you plan to take",
-            "action_input": str="The specific input for the action",
-            "observation": str="The expected or actual result of the action"
+            "thought": str="Reflect on the current situation and consider how to proceed in fulfilling the user's requirements.",
+            "action": str="Describe the action you plan to take to meet the user's needs.",
+            "observation": str="Note the expected or actual results of the action."
         }}
     ],
     "final_thought": str="Further reflection based on the observation, summarizing the final answer",
     "final_answer": str="The final answer to the original input question"
 }}
+```
 #############
 # START ANALYSIS #
 If you understand, please request the Overview of this data science competition from me.
@@ -135,17 +198,16 @@ Currently, I am at step: {step_name}.
 {task}
 #############
 # RESPONSE: JSON FORMAT #
+```json
 {{
     "thought_process": list=[
         {{
-            "question": str="The input question you must answer",
-            "thought": str="You should always think about what to do next",
-            "action": str="Describe the action you plan to take",
-            "action_input": str="The specific input for the action",
-            "observation": str="The expected or actual result of the action"
+            "thought": str="Reflect on the current situation and consider how to proceed in fulfilling the user's requirements.",
+            "action": str="Describe the action you plan to take to meet the user's needs.",
+            "observation": str="Note the expected or actual results of the action."
         }}
     ],
-    "final_thought": str="Further reflection based on the observation, summarizing the final answer",
+    "final_thought": str="Summarize your understanding and confirm that you now have the final answer.",
     "final_answer": list=[
         {{
             "task": str="The specific task to be performed",
@@ -153,9 +215,10 @@ Currently, I am at step: {step_name}.
         }}
     ]
 }}
+```
 #############
 # START PLANNING #
-If you understand, please request the plans for the previous steps from me. Your plan should closely follow the previous steps, maintain logical consistency, and avoid any duplication of tasks.
+If you understand, please request the report and plan from the previous step. These documents contain important information that will guide your planning. In addition to the report and plan, I will also provide some sample data for your analysis. This will help you create a more accurate and tailored plan for the current step. Your plan should closely follow the previous step, maintain logical consistency, and avoid any duplication of tasks.
 '''
 
 
@@ -176,11 +239,13 @@ PROMPT_DEVELOPER_CONSTRAINTS = '''
 Data visualization: When using libraries such as seaborn or matplotlib to create plots, consider turning off unnecessary details (e.g., annot=False in heatmaps), especially when the number of data points is large.
 </example>
 - Always consider resource constraints and limit the number of generated images to ensure that they do not exceed 10 when performing Exploratory Data Analysis (EDA), 
-<example>
+    - **Note that the generated images should be LIMITED to the most critical visualizations that provide valuable insights.**
+<example>   
 When using the matplotlib library for visualizing multiple subplots, if you need to display relationships between multiple variables, you can set up subplots within a single figure window instead of generating separate plots for each variable relationship. This approach not only makes effective use of visual space but also adheres to the rule of limiting the number of generated plots. For example, if there are 12 variable combinations, you can choose the most critical 10 combinations to display.
 </example>
 ## CODING RULES ##
 - Always use `print()` function if you need to print a value. 
+- Always use `plt.close()` to close the figure after saving the image.
 - Always make sure that the data types of each column in the dataset are correct before performing any data computation, analysis, or other operations.
 <example>
 - Before calculating a correlation matrix, confirm that the dataset only contains numerical data. If there is non-numerical data, handle it appropriately, such as by removing or converting it to numerical data.
@@ -231,12 +296,65 @@ If you understand, please request the code and insight from previous steps, all 
 '''
 
 
+PROMPT_DEVELOPER_WITH_EXPERIENCE_ROUND0 = '''
+# CONTEXT #
+{steps_in_context}
+Currently, I am at step :{step_name}.
+#############
+# MESSAGE FROM LAST STEP #
+{message}
+#############
+# COMPETITION INFORMATION #
+{competition_info}
+#############
+# PLAN #
+{plan}
+#############
+# CONSTRAINTS #
+{constraints}
+#############
+# TASK #
+{task} In the past, you have attempted this task multiple times. However, due to errors in your answers or insufficient quality, you have not succeeded. I will provide you with your previous attempts' experiences and a professional reviewer's suggestions for improvement (PREVIOUS EXPERIENCE WITH SUGGESTION). Based on these, please learn from previous experience, try again to mitigate similar failures and successfully complete the task.
+You must follow these subtasks:
+1. Analyze the previous experience and suggestions. Think about what went wrong and how you can improve.
+2. Develop a new solution based on the previous experience and suggestions.
+#############
+# PREVIOUS EXPERIENCE WITH SUGGESTION #
+{experience_with_suggestion}
+#############
+# RESPONSE #
+Subtask 1: Analyze the previous experience and suggestions. Think about what went wrong and how you can improve.
+Let's work this out in a step by step way.
+#############
+# START ANALYSIS #
+If you understand, please request the code and insight from previous steps, all the features of the data and 10 data samples in both training data and test data from me. Then you can start analyzing the previous experience and suggestions.
+'''
+
+PROMPT_DEVELOPER_WITH_EXPERIENCE_ROUND2 = '''
+#############
+# RESPONSE: BLOCK (CODE & EXPLANATION) #
+Subtask 2: Develop a new solution based on the previous experience and suggestions.
+TASK 1:
+THOUGHT PROCESS
+CODE
+EXPLANATION
+TASK 2:
+THOUGHT PROCESS
+CODE
+EXPLANATION
+...
+#############
+# START CODING #
+'''
+
+
+
 PROMPT_DEVELOPER_DEBUG = '''
 # CONTEXT #
 I'm getting an error executing the code you generated.
 #############
 # TASK #
-please modify the code according to the output messages ([OUTPUT MESSAGES]) and error messages ([ERROR MESSAGES]). You must follow these steps:
+please modify the code according to the error messages ([ERROR MESSAGES]). You must follow these steps:
 1. Analyze and find out which code block causes the error.
 2. Think about how to correct the code block.
 4. Correct the wrong code block.
@@ -249,9 +367,6 @@ Note that you are not allowed to output PREVIOUS CODE repeatedly.
 # WRONG CODE #
 {wrong_code}
 #############
-# OUTPUT MESSAGES #
-{output_messages}
-#############
 # ERROR MESSAGES #
 {error_messages}
 #############
@@ -263,32 +378,32 @@ Note that you are not allowed to output PREVIOUS CODE repeatedly.
 PROMPT_REVIEWER_ROUND0 = '''
 # CONTEXT #
 {steps_in_context}
-Each step is done by multiple agents to collaborate. Currently, you are evaluating the performance of the agents in Step: {step_name}.
+Each step involves collaboration between multiple agents. You are currently evaluating the performance of agents in Step: {step_name}.
 #############
 # TASK #
-Please assess the performance of multiple agents in completing Step: {step_name}. I will provide descriptions of the agents, the tasks they performed, and their outcomes. You need to assign a score from 1 to 5, with 1 indicating very poor performance and 5 indicating excellent performance. Additionally, please provide specific suggestions for improving the agents' performance if necessary (If an agent is good enough, don't give any suggestion).
+Your task is to assess the performance of several agents in completing Step: {step_name}. I will provide descriptions of each agent, the tasks they performed, and the outcomes of those tasks. Please assign a score from 1 to 5 for each agent, with 1 indicating very poor performance and 5 indicating excellent performance. Additionally, provide specific suggestions for improving each agent's performance, if applicable. If an agent's performance is satisfactory, no suggestions are necessary.
 #############
 # RESPONSE: JSON FORMAT #
+```json
 {{
     "thought_process": list=[
         {{
-            "question": str="The input question you must answer",
-            "thought": str="You should always think about what to do next",
-            "action": str="Describe the action you plan to take",
-            "action_input": str="The specific input for the action",
-            "observation": str="The expected or actual result of the action"
+            "thought": str="Reflect on the current situation and consider how to proceed in fulfilling the user's requirements.",
+            "action": str="Describe the action you plan to take to meet the user's needs.",
+            "observation": str="Note the expected or actual results of the action."
         }}
     ],
-    "final_thought": str="Further reflection based on the observation, summarizing the final answer",
+    "final_thought": str="Summarize your understanding and confirm that you now have the final answer.",
     "final_answer": {{
 	    "final_suggestion": {{
-            str="agent name": str="Specific suggestions for improving the performance of the agent"
+            str="agent name": str="Specific suggestions for improving the agent's performance"
         }},
         "final_score": {{
             str="agent name": int="The final score you assign to the evaluated agent, only one score in range 1-5"
         }}
     }}
 }}
+```
 #############
 # START EVALUATION #
 If you are ready, please request from me the role, description, input, task and execution result of the agent to be evaluated.
@@ -334,11 +449,9 @@ PROMPT_SUMMARIZER_ROUND2_RESPONSE_FORMAT = '''
 {{
     "thought_process": list=[
         {{
-            "question": str="The input question you must answer",
-            "thought": str="You should always think about what to do next",
-            "action": str="Describe the action you plan to take",
-            "action_input": str="The specific input for the action",
-            "observation": str="The expected or actual result of the action"
+            "thought": str="Reflect on the current situation and consider how to proceed in fulfilling the user's requirements.",
+            "action": str="Describe the action you plan to take to meet the user's needs.",
+            "observation": str="Note the expected or actual results of the action."
         }}
     ],
     "final_thought": str="Further reflection based on the observation, summarizing the final answer",

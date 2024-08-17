@@ -1,46 +1,50 @@
 [
     {
-        "task": "Load the Data",
+        "task": "Load and Inspect Data",
         "method": [
-            "Use pandas to load 'train.csv' and 'test.csv' into DataFrames."
+            "Use pandas to read CSV files and display the first few rows."
         ]
     },
     {
-        "task": "Understand the Data Structure",
+        "task": "Understand Data Structure",
         "method": [
-            "Use DataFrame methods like .info() and .head() to get an overview of the data structure, data types, and initial few rows."
-        ]
-    },
-    {
-        "task": "Summary Statistics",
-        "method": [
-            "Use .describe() to get summary statistics for numerical features.",
-            "Use .describe(include=['O']) to get summary statistics for categorical features."
+            "Use pandas functions to get information about the data types, number of rows and columns, and summary statistics."
         ]
     },
     {
         "task": "Check for Missing Values",
         "method": [
-            "Use .isnull().sum() to identify columns with missing values and the number of missing entries."
+            "Use pandas to check for null values and calculate the percentage of missing values for each column."
         ]
     },
     {
-        "task": "Initial Visualizations",
+        "task": "Analyze Target Variable (Survived)",
         "method": [
-            "Use seaborn and matplotlib to create histograms for numerical features.",
-            "Use count plots for categorical features to understand their distribution."
+            "Use pandas and seaborn to plot the distribution of the 'Survived' column."
         ]
     },
     {
-        "task": "Correlation Analysis",
+        "task": "Explore Categorical Features",
         "method": [
-            "Use .corr() to compute pairwise correlation of numerical features and visualize it using a heatmap."
+            "Use pandas and seaborn to plot the distribution of categorical features."
         ]
     },
     {
-        "task": "Initial Observations",
+        "task": "Explore Numerical Features",
         "method": [
-            "Document any initial observations, patterns, or anomalies detected during the preliminary EDA."
+            "Use pandas and seaborn to plot histograms and boxplots for numerical features."
+        ]
+    },
+    {
+        "task": "Identify Potential Outliers",
+        "method": [
+            "Use boxplots and scatter plots to identify outliers."
+        ]
+    },
+    {
+        "task": "Initial Correlation Analysis",
+        "method": [
+            "Use pandas to calculate the correlation matrix and seaborn to visualize it."
         ]
     }
 ]

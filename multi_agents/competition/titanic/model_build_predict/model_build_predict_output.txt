@@ -1,0 +1,21 @@
+Logistic Regression Accuracy: 0.8212
+Decision Tree Accuracy: 0.7821
+Random Forest Accuracy: 0.8212
+Gradient Boosting Accuracy: 0.8324
+Support Vector Machine Accuracy: 0.8268
+K-Nearest Neighbors Accuracy: 0.8324
+Logistic Regression - CV Accuracy: 0.8148, Precision: 0.7838, Recall: 0.7838, F1 Score: 0.7838
+Decision Tree - CV Accuracy: 0.7812, Precision: 0.7105, Recall: 0.7297, F1 Score: 0.7200
+Random Forest - CV Accuracy: 0.8137, Precision: 0.7821, Recall: 0.8243, F1 Score: 0.8026
+Gradient Boosting - CV Accuracy: 0.8350, Precision: 0.7945, Recall: 0.7838, F1 Score: 0.7891
+Support Vector Machine - CV Accuracy: 0.8305, Precision: 0.8116, Recall: 0.7568, F1 Score: 0.7832
+K-Nearest Neighbors - CV Accuracy: 0.8171, Precision: 0.8235, Recall: 0.7568, F1 Score: 0.7887
+Logistic Regression Best Params: {'C': 100}
+Decision Tree Best Params: {'max_depth': 10}
+Random Forest Best Params: {'max_depth': 10, 'n_estimators': 200}
+Gradient Boosting Best Params: {'learning_rate': 0.2, 'n_estimators': 100}
+Support Vector Machine Best Params: {'C': 1, 'kernel': 'rbf'}
+K-Nearest Neighbors Best Params: {'n_neighbors': 3}
+Selected Best Model: Random Forest
+Submission file created successfully.
+Submit the 'submission.csv' file on the Kaggle competition platform.

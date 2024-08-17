@@ -11,7 +11,7 @@ from utils import PREFIX_MULTI_AGENTS, load_config
 from prompt import STEPS_IN_CONTEXT_TEMPLATE
 
 class State:
-    def __init__(self, phase, message=""):
+    def __init__(self, phase, message="There is no message."):
         self.phase = phase
         self.memory = [{}]   # 用于记录State内部的信息 只存相同phase的 当前State的memory在最后一个
         self.message = message  # 来自上一个State的信息 
@@ -38,10 +38,15 @@ class State:
             os.makedirs(f'{path_to_dir}/images')
         self.restore_dir = path_to_dir
 
-    def get_previous_phase(self):
+    def get_previous_phase(self, type: str="last"):
         phases = load_config(f'{PREFIX_MULTI_AGENTS}/config.json')['phases']
         current_phase_index = phases.index(self.phase)
-        previous_phase = phases[current_phase_index - 1]
+        if type == 'last':
+            previous_phase = phases[current_phase_index - 1]
+        elif type == 'all':
+            previous_phase = phases[:current_phase_index]
+        else:
+            raise Exception(f"Unknown type: {type}")
         return previous_phase
 
     # 更新State内部的信息
@@ -56,7 +61,7 @@ class State:
         print(f"Memory in Phase: {self.phase} is restored.")
 
     def restore_report(self):
-        report = self.memory[-1]['summarizer'].get('report', '')
+        report = self.memory[-1].get('summarizer', {}).get('report', '')
         if len(report) > 0:
             with open(f'{self.restore_dir}/Report.txt', 'w') as f:
                 f.write(report)
@@ -65,7 +70,7 @@ class State:
             print(f"No report in Phase: {self.phase} to restore.")
 
     def send_message(self):
-        message_to_next_state = self.memory[-1]['summarizer'].get('message', '')
+        message_to_next_state = self.memory[-1].get('summarizer', {}).get('message', '')
         return message_to_next_state
 
     def next_step(self):
@@ -77,6 +82,8 @@ class State:
         for score in final_score.values():
             total += score
         self.score = total / len(final_score)
+        # if not self.memory[-1].get('developer', {}).get('status', True): # 如果developer执行失败, score为0
+        #     self.score = 0
 
     def check_finished(self):
         if self.current_step == len(self.agents):

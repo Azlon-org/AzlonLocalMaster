@@ -1,0 +1,46 @@
+[
+    {
+        "task": "Model Building",
+        "method": [
+            "Select a variety of machine learning models to test (e.g., Logistic Regression, Decision Trees, Random Forest, Gradient Boosting, Support Vector Machines, etc.).",
+            "Implement each model using the processed data with the newly created features (FamilySize, IsAlone, Title, Age*Class, FarePerPerson) and the transformed categorical variables.",
+            "Ensure that the code is well-documented and includes comments explaining the purpose of each code block."
+        ]
+    },
+    {
+        "task": "Model Validation",
+        "method": [
+            "Split the training data into training and validation sets using techniques like k-fold cross-validation to ensure robust evaluation.",
+            "Evaluate the performance of each model using accuracy as the primary metric, but also consider other metrics like precision, recall, and F1-score for a more comprehensive evaluation.",
+            "Use cross-validation to assess the generalizability of the models."
+        ]
+    },
+    {
+        "task": "Hyperparameter Tuning",
+        "method": [
+            "Perform hyperparameter tuning using techniques like grid search or random search to find the best parameters for each model.",
+            "Document the hyperparameter tuning process and the results obtained for each model."
+        ]
+    },
+    {
+        "task": "Model Selection",
+        "method": [
+            "Compare the performance of all models based on validation metrics.",
+            "Select the best-performing model for final predictions."
+        ]
+    },
+    {
+        "task": "Prediction",
+        "method": [
+            "Use the selected model to make predictions on the test dataset (test.csv).",
+            "Ensure the predictions are in the required submission format (CSV file with columns: PassengerId, Survived)."
+        ]
+    },
+    {
+        "task": "Submission",
+        "method": [
+            "Prepare the submission file according to the competition's requirements.",
+            "Submit the predictions to the competition platform (Kaggle) and monitor the leaderboard for feedback."
+        ]
+    }
+]

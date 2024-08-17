@@ -1,166 +1,235 @@
-# Summarized Report
+# Summary Report: Data Cleaning Step
 
-## Current Step: Data Cleaning
+## 1. Current Step Being Performed
+The current step being performed is Data Cleaning for the Titanic data science competition.
 
-### Planner's Plan
+## 2. Plan Designed by the Planner to Complete This Step
+### Objectives:
+1. Identify and handle missing values.
+2. Handle incorrect or inconsistent data.
+3. Convert data types.
+4. Standardize categorical variables.
+5. Remove duplicates.
+6. Detect and handle outliers.
+7. Save the cleaned data.
 
-#### Objectives:
-1. Handle missing values.
-2. Correct data types if necessary.
-3. Address any inconsistencies or errors in the data.
-4. Ensure data is in a suitable format for further analysis and modeling.
+### Tasks and Methods:
+1. **Identify and Handle Missing Values**
+   - **Method**: Check for missing values in each column using methods like `isnull()` and `sum()`. Decide on a strategy for each column with missing values: drop, fill with mean/median/mode, or use more advanced imputation techniques. Implement the chosen strategy using pandas functions like `dropna()`, `fillna()`, or `SimpleImputer` from sklearn.
+2. **Handle Incorrect or Inconsistent Data**
+   - **Method**: Identify any incorrect or inconsistent data entries (e.g., negative ages, invalid ticket numbers). Correct or remove these entries as appropriate.
+3. **Convert Data Types**
+   - **Method**: Ensure all columns have appropriate data types (e.g., convert numerical columns to `int` or `float`, categorical columns to `category`). Use pandas functions like `astype()` to convert data types.
+4. **Standardize Categorical Variables**
+   - **Method**: Ensure consistency in categorical variables (e.g., standardize the values in the 'embarked' column to 'C', 'Q', 'S'). Use string manipulation functions in pandas to clean and standardize these values.
+5. **Remove Duplicates**
+   - **Method**: Check for duplicate rows using `duplicated()`. Remove duplicates using `drop_duplicates()`.
+6. **Outlier Detection and Handling**
+   - **Method**: Identify outliers in numerical columns using statistical methods (e.g., IQR, Z-score). Decide on a strategy to handle outliers: remove, cap, or transform. Implement the chosen strategy using pandas or numpy functions.
+7. **Save the Cleaned Data**
+   - **Method**: Save the cleaned dataset to a new CSV file using `to_csv()` for future use in the next steps.
 
-#### Tasks and Methods:
-1. **Identify Missing Values**
-   - **Method**: Use `.isnull().sum()` to identify columns with missing values and the number of missing entries.
-   - **Action**: Document the columns with missing values and the extent of missingness.
+## 3. Detailed Account of How the Developer Implemented the Plan
+### Task 1: Identify and Handle Missing Values
+#### Method:
+- Checked for missing values in each column.
+- Used the median to fill missing values in 'Age' and 'Fare' columns.
+- Used the mode to fill missing values in the 'Embarked' column.
+- Dropped the 'Cabin' column due to too many missing values.
+#### Code:
+```python
+import pandas as pd
+from sklearn.impute import SimpleImputer
 
-2. **Handle Missing Values**
-   - **Method**:
-     - For numerical features: Consider imputation methods such as mean, median, or mode imputation.
-     - For categorical features: Consider imputation with the most frequent category or a placeholder value like 'Unknown'.
-   - **Action**: Implement the chosen imputation methods and document the rationale behind each choice.
+# Load the datasets
+train_data_path = '/mnt/d/PythonProjects/AutoKaggleMaster/multi_agents/competition/titanic/train.csv'
+test_data_path = '/mnt/d/PythonProjects/AutoKaggleMaster/multi_agents/competition/titanic/test.csv'
 
-3. **Correct Data Types**
-   - **Method**: Use `.astype()` to convert columns to appropriate data types if necessary.
-   - **Action**: Identify any columns with incorrect data types and convert them to the correct types.
+train_df = pd.read_csv(train_data_path)
+test_df = pd.read_csv(test_data_path)
 
-4. **Address Inconsistencies and Errors**
-   - **Method**:
-     - Check for and handle any duplicate rows using `.duplicated()` and `.drop_duplicates()`.
-     - Validate ranges and categories for each feature.
-   - **Action**: Remove duplicates and correct any inconsistencies or errors found in the data.
+# Copy the DataFrames before processing
+train_df_clean = train_df.copy()
+test_df_clean = test_df.copy()
 
-5. **Feature-Specific Cleaning**
-   - **Method**:
-     - For the 'Age' column: Consider creating age bins if the distribution is highly skewed.
-     - For the 'Fare' column: Handle any outliers or zero values appropriately.
-     - For the 'Cabin' column: Extract deck information if useful and handle missing values.
-     - For the 'Embarked' column: Impute missing values with the most frequent port of embarkation.
-   - **Action**: Apply feature-specific cleaning methods and document any transformations made.
+# Identify missing values
+missing_train = train_df_clean.isnull().sum()
+missing_test = test_df_clean.isnull().sum()
 
-6. **Ensure Data Consistency**
-   - **Method**: Perform a final check using `.info()` and `.head()` to ensure all columns are clean and data types are correct.
-   - **Action**: Verify that the data is clean and ready for in-depth EDA and feature engineering.
+print("Missing Values in Training Data:")
+print(missing_train)
 
-7. **Document Cleaning Process**
-   - **Method**: Maintain a detailed log of all cleaning steps, including the rationale for each decision and any challenges encountered.
-   - **Action**: Create a comprehensive report summarizing the data cleaning process, including before-and-after snapshots of the data.
+print("\nMissing Values in Test Data:")
+print(missing_test)
 
-### Developer's Implementation
+# Handle missing values
+# For 'Age', 'Fare' columns, we will use the median to fill missing values
+imputer = SimpleImputer(strategy='median')
+train_df_clean['Age'] = imputer.fit_transform(train_df_clean[['Age']])
+test_df_clean['Age'] = imputer.transform(test_df_clean[['Age']])
+train_df_clean['Fare'] = imputer.fit_transform(train_df_clean[['Fare']])
+test_df_clean['Fare'] = imputer.transform(test_df_clean[['Fare']])
 
-#### Task 1: Identify Missing Values
-- **Code**:
-  ```python
-  missing_values_train = train_df.isnull().sum()
-  missing_values_test = test_df.isnull().sum()
-  print("Missing values in training data:\n", missing_values_train)
-  print("Missing values in test data:\n", missing_values_test)
-  ```
-- **Explanation**: This code prints the number of missing values in each column for both the training and test datasets.
+# For 'Embarked' column, we will use the mode to fill missing values
+imputer = SimpleImputer(strategy='most_frequent')
+train_df_clean['Embarked'] = imputer.fit_transform(train_df_clean[['Embarked']])
+test_df_clean['Embarked'] = imputer.transform(test_df_clean[['Embarked']])
 
-#### Task 2: Handle Missing Values
-- **Code**:
-  ```python
-  train_df['Age'].fillna(train_df['Age'].median(), inplace=True)
-  train_df['Fare'].fillna(train_df['Fare'].median(), inplace=True)
-  train_df['Embarked'].fillna(train_df['Embarked'].mode()[0], inplace=True)
-  train_df['Cabin'].fillna('Unknown', inplace=True)
-  test_df['Age'].fillna(test_df['Age'].median(), inplace=True)
-  test_df['Fare'].fillna(test_df['Fare'].median(), inplace=True)
-  test_df['Embarked'].fillna(test_df['Embarked'].mode()[0], inplace=True)
-  test_df['Cabin'].fillna('Unknown', inplace=True)
-  print("Missing values in training data after imputation:\n", train_df.isnull().sum())
-  print("Missing values in test data after imputation:\n", test_df.isnull().sum())
-  ```
-- **Explanation**: This code fills missing values in the 'Age' and 'Fare' columns with the median value and fills missing values in the 'Embarked' column with the most frequent value. The 'Cabin' column is filled with 'Unknown'. The same imputation strategy is applied to both the training and test datasets.
+# Drop 'Cabin' column due to too many missing values
+train_df_clean.drop(columns=['Cabin'], inplace=True)
+test_df_clean.drop(columns=['Cabin'], inplace=True)
 
-#### Task 3: Correct Data Types
-- **Code**:
-  ```python
-  train_df['Pclass'] = train_df['Pclass'].astype('category')
-  test_df['Pclass'] = test_df['Pclass'].astype('category')
-  print(train_df.dtypes)
-  print(test_df.dtypes)
-  ```
-- **Explanation**: This code converts the 'Pclass' column to a categorical data type and prints the data types of all columns to verify the changes.
+# Verify that there are no more missing values
+assert train_df_clean.isnull().sum().sum() == 0, "There are still missing values in the training data."
+assert test_df_clean.isnull().sum().sum() == 0, "There are still missing values in the test data."
 
-#### Task 4: Address Inconsistencies and Errors
-- **Code**:
-  ```python
-  train_df.drop_duplicates(inplace=True)
-  test_df.drop_duplicates(inplace=True)
-  assert train_df['Age'].between(0, 100).all(), "Age values are out of range"
-  assert train_df['Fare'].between(0, 600).all(), "Fare values are out of range"
-  assert set(train_df['Pclass'].unique()).issubset({1, 2, 3}), "Pclass values are incorrect"
-  assert set(train_df['Sex'].unique()).issubset({'male', 'female'}), "Sex values are incorrect"
-  assert set(train_df['Embarked'].unique()).issubset({'C', 'Q', 'S'}), "Embarked values are incorrect"
-  print("Duplicates in training data:", train_df.duplicated().sum())
-  print("Duplicates in test data:", test_df.duplicated().sum())
-  ```
-- **Explanation**: This code removes duplicate rows and validates the ranges and categories for each feature using assertions. It also prints the number of duplicate rows to verify they have been handled.
+print("Missing values handled successfully.")
+```
+#### Explanation:
+- Loaded the datasets and created copies for processing.
+- Identified missing values and handled them using median and mode imputation.
+- Dropped the 'Cabin' column due to excessive missing values.
+- Verified that there are no remaining missing values.
 
-#### Task 5: Feature-Specific Cleaning
-- **Code**:
-  ```python
-  train_df['AgeBin'] = pd.cut(train_df['Age'], bins=[0, 12, 20, 40, 60, 80, 100], labels=['Child', 'Teen', 'Adult', 'Middle-Aged', 'Senior', 'Elderly'])
-  test_df['AgeBin'] = pd.cut(test_df['Age'], bins=[0, 12, 20, 40, 60, 80, 100], labels=['Child', 'Teen', 'Adult', 'Middle-Aged', 'Senior', 'Elderly'])
-  train_df['Fare'] = train_df['Fare'].replace(0, train_df['Fare'].median())
-  test_df['Fare'] = test_df['Fare'].replace(0, test_df['Fare'].median())
-  train_df['Deck'] = train_df['Cabin'].str[0]
-  test_df['Deck'] = test_df['Cabin'].str[0]
-  print(train_df[['Age', 'AgeBin', 'Fare', 'Cabin', 'Deck']].head())
-  print(test_df[['Age', 'AgeBin', 'Fare', 'Cabin', 'Deck']].head())
-  ```
-- **Explanation**: This code creates age bins for the 'Age' column, replaces zero values in the 'Fare' column with the median, extracts deck information from the 'Cabin' column, and verifies the changes.
+### Task 2: Handle Incorrect or Inconsistent Data
+#### Method:
+- Checked for negative ages and invalid ticket numbers.
+#### Code:
+```python
+# Handle incorrect or inconsistent data
+# Check for negative ages
+assert (train_df_clean['Age'] >= 0).all(), "There are negative ages in the training data."
+assert (test_df_clean['Age'] >= 0).all(), "There are negative ages in the test data."
 
-#### Task 6: Ensure Data Consistency
-- **Code**:
-  ```python
-  print(train_df.info())
-  print(train_df.head())
-  print(test_df.info())
-  print(test_df.head())
-  ```
-- **Explanation**: This code prints the information and first few rows of the cleaned training and test datasets to ensure all columns are clean and data types are correct.
+# Check for invalid ticket numbers (e.g., empty strings)
+assert train_df_clean['Ticket'].str.strip().astype(bool).all(), "There are invalid ticket numbers in the training data."
+assert test_df_clean['Ticket'].str.strip().astype(bool).all(), "There are invalid ticket numbers in the test data."
 
-#### Task 7: Document Cleaning Process
-- **Code**:
-  ```python
-  cleaning_log = """
-  1. Identified missing values in 'Age', 'Cabin', and 'Embarked' columns.
-  2. Imputed missing values in 'Age' and 'Fare' columns with the median.
-  3. Imputed missing values in 'Embarked' column with the most frequent value.
-  4. Filled missing values in 'Cabin' column with 'Unknown'.
-  5. Converted 'Pclass' column to categorical data type.
-  6. Removed duplicate rows.
-  7. Validated ranges and categories for each feature.
-  8. Created age bins for 'Age' column.
-  9. Replaced zero values in 'Fare' column with the median.
-  10. Extracted deck information from 'Cabin' column.
-  11. Performed final check to ensure data consistency.
-  """
-  print(cleaning_log)
-  ```
-- **Explanation**: This code prints a detailed log of all cleaning steps, including the rationale for each decision and any challenges encountered.
+print("No incorrect or inconsistent data found.")
+```
+#### Explanation:
+- Ensured there are no negative ages or invalid ticket numbers in the datasets.
 
-#### Save Cleaned Data
-- **Code**:
-  ```python
-  train_df.to_csv('/mnt/d/PythonProjects/AutoKaggleMaster/multi_agents/competition/titanic/cleaned_train.csv', index=False)
-  test_df.to_csv('/mnt/d/PythonProjects/AutoKaggleMaster/multi_agents/competition/titanic/cleaned_test.csv', index=False)
-  ```
-- **Explanation**: This code saves the cleaned training and test datasets to the specified file paths.
+### Task 3: Convert Data Types
+#### Method:
+- Converted relevant columns to appropriate data types.
+#### Code:
+```python
+# Convert data types
+# Convert 'Pclass', 'SibSp', 'Parch' to categorical
+categorical_columns = ['Pclass', 'SibSp', 'Parch', 'Embarked', 'Sex']
+for col in categorical_columns:
+    train_df_clean[col] = train_df_clean[col].astype('category')
+    test_df_clean[col] = test_df_clean[col].astype('category')
 
-### Reviewer's Evaluation
+# Ensure numerical columns are of correct type
+numerical_columns = ['Age', 'Fare']
+for col in numerical_columns:
+    train_df_clean[col] = train_df_clean[col].astype('float')
+    test_df_clean[col] = test_df_clean[col].astype('float')
 
-#### Planner
-- **Score**: 5
-- **Suggestions**: No specific suggestions for improvement. The plan is comprehensive and well-detailed.
+# Verify data types
+for col in categorical_columns:
+    assert train_df_clean[col].dtype == 'category', f"Column {col} is not of type 'category' in the training data."
+    assert test_df_clean[col].dtype == 'category', f"Column {col} is not of type 'category' in the test data."
+for col in numerical_columns:
+    assert train_df_clean[col].dtype == 'float64', f"Column {col} is not of type 'float' in the training data."
+    assert test_df_clean[col].dtype == 'float64', f"Column {col} is not of type 'float' in the test data."
 
-#### Developer
-- **Score**: 5
-- **Suggestions**: No specific suggestions for improvement. The implementation is comprehensive and well-executed.
+print("Data types converted successfully.")
+```
+#### Explanation:
+- Converted categorical columns to `category` type and numerical columns to `float`.
+- Verified the data types to ensure correctness.
 
-### Final Thoughts
-Both the planner and developer have performed excellently in the Data Cleaning step. The planner provided a thorough and well-organized plan, and the developer implemented it effectively, ensuring the data is clean, consistent, and ready for further analysis and modeling.
+### Task 4: Standardize Categorical Variables
+#### Method:
+- Standardized the values in the 'Embarked' column.
+#### Code:
+```python
+# Standardize categorical variables
+# Ensure consistency in 'Embarked' column
+train_df_clean['Embarked'] = train_df_clean['Embarked'].str.strip().str.upper()
+test_df_clean['Embarked'] = test_df_clean['Embarked'].str.strip().str.upper()
+
+# Verify standardization
+assert train_df_clean['Embarked'].isin(['C', 'Q', 'S']).all(), "There are inconsistent values in the 'Embarked' column in the training data."
+assert test_df_clean['Embarked'].isin(['C', 'Q', 'S']).all(), "There are inconsistent values in the 'Embarked' column in the test data."
+
+print("Categorical variables standardized successfully.")
+```
+#### Explanation:
+- Ensured consistency in the 'Embarked' column values.
+
+### Task 5: Remove Duplicates
+#### Method:
+- Checked for and removed duplicate rows.
+#### Code:
+```python
+# Remove duplicates
+train_df_clean.drop_duplicates(inplace=True)
+test_df_clean.drop_duplicates(inplace=True)
+
+# Verify no duplicates
+assert not train_df_clean.duplicated().any(), "There are duplicate rows in the training data."
+assert not test_df_clean.duplicated().any(), "There are duplicate rows in the test data."
+
+print("Duplicates removed successfully.")
+```
+#### Explanation:
+- Removed duplicate rows and verified their absence.
+
+### Task 6: Outlier Detection and Handling
+#### Method:
+- Identified and handled outliers using the IQR method.
+#### Code:
+```python
+import numpy as np
+
+# Identify and handle outliers using IQR
+def handle_outliers(df, column):
+    Q1 = df[column].quantile(0.25)
+    Q3 = df[column].quantile(0.75)
+    IQR = Q3 - Q1
+    lower_bound = Q1 - 1.5 * IQR
+    upper_bound = Q3 + 1.5 * IQR
+    df[column] = np.where(df[column] < lower_bound, lower_bound, df[column])
+    df[column] = np.where(df[column] > upper_bound, upper_bound, df[column])
+
+# Handle outliers in 'Age' and 'Fare' columns
+handle_outliers(train_df_clean, 'Age')
+handle_outliers(train_df_clean, 'Fare')
+handle_outliers(test_df_clean, 'Age')
+handle_outliers(test_df_clean, 'Fare')
+
+print("Outliers handled successfully.")
+```
+#### Explanation:
+- Identified outliers using the IQR method and capped them to the lower and upper bounds.
+
+### Task 7: Save the Cleaned Data
+#### Method:
+- Saved the cleaned datasets to new CSV files.
+#### Code:
+```python
+# Save the cleaned data
+train_df_clean.to_csv('/mnt/d/PythonProjects/AutoKaggleMaster/multi_agents/competition/titanic/cleaned_train.csv', index=False)
+test_df_clean.to_csv('/mnt/d/PythonProjects/AutoKaggleMaster/multi_agents/competition/titanic/cleaned_test.csv', index=False)
+
+print("Cleaned data saved successfully.")
+```
+#### Explanation:
+- Saved the cleaned datasets for future use.
+
+## 4. Reviewer's Evaluations and Suggestions for the Agents
+### Agent Planner
+#### Score: 4
+#### Evaluation:
+- **Strengths**: The plan is comprehensive and covers all essential aspects of data cleaning.
+- **Areas for Improvement**: The plan could benefit from a more detailed explanation of advanced imputation techniques and specific examples of handling incorrect or inconsistent data. Additionally, consider including a step for verifying the integrity of the cleaned data before saving it.
+
+### Agent Developer
+#### Score: 4
+#### Evaluation:
+- **Strengths**: The implementation is thorough and follows the plan closely. The code is well-structured and effectively handles the data cleaning tasks.
+- **Areas for Improvement**: Consider adding more comments to explain the purpose of each code block for better readability. Additionally, it would be beneficial to include error handling for file operations and data type conversions to make the code more robust.

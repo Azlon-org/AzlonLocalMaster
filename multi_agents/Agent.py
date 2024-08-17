@@ -1,23 +1,27 @@
 import os
 import sys
-from typing import Dict, List, Tuple, Any
+from typing import Dict, List, Tuple, Union, Any
 import pdb
 import json
 import re
 import copy
 import shutil
 import subprocess
+import logging
+
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 sys.path.append('..')
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 from LLM import LLM
 from State import State
-from prompt import REORGANIZE_REPLY
+from prompt import REORGANIZE_REPLY_TYPE1, REORGANIZE_REPLY_TYPE2, REORGANIZE_REPLY_TYPE3
 from prompt import AGENT_ROLE_TEMPLATE, PROMPT_READER, PROMPT_READER_TASK
 from prompt import PROMPT_EACH_EXPERIENCE_WITH_SUGGESTION, PROMPT_READER_WITH_EXPERIENCE
 from prompt import PROMPT_PLANNER_TASK, PROMPT_PLANNER
 from prompt import PROMPT_DEVELOPER_TASK, PROMPT_DEVELOPER_CONSTRAINTS, PROMPT_DEVELOPER, PROMPT_DEVELOPER_DEBUG
+from prompt import PROMPT_DEVELOPER_WITH_EXPERIENCE_ROUND0, PROMPT_DEVELOPER_WITH_EXPERIENCE_ROUND2
 from prompt import PROMPT_REVIEWER_ROUND0, PROMPT_REVIEWER_ROUND1_EACH_AGENT
 from prompt import PROMPT_SUMMARIZER_ROUND0, PROMPT_SUMMARIZER_ROUND2_RESPONSE_FORMAT
 from utils import read_file, PREFIX_MULTI_AGENTS, load_config
@@ -31,34 +35,86 @@ class Agent:
 
     def _gather_experience_with_suggestion(self, state: State) -> str:
         experience_with_suggestion = ""
-        for i, each_state_memory in enumerate(state.memory):
+        for i, each_state_memory in enumerate(state.memory[:-1]):
             act_agent_memory = each_state_memory.get(self.role, {}) # 获取过去state中当前agent的memory
             result = act_agent_memory.get("result", "")
             reviewer_memory = each_state_memory.get("reviewer", {}) # 获取过去state中reviewer的memory
-            suggestion = reviewer_memory.get("final_suggestion", "").get(f"agent_{self.role}", "")
-            score = reviewer_memory.get("final_score", 3).get(f"agent_{self.role}", 3)
+            suggestion = reviewer_memory.get("suggestion", {}).get(f"agent {self.role}", "")
+            score = reviewer_memory.get("score", {}).get(f"agent {self.role}", 3)
             experience_with_suggestion += PROMPT_EACH_EXPERIENCE_WITH_SUGGESTION.format(index=i, experience=result, suggestion=suggestion, score=score)
+            if self.role == 'developer':
+                with open(f'{state.competition_dir}/{state.dir_name}/{state.dir_name}_error.txt', 'r') as f:
+                    error_message = f.read()
+                experience_with_suggestion += f"\n<ERROR MESSAGE>\n{error_message}\n</ERROR MESSAGE>"
         return experience_with_suggestion
+    
+    def _read_data(self, state: State, num_lines: int = 11) -> str:
+        def read_sample(file_path: str, num_lines) -> str:
+            """
+            读取文件的前 num_lines 行内容并返回为字符串。
+            """
+            sample_lines = []
+            with open(file_path, 'r', encoding='utf-8') as f:
+                for i, line in enumerate(f):
+                    if i >= num_lines:
+                        break
+                    sample_lines.append(line)
+            return "".join(sample_lines)
+        
+        result = ""
+        if state.phase in ["Preliminary Exploratory Data Analysis", "Data Cleaning"]:
+            train_data_sample = read_sample(f'{state.competition_dir}/train.csv', num_lines)
+            test_data_sample = read_sample(f'{state.competition_dir}/test.csv', num_lines)
+            result += f"\n#############\n# TRAIN DATA WITH FEATURES #\n{train_data_sample}\n\n#############\n# TEST DATA WITH FEATURES #\n{test_data_sample}"
+        elif state.phase in ["In-depth Exploratory Data Analysis", "Feature Engineering"]:
+            cleaned_train_data_sample = read_sample(f'{state.competition_dir}/cleaned_train.csv', num_lines)
+            cleaned_test_data_sample = read_sample(f'{state.competition_dir}/cleaned_test.csv', num_lines)
+            result += f"\n#############\n# CLEANED TRAIN DATA WITH FEATURES #\n{cleaned_train_data_sample}\n\n#############\n# CLEANED TEST DATA WITH FEATURES #\n{cleaned_test_data_sample}"
+        elif state.phase in ["Model Building, Validation, and Prediction"]:
+            processed_train_data_sample = read_sample(f'{state.competition_dir}/processed_train.csv', num_lines)
+            processed_test_data_sample = read_sample(f'{state.competition_dir}/processed_test.csv', num_lines)
+            result += f"\n#############\n# PROCESSED TRAIN DATA WITH FEATURES #\n{processed_train_data_sample}\n\n#############\n# PROCESSED TEST DATA WITH FEATURES #\n{processed_test_data_sample}"
+
+        return result
+
 
     def _parse_json(self, raw_reply: str) -> Dict[str, Any]:
-        try:
-            reply = json.loads(raw_reply.strip())
-        except Exception as e:
-            print(f"Error in json loads reply: {e}")
-            print(f"raw_reply: \n{raw_reply}")
+        def try_json_loads(data: str) -> Dict[str, Any]:
             try:
-                reply_str = raw_reply.split('```json')[1].split('```')[0].strip()
-                reply = json.loads(reply_str)
-                assert 'final_answer' in reply # 保证是正确的json格式
-            except Exception as e:
-                print(f"Error in json loads reply_str: {e}")
-                json_reply, _ = self.llm.generate(REORGANIZE_REPLY.format(information=raw_reply), history=[], max_tokens=4096)
-                try:
-                    reply = json_reply.split('```json')[1].split('```')[0].strip()
-                    reply = json.loads(reply)
-                except Exception as e:
-                    print(f"Error in json loads json_reply: {e}")
-                    reply = {}
+                return json.loads(data)
+            except json.JSONDecodeError as e:
+                logging.error(f"JSON decoding error: {e}")
+                return None
+
+        raw_reply = raw_reply.strip()
+        logging.info(f"Attempting to extract JSON from raw reply.")
+        json_match = re.search(r'```json(.*?)```', raw_reply, re.DOTALL)
+        
+        if json_match and '###' not in raw_reply:
+            reply_str = json_match.group(1).strip()
+            reply = try_json_loads(reply_str)
+            if reply is not None and 'final_answer' in reply:
+                return reply
+        
+        logging.info(f"Failed to parse JSON from raw reply, attempting reorganization.")
+        if self.role == "planner":
+            json_reply, _ = self.llm.generate(REORGANIZE_REPLY_TYPE3.format(information=raw_reply), history=[], max_tokens=4096)
+        elif self.role == "reviewer":
+            json_reply, _ = self.llm.generate(REORGANIZE_REPLY_TYPE2.format(information=raw_reply), history=[], max_tokens=4096)
+        else:
+            json_reply, _ = self.llm.generate(REORGANIZE_REPLY_TYPE1.format(information=raw_reply), history=[], max_tokens=4096)
+        
+        json_match = re.search(r'```json(.*?)```', json_reply, re.DOTALL)
+        if json_match:
+            reply_str = json_match.group(1).strip()
+            reply = try_json_loads(reply_str)
+            
+            if reply is not None:
+                return reply
+        
+        logging.error("Final attempt to parse JSON failed.")
+        reply = {}
+
         return reply
 
     def action(self, state: State) -> Dict[str, Any]:
@@ -112,7 +168,13 @@ class Reader(Agent):
                 round += 1
         result = raw_reply
         reply = self._parse_json(raw_reply)
-        summary = reply["final_answer"]
+
+        try:
+            summary = reply["final_answer"]
+        except KeyError:
+            logging.info("Final answer not found in reply.")
+            summary = reply
+
         with open(f'{state.competition_dir}/competition_info.json', 'w') as f:
             json.dump(summary, f, indent=4)
         with open(f'{state.restore_dir}/{self.role}_reply.txt', 'w') as f:
@@ -132,16 +194,25 @@ class Planner(Agent):
             type=type
         )
 
-    def _get_previous_plan(self, state: State) -> Dict[str, Any]:
-        previous_phase = state.get_previous_phase()
-        previous_dir_name = state.phase_to_directory[previous_phase]
-        path_to_previous_plan = f'{state.competition_dir}/{previous_dir_name}/plan.json'
-        if os.path.exists(path_to_previous_plan):
-            with open(path_to_previous_plan, 'r') as f:
-                previous_plan = json.load(f)
+    def _get_previous_plan_and_report(self, state: State):
+        previous_plan = ""
+        previous_phases = state.get_previous_phase(type="all")
+        for previous_phase in previous_phases:
+            previous_dir_name = state.phase_to_directory[previous_phase]
+            previous_plan += f"## {previous_phase.upper()} ##\n"
+            path_to_previous_plan = f'{state.competition_dir}/{previous_dir_name}/plan.json'
+            if os.path.exists(path_to_previous_plan):
+                with open(path_to_previous_plan, 'r') as f:
+                    previous_plan += f.read()
+                    previous_plan += '\n'
+            else:
+                previous_plan = "There is no plan in this step."
+        path_to_previous_report = f'{state.competition_dir}/{previous_dir_name}/Report.txt'
+        if os.path.exists(path_to_previous_report):
+            previous_report = read_file(path_to_previous_report)
         else:
-            previous_plan = "There is no plan in the previous step."
-        return previous_plan
+            previous_report = "There is no report in the previous step."
+        return previous_plan, previous_report
 
     def _execute(self, state: State, role_prompt: str) -> Dict[str, Any]:
         # 实现规划功能
@@ -156,17 +227,27 @@ class Planner(Agent):
                     task = PROMPT_PLANNER_TASK.format(step_name=state.phase)
                     input = PROMPT_PLANNER.format(steps_in_context=state.context, step_name=state.phase, message=state.message, competition_info=competition_info, task=task)
                 elif round == 1:
-                    input = f"\n#############\n# PREVIOUS PLAN #\n{self._get_previous_plan(state)}"
+                    input = f"\n#############\n# PREVIOUS PLAN #\n{self._get_previous_plan_and_report(state)[0]}\n#############\n# PREVIOUS REPORT #\n{self._get_previous_plan_and_report(state)[1]}"
+                    input += self._read_data(state)
                 elif round == 2:
                     break
                 raw_reply, history = self.llm.generate(input, history, max_tokens=4096)
                 round += 1
         else:
-            pass
+            last_planner_score = state.memory[-2].get("reviewer", {}).get("score", {}).get("agent planner", 0)
+            if last_planner_score >= 3: # 如果上一轮中planner的评分大于等于3，说明上一个planner的规划结果是可以接受的
+                return state.memory[-2]["planner"]
+            else:
+                pass
         result = raw_reply
         reply = self._parse_json(raw_reply)
-        plan = reply["final_answer"]
-        # pdb.set_trace()
+
+        try:
+            plan = reply["final_answer"]
+        except KeyError:
+            logging.info("Final answer not found in reply.")
+            plan = reply
+
         with open(f'{state.restore_dir}/plan.json', 'w') as f:
             json.dump(plan, f, indent=4) # 保存规划结果
         with open(f'{state.restore_dir}/{self.role}_reply.txt', 'w') as f:
@@ -194,19 +275,29 @@ class Developer(Agent):
         return os.path.exists(path_to_previous_code), path_to_previous_code, path_to_previous_run_code
 
     def _delete_output_in_code(self, state: State, previous_code) -> str:
+        # 第一次扫描：替换 print 和 plt.show / plt.save 行，保留缩进
+        # pdb.set_trace()
         previous_run_code = copy.deepcopy(previous_code)
         for i, line in enumerate(previous_run_code):
-            if line.strip().startswith('for') and previous_run_code[i+1].strip().startswith('print'):
-                previous_run_code[i] = ''
-            elif line.strip().startswith('print'):
-                previous_run_code[i] = ''
-            elif line.strip().startswith('plt.show'):
-                previous_run_code[i] = ''
-            elif line.strip().startswith('plt.save'):
-                previous_run_code[i] = ''
-        # 删除空行
-        previous_run_code = [line for line in previous_run_code if line != '']
-        return previous_run_code
+            stripped_line = line.lstrip()
+            if stripped_line.startswith('print') or stripped_line.startswith('plt.show') or stripped_line.startswith('plt.save'):
+                indent = line[:len(line) - len(stripped_line)]  # 获取缩进部分
+                previous_run_code[i] = indent + 'pass\n'
+        
+        # 第二次扫描：合并连续的 pass 行
+        new_code = []
+        pass_found = False
+        
+        for line in previous_run_code:
+            if line.strip() == 'pass':
+                if not pass_found:  # 第一次遇到 pass
+                    new_code.append(line)
+                    pass_found = True
+            else:
+                new_code.append(line)
+                pass_found = False
+        
+        return new_code
 
     def _generate_code_file(self, state: State, raw_reply) -> Tuple[str, str]:
         is_previous_code, path_to_previous_code, _ = self._is_previous_code(state)
@@ -296,10 +387,12 @@ class Developer(Agent):
             previous_code = previous_code[:-2] # 删除最后两行
             previous_code = previous_code[1:] # 删除第一行
             for i, line in enumerate(previous_code):
-                # 删除每行第一个'\t'
+                # 删除每行第一个'\t'或者是连续的四个空格
                 if line.startswith('\t'):
                     previous_code[i] = line[1:]
-            previous_code = "\n".join(previous_code)
+                elif line.startswith('    '):
+                    previous_code[i] = line[4:]
+            previous_code = "".join(previous_code)
         else:
             previous_code = "There is no code file in the previous phase."
         # Extract code from the file
@@ -337,18 +430,7 @@ class Developer(Agent):
         else:
             previous_code = "There is no code file in the previous phase."
         prompt_round1 += f"\n#############\n# CODE FROM PREVIOUS PHASE #\n{previous_code}"
-
-        # 读取train.csv和test.csv
-        if state.phase in ["Preliminary Exploratory Data Analysis", "Data Cleaning"]:
-            train_data = read_file(f'{state.competition_dir}/train.csv')
-            sample_train_data = train_data[:11]
-            test_data = read_file(f'{state.competition_dir}/test.csv')
-            sample_test_data = test_data[:11]
-            prompt_round1 += f"\n#############\n# TRAIN DATA WITH FEATURES #\n{sample_train_data}\n\n#############\n# TEST DATA WITH FEATURES #\n{sample_test_data}"
-        elif state.phase in ["In-depth Exploratory Data Analysis", "Feature Engineering"]:
-            pass
-        elif state.phase in ["Model Building, Validation, and Prediction"]:
-            pass
+        prompt_round1 += self._read_data(state)
 
         return prompt_round1
 
@@ -365,6 +447,7 @@ class Developer(Agent):
         with open(f'{state.competition_dir}/competition_info.json', 'r') as f:
             competition_info = json.load(f)
         plan = state.memory[-1]["planner"]["plan"]
+
         if len(state.memory) == 1: # 如果之前没有memory，说明是第一次执行
             history.append({"role": "system", "content": f"{role_prompt} {self.description}"})
             while round <= 1+max_tries:
@@ -381,24 +464,51 @@ class Developer(Agent):
                     print(f"The {round-1}th try.")
                     path_to_code, path_to_run_code = self._generate_code_file(state, raw_reply)
                     error_flag = self._run_code(state, path_to_run_code)
-                    if error_flag:
+                    if error_flag and round <= 1+max_tries:
                         raw_reply, debug_history = self._debug_code(state, debug_history, raw_reply) # 这里我先把develop和debug解耦 后续便于加上retrieve history然后debug
                     else:
                         break
                 round += 1
         else:
-            pass
+            self.description = "You are skilled at writing and implementing code according to plan." \
+                            "You have advanced reasoning abilities and can improve your answers through reflection."
+            experience_with_suggestion = self._gather_experience_with_suggestion(state)
+            history.append({"role": "system", "content": f"{role_prompt} {self.description}"})
+            while round <= 2+max_tries:
+                if round == 0:
+                    input = PROMPT_DEVELOPER_WITH_EXPERIENCE_ROUND0.format(steps_in_context=state.context, step_name=state.phase, message=state.message, competition_info=competition_info, plan=plan, constraints=constraints, task=task, experience_with_suggestion=experience_with_suggestion)
+                    raw_reply, history = self.llm.generate(input, history, max_tokens=4096)
+                elif round == 1:
+                    prompt_round1 = self._generate_prompt_round1(state)
+                    input = prompt_round1
+                    raw_reply, history = self.llm.generate(input, history, max_tokens=4096)
+                elif round == 2:
+                    input = PROMPT_DEVELOPER_WITH_EXPERIENCE_ROUND2
+                    raw_reply, history = self.llm.generate(input, history, max_tokens=4096)
+                    with open(f'{state.restore_dir}/{self.role}_reply.txt', 'w') as f:
+                        f.write(raw_reply)
+                elif round >= 3:
+                    print(f"The {round-2}th try.")
+                    path_to_code, path_to_run_code = self._generate_code_file(state, raw_reply)
+                    error_flag = self._run_code(state, path_to_run_code)
+                    if error_flag and round < 1+max_tries:
+                        raw_reply, debug_history = self._debug_code(state, debug_history, raw_reply)
+                    else:
+                        break
+                round += 1
 
         with open(f'{state.restore_dir}/debug_history.json', 'w') as f:
             json.dump(debug_history, f, indent=4)
 
+        execution_flag = True
         if round <= 1+max_tries:
             print(f"State {state.phase} - Agent {self.role} finishes working.")
         else:
+            execution_flag = False
             print(f"State {state.phase} - Agent {self.role} finishes working with error.")
 
         input_used_in_review = f"   <competition_info>\n{competition_info}\n    </competition_info>\n   <plan>\n{plan}\n    </plan>"
-        return {self.role: {"history": history, "role": self.role, "description": self.description, "task": task, "input": input_used_in_review, "result": raw_reply}}
+        return {self.role: {"history": history, "role": self.role, "description": self.description, "task": task, "input": input_used_in_review, "result": raw_reply, "status": execution_flag}}
     
 
 class Reviewer(Agent):
@@ -410,13 +520,40 @@ class Reviewer(Agent):
             type=type
         )
 
-    def _merge_dicts(self, dicts: List[Dict[str, Any]]) -> Dict[str, Any]:
+    def _merge_dicts(self, dicts: List[Dict[str, Any]], state: State) -> Dict[str, Any]:
         merged_dict = {"final_suggestion": {}, "final_score": {}}
-        for d in dicts:
-            for key in d["final_suggestion"]:
-                merged_dict["final_suggestion"][key] = d["final_suggestion"][key]
-            for key in d["final_score"]:
-                merged_dict["final_score"][key] = d["final_score"][key]
+
+        # 定义需要统一的key
+        if state.phase == 'Understand Background':
+            key_mapping = {
+                "reader": "agent reader"
+            }
+        else:
+            key_mapping = {
+                "planner": "agent planner",
+                "developer": "agent developer"
+            }
+        
+        try:
+            for d in dicts:
+                for key in d["final_suggestion"]:
+                    normalized_key = key.lower()
+                    for k, v in key_mapping.items():
+                        if k in normalized_key:
+                            normalized_key = v
+                            break
+                    merged_dict["final_suggestion"][normalized_key] = d["final_suggestion"][key]
+                for key in d["final_score"]:
+                    normalized_key = key.lower()
+                    for k, v in key_mapping.items():
+                        if k in normalized_key:
+                            normalized_key = v
+                            break
+                    merged_dict["final_score"][normalized_key] = d["final_score"][key]
+        except KeyError as e:
+            logging.error(f"KeyError: {e}")
+            pdb.set_trace()
+        
         return merged_dict
 
     def _generate_prompt_for_agents(self, state: State) -> List[str]:
@@ -436,6 +573,7 @@ class Reviewer(Agent):
     def _execute(self, state: State, role_prompt: str) -> Dict[str, Any]:
         # 实现评价功能
         # 第二轮输入：state的memory中过去每个agent的role_description, task, input, result
+        # pdb.set_trace()
         prompt_for_agents = self._generate_prompt_for_agents(state)
         history = []
         all_raw_reply = []
@@ -455,11 +593,18 @@ class Reviewer(Agent):
         # pdb.set_trace()
         for each_raw_reply in all_raw_reply:
             reply = self._parse_json(each_raw_reply)
-            all_reply.append(reply['final_answer'])
+            try:
+                all_reply.append(reply['final_answer'])
+            except KeyError:
+                pdb.set_trace()
 
-        review = self._merge_dicts(all_reply)
+        review = self._merge_dicts(all_reply, state)
         final_score = review['final_score']
         final_suggestion = review['final_suggestion']
+        # developer代码执行失败 评分为0
+        if state.memory[-1].get("developer", {}).get("status", True) == False:
+            final_score["agent developer"] = 0
+            review["final_suggestion"]["agent developer"] = "The code execution failed. Please check the error message and write code again."
         # pdb.set_trace()
         with open(f'{state.restore_dir}/review.json', 'w') as f:
             json.dump(review, f, indent=4)

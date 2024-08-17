@@ -1,49 +1,52 @@
 [
     {
-        "task": "Identify Missing Values",
+        "task": "Identify and handle missing values",
         "method": [
-            "Use .isnull().sum() to identify columns with missing values and the number of missing entries."
+            "Check for missing values in each column using methods like `isnull()` and `sum()`.",
+            "Decide on a strategy for each column with missing values: drop, fill with mean/median/mode, or use more advanced imputation techniques.",
+            "Implement the chosen strategy using pandas functions like `dropna()`, `fillna()`, or `SimpleImputer` from sklearn."
         ]
     },
     {
-        "task": "Handle Missing Values",
+        "task": "Handle incorrect or inconsistent data",
         "method": [
-            "For numerical features: Consider mean, median, or mode imputation.",
-            "For categorical features: Consider imputation with the most frequent category or a placeholder value like 'Unknown'."
+            "Identify any incorrect or inconsistent data entries (e.g., negative ages, invalid ticket numbers).",
+            "Correct or remove these entries as appropriate."
         ]
     },
     {
-        "task": "Correct Data Types",
+        "task": "Convert data types",
         "method": [
-            "Use .astype() to convert columns to appropriate data types if necessary."
+            "Ensure all columns have appropriate data types (e.g., convert numerical columns to `int` or `float`, categorical columns to `category`).",
+            "Use pandas functions like `astype()` to convert data types."
         ]
     },
     {
-        "task": "Address Inconsistencies and Errors",
+        "task": "Standardize categorical variables",
         "method": [
-            "Check for and handle any duplicate rows using .duplicated() and .drop_duplicates().",
-            "Validate ranges and categories for each feature."
+            "Ensure consistency in categorical variables (e.g., standardize the values in the 'embarked' column to 'C', 'Q', 'S').",
+            "Use string manipulation functions in pandas to clean and standardize these values."
         ]
     },
     {
-        "task": "Feature-Specific Cleaning",
+        "task": "Remove duplicates",
         "method": [
-            "For the 'Age' column: Consider creating age bins if the distribution is highly skewed.",
-            "For the 'Fare' column: Handle any outliers or zero values appropriately.",
-            "For the 'Cabin' column: Extract deck information if useful and handle missing values.",
-            "For the 'Embarked' column: Impute missing values with the most frequent port of embarkation."
+            "Check for duplicate rows using `duplicated()`.",
+            "Remove duplicates using `drop_duplicates()`."
         ]
     },
     {
-        "task": "Ensure Data Consistency",
+        "task": "Outlier detection and handling",
         "method": [
-            "Perform a final check using .info() and .head() to ensure all columns are clean and data types are correct."
+            "Identify outliers in numerical columns using statistical methods (e.g., IQR, Z-score).",
+            "Decide on a strategy to handle outliers: remove, cap, or transform.",
+            "Implement the chosen strategy using pandas or numpy functions."
         ]
     },
     {
-        "task": "Document Cleaning Process",
+        "task": "Save the cleaned data",
         "method": [
-            "Maintain a detailed log of all cleaning steps, including the rationale for each decision and any challenges encountered."
+            "Save the cleaned dataset to a new CSV file using `to_csv()` for future use in the next steps."
         ]
     }
 ]

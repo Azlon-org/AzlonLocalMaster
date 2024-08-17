@@ -2,4 +2,5 @@
 **/__pycache__/
 **/images/
 test.py
+test.txt
 api_key.txt

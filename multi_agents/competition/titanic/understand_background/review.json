@@ -1,4 +1,8 @@
 {
-    "final_score": 5,
-    "final_suggestion": {}
+    "final_suggestion": {
+        "agent reader": "No specific suggestions for improving the agent's performance"
+    },
+    "final_score": {
+        "agent reader": 5
+    }
 }
