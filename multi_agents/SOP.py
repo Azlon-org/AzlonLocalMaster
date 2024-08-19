@@ -6,8 +6,8 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 from utils import PREFIX_MULTI_AGENTS, load_config
 from typing import Dict, Tuple, List, Optional
-from Agent import Agent, Reader, Planner, Developer, Reviewer, Summarizer
-from State import State
+from agents import Agent, Reader, Planner, Developer, Reviewer, Summarizer
+from state import State
 import pdb
 import copy
 
@@ -40,7 +40,7 @@ class SOP:
         print(f"Current State: {state}")
         agents = state.agents # 获取当前State中的Agents
 
-        pdb.set_trace()
+        # pdb.set_trace()
         while not state.finished:
             current_agent_name = agents[state.current_step % len(agents)] # 获取当前Agent名字
             current_agent = self._create_agents(current_agent_name) # 创建当前Agent
@@ -72,13 +72,14 @@ class SOP:
                 if state.score >= 3:
                     # Model Building, Validation, and Prediction通过，完成此阶段
                     next_phase = "Complete"
+                    update_state_info = "Complete"
                     new_state = None
                 else:
                     update_state_info = "Fail"
                     new_state = None
         else:
             if state.phase == "Feature Engineering":
-                if self.state_records[-2].phase == "Model Building, Validation, and Prediction":
+                if len(self.state_records) >=2 and self.state_records[-2].phase == "Model Building, Validation, and Prediction":
                     pass
                 else:
                     self.phase_to_iterations[state.phase] += 1

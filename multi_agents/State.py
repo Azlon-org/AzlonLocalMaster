@@ -8,7 +8,7 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 from typing import List, Dict, Any
 from utils import PREFIX_MULTI_AGENTS, load_config
-from prompt import STEPS_IN_CONTEXT_TEMPLATE
+from prompts.prompt_base import STEPS_IN_CONTEXT_TEMPLATE
 
 class State:
     def __init__(self, phase, message="There is no message."):

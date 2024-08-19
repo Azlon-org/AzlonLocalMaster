@@ -1,6 +1,9 @@
 **/submission*/  
 **/__pycache__/
 **/images/
+**/titanic/
+**/house_prices/
+
 test.py
 test.txt
 api_key.txt
