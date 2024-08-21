@@ -81,7 +81,7 @@ class State:
         final_score = self.memory[-1]['reviewer']['score'] # 从memory中获取reviewer的评分
         total = 0.0
         for score in final_score.values():
-            total += score
+            total += float(score)
         self.score = total / len(final_score)
         # if not self.memory[-1].get('developer', {}).get('status', True): # 如果developer执行失败, score为0
         #     self.score = 0

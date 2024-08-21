@@ -9,8 +9,8 @@ sys.path.append('../..')
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 from memory import Memory, transfer_text_to_json
-from llm import OpenaiEmbeddings, LLM
-from state import State
+from LLM import OpenaiEmbeddings, LLM
+from State import State
 from utils import load_config
 
 class TestTool:
@@ -56,13 +56,13 @@ class TestTool:
         elif state.phase == "Data Cleaning":
             content = "cleaned"
         else:
-            assert False, "Don't need to check the document in this phase"
+            return True, 2, "Don't need to check the document in this phase"
 
         for file in files:
             if f"{content}" in file:
-                return True, file
+                return True, 2, f"{content} data exists"
         
-        assert False, f"{content} data does not exist"
+        return False, 2, f"{content} data does not exist"
     
     def test_no_duplicate_cleaned_train(self, state: State):
         '''
@@ -71,7 +71,10 @@ class TestTool:
         df = pd.read_csv(f"{state.competition_dir}/cleaned_train.csv")
         duplicates = df.duplicated().sum()
 
-        assert duplicates == 0, "There are duplicate rows in the cleaned_train.csv"
+        if duplicates == 0:
+            return True, 3, "No duplicate rows in cleaned_train.csv"
+        else:
+            return False, 3, "There are duplicate rows in the cleaned_train.csv"
 
     def test_no_duplicate_cleaned_test(self, state: State):
         '''
@@ -80,7 +83,10 @@ class TestTool:
         df = pd.read_csv(f"{state.competition_dir}/cleaned_test.csv")
         duplicates = df.duplicated().sum()
 
-        assert duplicates == 0, "There are duplicate rows in the cleaned_test.csv"
+        if duplicates == 0:
+            return True, 4, "No duplicate rows in cleaned_test.csv"
+        else:
+            return False, 4, "There are duplicate rows in the cleaned_test.csv"
 
     def test_no_duplicate_submission(self, state: State):
         '''
@@ -93,9 +99,9 @@ class TestTool:
                 duplicates = df.duplicated().sum()
 
                 if duplicates == 0:
-                    return True, file
+                    return True, 5, "No duplicate rows in submission.csv"
                 else:
-                    assert False, file
+                    return False, 5, "There are duplicate rows in the submission.csv"
 
     def test_submission_columns(self, state: State):
         _, file = self.test_no_duplicate_submission()
@@ -123,9 +129,9 @@ text:
         reply = [name.replace(" ", '') for name in reply]
         
         if set(sub_columns) == set(reply):
-            return True, "The columns are correct"
+            return True, 6, "The columns are correct"
         else:
-            assert False, "The columns are not correct"
+            return False, 6, "The columns are not correct"
 
 
 if __name__ == '__main__':

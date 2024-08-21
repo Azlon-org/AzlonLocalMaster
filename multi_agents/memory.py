@@ -5,7 +5,7 @@ from tqdm import tqdm
 import json
 
 # from SOP import SOP
-from llm import OpenaiEmbeddings
+from LLM import OpenaiEmbeddings
 
 
 def transfer_text_to_json(content: str):

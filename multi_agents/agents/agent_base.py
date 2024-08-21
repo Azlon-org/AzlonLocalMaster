@@ -14,8 +14,8 @@ sys.path.append('../..')
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 from utils import read_file
-from llm import LLM
-from state import State
+from LLM import LLM
+from State import State
 from prompts.prompt_base import *
 
 class Agent:
