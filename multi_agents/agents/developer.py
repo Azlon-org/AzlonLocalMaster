@@ -144,15 +144,17 @@ class Developer(Agent):
 
     def _conduct_unit_test(self, state: State) -> None:
         test_tool = TestTool(memory=None, model='gpt-4o', type='api')
-        not_pass_flag = True
+        not_pass_flag = False
         not_pass_tests = test_tool._execute_tests(state) # [(test1_number, test1_information), ...] 全通过返回[]
         not_pass_information = "There are several unit tests failed. You need to modify your code."
         if not_pass_tests:
-            not_pass_flag = False
+            not_pass_flag = True
             print("Unit tests failed.")
             for test_number, test_information in not_pass_tests:
                 print(f"Test {test_number}: {test_information}")
                 not_pass_information += "\n## TEST CASE NUMBER {test_number} ##\n{test_information}"
+        else:
+            not_pass_information = "All unit tests passed."
         return not_pass_flag, not_pass_information
 
     def _debug_code(self, state: State, not_pass_information: str, debug_history: list, raw_reply: str) -> str:
@@ -276,7 +278,7 @@ class Developer(Agent):
                     error_flag = self._run_code(state, path_to_run_code)
                     not_pass_flag, not_pass_information = self._conduct_unit_test(state)
                     if (error_flag or not_pass_flag) and round < 2+max_tries:
-                        raw_reply, debug_history = self._debug_code(state, debug_history, raw_reply)
+                        raw_reply, debug_history = self._debug_code(state, not_pass_information, debug_history, raw_reply)
                     else:
                         break
                 round += 1

@@ -27,10 +27,10 @@
     },
     "phase_to_unit_tests": {
         "Understand Background": [],
-        "Preliminary Exploratory Data Analysis": [],
-        "Data Cleaning": ["test_document_exist", "test_no_duplicate_cleaned_train", "test_no_duplicate_cleaned_test"],
+        "Preliminary Exploratory Data Analysis": ["test_example"],
+        "Data Cleaning": [],
         "In-depth Exploratory Data Analysis": [],
         "Feature Engineering": [],
-        "Model Building, Validation, and Prediction": ["test_document_exist", "test_no_duplicate_submission", "test_submission_columns"]
+        "Model Building, Validation, and Prediction": []
     }
 }

@@ -28,13 +28,17 @@ class TestTool:
         not_pass_tests = []
         test_function_names = state.phase_to_unit_tests[state.phase]
         for func_name in test_function_names:
-            if hasattr(self, func_name):
+            if hasattr(self, func_name): # if the function exists
                 func = getattr(self, func_name)
-                result = func(state) # return 执行结果，测试编号，测试信息
-                print(f"Result of {func_name}: {result[0]}") # assert result
+                result = func(state) # return 执行结果, 测试编号, 测试信息
+                if not result[0]: # if the test failed
+                    not_pass_tests.append(result)
+                    print(f"Test '{func_name}' failed: {result[2]}")
+                else:
+                    print(f"Test '{func_name}' succeeded") # assert result
             else:
                 print(f"Function '{func_name}' not found in TestTool class")
-
+        return not_pass_tests
 
     def test_example(self, state: State):
         return True, 1, "cool example"
