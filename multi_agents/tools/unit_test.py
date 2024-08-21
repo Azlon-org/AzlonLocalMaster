@@ -2,53 +2,54 @@ import os
 import pandas as pd
 import json
 import chromadb
+import sys
+
+sys.path.append('..')
+sys.path.append('../..')
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 from memory import Memory, transfer_text_to_json
-from LLM import OpenaiEmbeddings, LLM
-
+from llm import OpenaiEmbeddings, LLM
+from state import State
+from utils import load_config
 
 class TestTool:
     def __init__(
-        self, current_state: str = "Model Building, Validation, and Prediction", 
-        project_path: str = "/Users/qianbo.zang/Documents/AutoKaggleMaster/multi_agents/competition/titanic",
+        self, 
         memory: Memory = None,
-        llm: LLM = None,
+        model: str = 'gpt-4o',
+        type: str = 'api'
     ):
-        with open("multi_agents/config.json", 'r', encoding='utf-8') as f:
-            config = json.load(f)
-            self.phase_to_iterations = config["phase_to_unit_test"]
-        self.current_state = current_state
-        self.project_path = project_path
-        self.llm = llm
+        self.llm = LLM(model, type)
         self.memory = memory
         # self.summary_ducument = summary_ducument
 
-        self.test_function_names = self.phase_to_iterations[current_state]
-
-    def _execute_tests(self):
-        for func_name in self.test_function_names:
+    def _execute_tests(self, state: State):
+        not_pass_tests = []
+        test_function_names = state.phase_to_unit_tests[state.phase]
+        for func_name in test_function_names:
             if hasattr(self, func_name):
                 func = getattr(self, func_name)
-                result = func()
-                print(f"Result of {func_name}: {result}") # assert result
+                result = func(state) # return 执行结果，测试编号，测试信息
+                print(f"Result of {func_name}: {result[0]}") # assert result
             else:
                 print(f"Function '{func_name}' not found in TestTool class")
 
 
-    def test_example(self):
-        return "cool example"
+    def test_example(self, state: State):
+        return True, 1, "cool example"
     
     
-    def test_document_exist(self):
+    def test_document_exist(self, state: State):
         '''
         check if the csv document exists in the data_dir
         '''
-        # check in the self.project_path, if the document exists
+        # check in the state.competition_dir, if the document exists
         # read all the files in the directory
-        files = os.listdir(self.project_path)
-        if self.current_state == "Model Building, Validation, and Prediction":
+        files = os.listdir(state.competition_dir)
+        if state.phase == "Model Building, Validation, and Prediction":
             content = "submission"
-        elif self.current_state == "Data Cleaning":
+        elif state.phase == "Data Cleaning":
             content = "cleaned"
         else:
             assert False, "Don't need to check the document in this phase"
@@ -59,32 +60,32 @@ class TestTool:
         
         assert False, f"{content} data does not exist"
     
-    def test_no_duplicate_cleaned_train(self):
+    def test_no_duplicate_cleaned_train(self, state: State):
         '''
         Check if there are any duplicate rows in the csv
         '''
-        df = pd.read_csv(f"{self.project_path}/cleaned_train.csv")
+        df = pd.read_csv(f"{state.competition_dir}/cleaned_train.csv")
         duplicates = df.duplicated().sum()
 
         assert duplicates == 0, "There are duplicate rows in the cleaned_train.csv"
 
-    def test_no_duplicate_cleaned_test(self):
+    def test_no_duplicate_cleaned_test(self, state: State):
         '''
         Check if there are any duplicate rows in the csv
         '''
-        df = pd.read_csv(f"{self.project_path}/cleaned_test.csv")
+        df = pd.read_csv(f"{state.competition_dir}/cleaned_test.csv")
         duplicates = df.duplicated().sum()
 
         assert duplicates == 0, "There are duplicate rows in the cleaned_test.csv"
 
-    def test_no_duplicate_submission(self):
+    def test_no_duplicate_submission(self, state: State):
         '''
         Check if there are any duplicate rows in the csv
         '''
-        files = os.listdir(self.project_path)
+        files = os.listdir(state.competition_dir)
         for file in files:
             if f"submission" in file:
-                df = pd.read_csv(f"{self.project_path}/{file}")
+                df = pd.read_csv(f"{state.competition_dir}/{file}")
                 duplicates = df.duplicated().sum()
 
                 if duplicates == 0:
@@ -92,9 +93,9 @@ class TestTool:
                 else:
                     assert False, file
 
-    def test_submission_columns(self):
+    def test_submission_columns(self, state: State):
         _, file = self.test_no_duplicate_submission()
-        df = pd.read_csv(f"{self.project_path}/{file}")
+        df = pd.read_csv(f"{state.competition_dir}/{file}")
         sub_columns = df.columns.values.tolist()
         print(sub_columns)
 
@@ -102,7 +103,7 @@ class TestTool:
 text: 
 {text}
 '''
-        with open(f"{self.project_path}/understand_background/summarizer_reply.txt", 'r') as f:
+        with open(f"{state.competition_dir}/{state.phase}/summarizer_reply.txt", 'r') as f:
             text = f.read()
         json_data = transfer_text_to_json(text)
         # trasnfer json data to list of strings
@@ -124,8 +125,8 @@ text:
 
 
 if __name__ == '__main__':
-    llm = LLM('gpt-4o', 'api')
+    # llm = LLM('gpt-4o', 'api')
     # reply, history = llm.generate('try me a joke', history=None)
     # print(reply)
-    test_tool = TestTool(llm=llm)
+    test_tool = TestTool(memory=None, model='gpt-4o', type='api')
     test_tool._execute_tests()

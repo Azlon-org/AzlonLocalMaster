@@ -20,6 +20,7 @@ from llm import LLM
 from state import State
 from prompts.prompt_base import *
 from prompts.prompt_developer import *
+from tools import *
 
 class Developer(Agent):
     def __init__(self, model: str, type: str):  
@@ -140,8 +141,21 @@ class Developer(Agent):
             file.write(result.stdout)
 
         return error_flag
-    
-    def _debug_code(self, state: State, debug_history: list, raw_reply: str) -> str:
+
+    def _conduct_unit_test(self, state: State) -> None:
+        test_tool = TestTool(memory=None, model='gpt-4o', type='api')
+        not_pass_flag = True
+        not_pass_tests = test_tool._execute_tests(state) # [(test1_number, test1_information), ...] 全通过返回[]
+        not_pass_information = "There are several unit tests failed. You need to modify your code."
+        if not_pass_tests:
+            not_pass_flag = False
+            print("Unit tests failed.")
+            for test_number, test_information in not_pass_tests:
+                print(f"Test {test_number}: {test_information}")
+                not_pass_information += "\n## TEST CASE NUMBER {test_number} ##\n{test_information}"
+        return not_pass_flag, not_pass_information
+
+    def _debug_code(self, state: State, not_pass_information: str, debug_history: list, raw_reply: str) -> str:
         is_previous_code, path_to_previous_code, _ = self._is_previous_code(state)
         if is_previous_code:
             with open(path_to_previous_code, 'r', encoding='utf-8') as f_1:
@@ -168,9 +182,12 @@ class Developer(Agent):
         # 读取error和output
         path_to_error = f'{state.restore_dir}/{state.dir_name}_error.txt'
         path_to_output = f'{state.restore_dir}/{state.dir_name}_output.txt'
-        error_messages = read_file(path_to_error)
+        if os.path.exists(path_to_error):
+            error_messages = read_file(path_to_error)
+        else:
+            error_messages = "There is no error message in the previous phase."
         output_messages = read_file(path_to_output)
-        input = PROMPT_DEVELOPER_DEBUG.format(previous_code=previous_code, wrong_code=wrong_code, output_messages=output_messages, error_messages=error_messages)
+        input = PROMPT_DEVELOPER_DEBUG.format(previous_code=previous_code, wrong_code=wrong_code, output_messages=output_messages, error_messages=error_messages, not_pass_information=not_pass_information)
 
         reply, debug_history = self.llm.generate(input, debug_history, max_tokens=4096)
         return reply, debug_history
@@ -227,8 +244,9 @@ class Developer(Agent):
                     print(f"The {round-1}th try.")
                     path_to_code, path_to_run_code = self._generate_code_file(state, raw_reply)
                     error_flag = self._run_code(state, path_to_run_code)
-                    if error_flag and round <= 1+max_tries:
-                        raw_reply, debug_history = self._debug_code(state, debug_history, raw_reply) # 这里我先把develop和debug解耦 后续便于加上retrieve history然后debug
+                    not_pass_flag, not_pass_information = self._conduct_unit_test(state)
+                    if (error_flag or not_pass_flag) and round <= 1+max_tries:
+                        raw_reply, debug_history = self._debug_code(state, not_pass_information, debug_history, raw_reply) # 这里我先把develop和debug解耦 后续便于加上retrieve history然后debug
                     else:
                         break
                 round += 1
@@ -256,7 +274,8 @@ class Developer(Agent):
                     print(f"The {round-2}th try.")
                     path_to_code, path_to_run_code = self._generate_code_file(state, raw_reply)
                     error_flag = self._run_code(state, path_to_run_code)
-                    if error_flag and round < 2+max_tries:
+                    not_pass_flag, not_pass_information = self._conduct_unit_test(state)
+                    if (error_flag or not_pass_flag) and round < 2+max_tries:
                         raw_reply, debug_history = self._debug_code(state, debug_history, raw_reply)
                     else:
                         break

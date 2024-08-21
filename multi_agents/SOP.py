@@ -6,7 +6,7 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 from utils import PREFIX_MULTI_AGENTS, load_config
 from typing import Dict, Tuple, List, Optional
-from agents import Agent, Reader, Planner, Developer, Reviewer, Summarizer
+from agents import *
 from state import State
 import pdb
 import copy

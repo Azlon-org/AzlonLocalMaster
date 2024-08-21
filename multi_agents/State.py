@@ -22,6 +22,7 @@ class State:
         self.competition = load_config(f'{PREFIX_MULTI_AGENTS}/config.json')['competition'] 
         self.context = STEPS_IN_CONTEXT_TEMPLATE.format(competition_name=self.competition.replace('_', ' '))
         self.phase_to_directory = load_config(f'{PREFIX_MULTI_AGENTS}/config.json')['phase_to_directory'] # 记录每个阶段的目录
+        self.phase_to_unit_tests = load_config(f'{PREFIX_MULTI_AGENTS}/config.json')['phase_to_unit_tests'] # 记录每个阶段的单元测试
         self.restore_dir = ""   # 用于记录当前State的文件保存路径
         self.competition_dir = f'{PREFIX_MULTI_AGENTS}/competition/{self.competition}' # 用于记录当前competition的路径（import data的路径）
         self.dir_name = self.phase_to_directory[self.phase]

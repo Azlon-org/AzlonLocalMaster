@@ -148,5 +148,8 @@ Note that you are not allowed to output PREVIOUS CODE repeatedly.
 # ERROR MESSAGES #
 {error_messages}
 #############
+# NOT PASS TEST CASE #
+{not_pass_information}
+#############
 # CODE AFTER CORRECTION #
 '''
