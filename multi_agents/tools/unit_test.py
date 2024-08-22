@@ -9,8 +9,8 @@ sys.path.append('../..')
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 from memory import Memory, transfer_text_to_json
-from LLM import OpenaiEmbeddings, LLM
-from State import State
+from llm import OpenaiEmbeddings, LLM
+from state import State
 from utils import load_config
 
 

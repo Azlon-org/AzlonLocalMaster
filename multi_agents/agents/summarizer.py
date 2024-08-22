@@ -13,8 +13,8 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 from agent_base import Agent
 from utils import read_file, PREFIX_MULTI_AGENTS
-from LLM import LLM
-from State import State
+from llm import LLM
+from state import State
 from prompts.prompt_base import *
 from prompts.prompt_summarizer import *
 
