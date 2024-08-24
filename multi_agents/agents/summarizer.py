@@ -61,6 +61,9 @@ class Summarizer(Agent):
             round += 1
 
         message = self._parse_json(raw_message)
+        # 保存history
+        with open(f'{state.restore_dir}/{self.role}_history.json', 'w') as f:
+            json.dump(history, f, indent=4)
         with open(f'{state.restore_dir}/{self.role}_reply.txt', 'w') as f:
             f.write(report+'\n\n\n'+raw_message)
 

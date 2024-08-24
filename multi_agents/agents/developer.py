@@ -41,10 +41,12 @@ class Developer(Agent):
     def _delete_output_in_code(self, state: State, previous_code) -> str:
         # 第一次扫描：替换 print 和 plt.show / plt.save 行，保留缩进
         # pdb.set_trace()
+        start_signs = ('print', 'plt')
+        keywords = ('sns', '.plot(', '.hist(')
         previous_run_code = copy.deepcopy(previous_code)
         for i, line in enumerate(previous_run_code):
             stripped_line = line.lstrip()
-            if stripped_line.startswith('print') or stripped_line.startswith('plt.show') or stripped_line.startswith('plt.save'):
+            if stripped_line.startswith(start_signs) or any(keyword in stripped_line for keyword in keywords):
                 indent = line[:len(line) - len(stripped_line)]  # 获取缩进部分
                 previous_run_code[i] = indent + 'pass\n'
         
@@ -145,7 +147,7 @@ class Developer(Agent):
     def _conduct_unit_test(self, state: State) -> None:
         test_tool = TestTool(memory=None, model='gpt-4o', type='api')
         not_pass_flag = False
-        not_pass_tests = test_tool._execute_tests(state) # [(test1_number, test1_information), ...] 全通过返回[]
+        not_pass_tests = test_tool.execute_tests(state) # [(test1_number, test1_information), ...] 全通过返回[]
         not_pass_information = "There are several unit tests failed. You need to modify your code."
         if not_pass_tests:
             not_pass_flag = True
@@ -157,7 +159,8 @@ class Developer(Agent):
             not_pass_information = "All unit tests passed."
         return not_pass_flag, not_pass_information
 
-    def _debug_code(self, state: State, not_pass_information: str, debug_history: list, raw_reply: str) -> str:
+    def _debug_code(self, state: State, error_flag: bool, not_pass_flag: bool, not_pass_information: str, raw_reply: str) -> str:
+        # prepare debug information, and then debug
         is_previous_code, path_to_previous_code, _ = self._is_previous_code(state)
         if is_previous_code:
             with open(path_to_previous_code, 'r', encoding='utf-8') as f_1:
@@ -175,7 +178,7 @@ class Developer(Agent):
         else:
             previous_code = "There is no code file in the previous phase."
         # Extract code from the file
-        pattern = r"```python(.*?)```\n"
+        pattern = r"```python(.*?)```"
         matches = re.findall(pattern, raw_reply, re.DOTALL)
         code_lines = []
         for match in matches:
@@ -189,10 +192,15 @@ class Developer(Agent):
         else:
             error_messages = "There is no error message in the previous phase."
         output_messages = read_file(path_to_output)
-        input = PROMPT_DEVELOPER_DEBUG.format(previous_code=previous_code, wrong_code=wrong_code, output_messages=output_messages, error_messages=error_messages, not_pass_information=not_pass_information)
 
-        reply, debug_history = self.llm.generate(input, debug_history, max_tokens=4096)
-        return reply, debug_history
+        logging.info("Start debugging the code.")
+        debug_tool = DebugTool(model='gpt-4o', type='api')
+        if error_flag:
+            reply, single_round_debug_history = debug_tool.debug_code_with_error(state, previous_code, wrong_code, error_messages, not_pass_information)
+        elif not_pass_flag:
+            pass
+
+        return reply, single_round_debug_history
 
     def _generate_prompt_round1(self, state: State) -> str:
         prompt_round1 = ""
@@ -220,8 +228,12 @@ class Developer(Agent):
         # 实现开发和调试功能
         history = []
         debug_history = []
+        test_history = []
         round = 0
         max_tries = 5
+        error_flag = False
+        not_pass_flag = False
+        not_pass_information = ""
         restore_path = state.restore_dir
         competition_path = state.competition_dir
         task = PROMPT_DEVELOPER_TASK
@@ -246,12 +258,25 @@ class Developer(Agent):
                     print(f"The {round-1}th try.")
                     path_to_code, path_to_run_code = self._generate_code_file(state, raw_reply)
                     error_flag = self._run_code(state, path_to_run_code)
-                    not_pass_flag, not_pass_information = self._conduct_unit_test(state)
-                    if (error_flag or not_pass_flag) and round <= 1+max_tries:
-                        raw_reply, debug_history = self._debug_code(state, not_pass_information, debug_history, raw_reply) # 这里我先把develop和debug解耦 后续便于加上retrieve history然后debug
+                    if error_flag and round <= 1+max_tries:
+                        # 每一轮单独debug
+                        raw_reply, single_round_debug_history = self._debug_code(state, error_flag, not_pass_flag, not_pass_information, raw_reply) # 这里我先把develop和debug解耦 后续便于加上retrieve history然后debug
+                        debug_history.append(copy.deepcopy(single_round_debug_history)) # 好像没必要深拷贝
                     else:
                         break
                 round += 1
+            
+            if not error_flag:
+                # 进行unit test
+                test_round = 0
+                while test_round < max_tries:
+                    not_pass_flag, not_pass_information = self._conduct_unit_test(state)
+                    if not_pass_flag:
+                        raw_reply, test_history = self._debug_code(state, error_flag, not_pass_flag, not_pass_information, raw_reply)
+                    else:
+                        break
+                    test_round += 1
+
         else:
             self.description = "You are skilled at writing and implementing code according to plan." \
                             "You have advanced reasoning abilities and can improve your answers through reflection."
@@ -265,7 +290,7 @@ class Developer(Agent):
                     prompt_round1 = self._generate_prompt_round1(state)
                     input = prompt_round1
                     raw_reply, history = self.llm.generate(input, history, max_tokens=4096)
-                    with open(f'{state.restore_dir}/{self.role}_subtask1_reply.txt', 'w') as f:
+                    with open(f'{state.restore_dir}/{self.role}_mid_reply.txt', 'w') as f:
                         f.write(raw_reply)
                 elif round == 2:
                     input = PROMPT_DEVELOPER_WITH_EXPERIENCE_ROUND2
@@ -276,15 +301,31 @@ class Developer(Agent):
                     print(f"The {round-2}th try.")
                     path_to_code, path_to_run_code = self._generate_code_file(state, raw_reply)
                     error_flag = self._run_code(state, path_to_run_code)
-                    not_pass_flag, not_pass_information = self._conduct_unit_test(state)
-                    if (error_flag or not_pass_flag) and round < 2+max_tries:
-                        raw_reply, debug_history = self._debug_code(state, not_pass_information, debug_history, raw_reply)
+                    if error_flag and round < 2+max_tries:
+                        raw_reply, single_round_debug_history = self._debug_code(state, error_flag, not_pass_flag, not_pass_information, raw_reply)
+                        debug_history.append(copy.deepcopy(single_round_debug_history))
                     else:
                         break
                 round += 1
 
+            if not error_flag:
+                # 进行unit test
+                test_round = 0
+                while test_round < max_tries:
+                    not_pass_flag, not_pass_information = self._conduct_unit_test(state)
+                    if not_pass_flag:
+                        raw_reply, test_history = self._debug_code(state, error_flag, not_pass_flag, not_pass_information, raw_reply)
+                    else:
+                        break
+                    test_round += 1
+
+        # 保存history
+        with open(f'{state.restore_dir}/{self.role}_history.json', 'w') as f:
+            json.dump(history, f, indent=4)
         with open(f'{state.restore_dir}/debug_history.json', 'w') as f:
             json.dump(debug_history, f, indent=4)
+        with open(f'{state.restore_dir}/test_history.json', 'w') as f:
+            json.dump(test_history, f, indent=4)
 
         execution_flag = True
         if os.path.exists(f'{state.restore_dir}/{state.dir_name}_error.txt'):

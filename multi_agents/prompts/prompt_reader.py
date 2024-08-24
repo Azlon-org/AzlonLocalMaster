@@ -20,54 +20,88 @@ Currently, I am at step: Background Understand.
 # TASK #
 {task} 
 #############
-# RESPONSE: JSON FORMAT #
-You must think carefully first and then provide a detailed response in JSON format. Your response should include the following key elements:
-```json
-{{
-    "thought_process": list=[
-        {{
-            "thought": str="Reflect on the current situation and consider how to proceed in fulfilling the user's requirements.",
-            "action": str="Describe the action you plan to take to meet the user's needs.",
-            "observation": str="Note the expected or actual results of the action."
-        }}
-    ],
-    "final_thought": str="Summarize your understanding and confirm that you now have the final answer.",
-    "final_answer": str="Provide the final answer to the original task."
-}}
-```
+# RESPONSE #
+Let's work this out in a step by step way.
 #############
 # START ANALYSIS #
 If you understand, please request the overview of this data science competition from me.
 '''
 
+PROMPT_READER_ROUND2 = '''
+# TASK #
+Please extract essential information from your answer and reorganize into a specified JSON format. You need to organize the information in a clear and concise manner, ensuring that the content is logically structured and easy to understand. You must ensure that the essential information is complete and accurate.
+#############
+# RESPONSE: JSON FORMAT #
+Here is the JSON format you should follow:
+```json
+{{
+    "Competition Overview": ... ,
+    "Files": ... ,
+    "Problem Definition": ... ,
+    "Data Information": ... ,
+    "Target Variable": ... ,
+    "Evaluation Metrics": ... ,
+    "Submission Format": ... ,
+    "Other Key Aspects": ...
+}}
+```
+#############
+# START REORGANIZING #
+'''
 
-PROMPT_READER_WITH_EXPERIENCE = '''
+
+PROMPT_READER_WITH_EXPERIENCE_ROUND0 = '''
 # CONTEXT #
 {steps_in_context}
 Currently, I am at step one: Background Understand.
 #############
 # TASK #
 {task} In the past, you have attempted this task multiple times. However, due to errors in your answers or insufficient quality, you have not succeeded. I will provide you with your previous attempts' experiences and a professional reviewer's suggestions for improvement (PREVIOUS EXPERIENCE WITH SUGGESTION). Based on these, please formulate a new, concise high-level plan to mitigate similar failures and successfully complete the task.
+You must follow these subtasks:
+1. Analyze the previous experience and suggestions. Think about what went wrong and how you can improve.
+2. Develop a new solution based on the previous experience and suggestions.
 #############
 # PREVIOUS EXPERIENCE WITH SUGGESTION #
 {experience_with_suggestion}
 #############
-# RESPONSE: JSON FORMAT #
-You must think carefully first and then provide a detailed response in JSON format. Your response should include the following key elements:
-```json
-{{
-    "thought_process": list=[
-        {{
-            "thought": str="Reflect on the current situation and consider how to proceed in fulfilling the user's requirements.",
-            "action": str="Describe the action you plan to take to meet the user's needs.",
-            "observation": str="Note the expected or actual results of the action."
-        }}
-    ],
-    "final_thought": str="Further reflection based on the observation, summarizing the final answer",
-    "final_answer": str="The final answer to the original input question"
-}}
-```
+# RESPONSE #
+Subtask 1: Analyze the previous experience and suggestions. Think about what went wrong and how you can improve.
+Let's work **Subtask1** out in a step by step way.
 #############
 # START ANALYSIS #
 If you understand, please request the Overview of this data science competition from me.
 '''
+
+PROMPT_READER_WITH_EXPERIENCE_ROUND2 = '''
+#############
+# RESPONSE: JSON FORMAT #
+Subtask2: Develop a new solution based on the previous experience and suggestions.
+Here is the JSON format you should follow:
+```json
+{{
+    "Competition Overview": ... ,
+    "Files": ... ,
+    "Problem Definition": ... ,
+    "Data Information": ... ,
+    "Target Variable": ... ,
+    "Evaluation Metrics": ... ,
+    "Submission Format": ... ,
+    "Other Key Aspects": ...
+}}
+```
+'''
+
+# You must think carefully first and then provide a detailed response in JSON format. Your response should include the following key elements:
+# ```json
+# {{
+#     "thought_process": list=[
+#         {{
+#             "thought": str="Reflect on the current situation and consider how to proceed in fulfilling the user's requirements.",
+#             "action": str="Describe the action you plan to take to meet the user's needs.",
+#             "observation": str="Note the expected or actual results of the action."
+#         }}
+#     ],
+#     "final_thought": str="Summarize your understanding and confirm that you now have the final answer.",
+#     "final_answer": str="Provide the final answer to the original task."
+# }}
+# ```

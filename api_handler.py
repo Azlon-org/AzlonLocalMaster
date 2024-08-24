@@ -4,13 +4,17 @@ import os
 import base64
 import pdb
 import sys
+import logging
+
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 # os.environ['OPENAI_API_KEY'] = 'your_api_key'
 DIR = os.path.dirname(os.path.abspath(__file__))
 
 def generate_response(client, engine, messages, settings, type, timeout):
-    print("Generating response for engine:", engine)
+    # print("Generating response for engine:", engine)
+    logging.info(f"Generating response for engine: {engine}")
     start_time = time.time()
     
     try:
@@ -34,12 +38,13 @@ def generate_response(client, engine, messages, settings, type, timeout):
                 timeout = settings.get('timeout', 30),
             )
     except Exception as e:
-        print(f"Error during API call: {e}")
+        # print(f"Error during API call: {e}")
+        logging.error(f"Error during API call: {e}")
         raise
     
     end_time = time.time()
-    print('Finish!')
-    print("Time taken:", end_time - start_time)
+    # print("Finish! Time taken:", end_time - start_time)
+    # logging.info(f"Finish! Time taken: {end_time - start_time}")
     return response
 
 class APIHandler:
@@ -72,7 +77,8 @@ class APIHandler:
         }
         
         timeout = settings['timeout']
-        print(f'Timeout is setting to {timeout} seconds.')
+        # print(f'Timeout is setting to {timeout} seconds.')
+        # logging.info(f'Timeout is setting to {timeout} seconds.')
 
         max_attempts = 3
         for attempt in range(max_attempts):
@@ -83,7 +89,8 @@ class APIHandler:
                 else:
                     return "Error: Wrong response format."
             except (TimeoutError, openai.APIError, openai.APIConnectionError, openai.RateLimitError) as error:
-                print(f'Attempt {attempt + 1} of {max_attempts} failed with error: {error}')
+                # print(f'Attempt {attempt + 1} of {max_attempts} failed with error: {error}')
+                logging.error(f'Attempt {attempt + 1} of {max_attempts} failed with error: {error}')
                 if attempt == max_attempts - 1:
                     return "Error: Max attempts reached."
 

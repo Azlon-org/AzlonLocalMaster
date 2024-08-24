@@ -63,6 +63,9 @@ class Planner(Agent):
                     input = f"\n#############\n# PREVIOUS PLAN #\n{self._get_previous_plan_and_report(state)[0]}\n#############\n# PREVIOUS REPORT #\n{self._get_previous_plan_and_report(state)[1]}"
                     input += self._read_data(state)
                 elif round == 2:
+                    planner_mid_reply = raw_reply
+                    input = PROMPT_PLNNAER_ROUND2
+                elif round == 3: 
                     break
                 raw_reply, history = self.llm.generate(input, history, max_tokens=4096)
                 round += 1
@@ -72,7 +75,6 @@ class Planner(Agent):
                 return {"planner": state.memory[-2]["planner"]}
             else:
                 return {"planner": state.memory[-2]["planner"]}
-                pass
         result = raw_reply
         reply = self._parse_json(raw_reply)
 
@@ -82,8 +84,13 @@ class Planner(Agent):
             logging.info("Final answer not found in reply.")
             plan = reply
 
+        # 保存history
+        with open(f'{state.restore_dir}/{self.role}_history.json', 'w') as f:
+            json.dump(history, f, indent=4)
         with open(f'{state.restore_dir}/plan.json', 'w') as f:
             json.dump(plan, f, indent=4) # 保存规划结果
+        with open(f'{state.restore_dir}/{self.role}_mid_reply.txt', 'w') as f:
+            f.write(planner_mid_reply)
         with open(f'{state.restore_dir}/{self.role}_reply.txt', 'w') as f:
             f.write(raw_reply)
 

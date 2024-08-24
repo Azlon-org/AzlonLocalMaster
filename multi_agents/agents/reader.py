@@ -22,7 +22,7 @@ class Reader(Agent):
     def __init__(self, model: str, type: str):
         super().__init__(
             role="reader",
-            description="You are good at reading document, summarizing information and outputting it in JSON format.",
+            description="You are good at reading document and summarizing information.",
             model=model,
             type=type
         )
@@ -40,36 +40,47 @@ class Reader(Agent):
                 if round == 0:
                     task = PROMPT_READER_TASK
                     input = PROMPT_READER.format(steps_in_context=state.context, task=task)
-                elif round == 1: input = f"\n#############\n# OVERVIEW #\n{overview}"
-                elif round == 2: break
+                elif round == 1: 
+                    input = f"\n#############\n# OVERVIEW #\n{overview}"
+                elif round == 2: 
+                    reader_mid_reply = raw_reply
+                    input = PROMPT_READER_ROUND2
+                elif round == 3: 
+                    break
                 raw_reply, history = self.llm.generate(input, history, max_tokens=4096)
                 round += 1
         else: # 如果之前有memory，拼接之前memory中reader的结果作为experience
-            self.description = "You are good at reading document, summarizing information and outputting it in JSON format." \
+            self.description = "You are good at reading document and summarizing information." \
                             "You have advanced reasoning abilities and can improve your answers through reflection."
             experience_with_suggestion = self._gather_experience_with_suggestion(state)
             history.append({"role": "system", "content": f"{role_prompt} {self.description}"})
             while True:
                 if round == 0:
                     task = PROMPT_READER_TASK
-                    input = PROMPT_READER_WITH_EXPERIENCE.format(steps_in_context=state.context, task=task, experience_with_suggestion=experience_with_suggestion)
-                elif round == 1: input = f"\n#############\n# OVERVIEW #\n{overview}"
-                elif round == 2: break
+                    input = PROMPT_READER_WITH_EXPERIENCE_ROUND0.format(steps_in_context=state.context, task=task, experience_with_suggestion=experience_with_suggestion)
+                elif round == 1: 
+                    input = f"\n#############\n# OVERVIEW #\n{overview}"
+                elif round == 2:
+                    reader_mid_reply = raw_reply
+                    input = PROMPT_READER_WITH_EXPERIENCE_ROUND2
+                elif round == 3: 
+                    break
                 raw_reply, history = self.llm.generate(input, history, max_tokens=4096)
                 round += 1
         result = raw_reply
         reply = self._parse_json(raw_reply)
 
-        try:
-            summary = reply["final_answer"]
-        except KeyError:
-            logging.info("Final answer not found in reply.")
-            summary = reply
+        summary = reply 
 
+        # 保存history
+        with open(f'{state.restore_dir}/{self.role}_history.json', 'w') as f:
+            json.dump(history, f, indent=4)
         with open(f'{state.competition_dir}/competition_info.json', 'w') as f:
             json.dump(summary, f, indent=4)
         with open(f'{state.restore_dir}/{self.role}_reply.txt', 'w') as f:
             f.write(raw_reply)
+        with open(f'{state.restore_dir}/{self.role}_mid_reply.txt', 'w') as f:
+            f.write(reader_mid_reply)
         input_used_in_review = f"   <overview>\n{overview}\n    </overview>"
 
         print(f"State {state.phase} - Agent {self.role} finishes working.")

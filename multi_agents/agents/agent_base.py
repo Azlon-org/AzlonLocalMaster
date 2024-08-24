@@ -6,6 +6,7 @@ import re
 import logging
 import sys 
 import os
+import pdb
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
@@ -82,10 +83,10 @@ class Agent:
         logging.info(f"Attempting to extract JSON from raw reply.")
         json_match = re.search(r'```json(.*?)```', raw_reply, re.DOTALL)
         
-        if json_match and '###' not in raw_reply:
+        if json_match:
             reply_str = json_match.group(1).strip()
             reply = try_json_loads(reply_str)
-            if reply is not None and 'final_answer' in reply:
+            if reply is not None:
                 return reply
         
         logging.info(f"Failed to parse JSON from raw reply, attempting reorganization.")

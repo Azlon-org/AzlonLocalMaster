@@ -25,7 +25,7 @@ class TestTool:
         self.memory = memory
         # self.summary_ducument = summary_ducument
 
-    def _execute_tests(self, state: State):
+    def execute_tests(self, state: State):
         not_pass_tests = []
         test_function_names = state.phase_to_unit_tests[state.phase]
         for func_name in test_function_names:

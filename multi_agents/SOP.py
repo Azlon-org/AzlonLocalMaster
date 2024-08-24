@@ -66,8 +66,13 @@ class SOP:
         if state.phase == "Model Building, Validation, and Prediction":
             if state.score < 3 and self.phase_to_iterations[state.phase] < self.max_iterations:
                 # 如果Model Building, Validation, and Prediction评分低于3，并且还能继续迭代，返回Feature Engineering
-                next_phase = "Feature Engineering"
+                # next_phase = "Feature Engineering"
                 self.phase_to_iterations[state.phase] += 1
+                next_phase = state.phase # 如果评分低于3，继续当前阶段
+                update_state_info = "Repeat"
+                new_state = State(phase=state.phase) 
+                new_state.memory = copy.deepcopy(state.memory) # 深拷贝memory
+                new_state.memory.append({})  # 在列表中加入一个空dict
             else:
                 if state.score >= 3:
                     # Model Building, Validation, and Prediction通过，完成此阶段

@@ -17,9 +17,6 @@ Data visualization: When using libraries such as seaborn or matplotlib to create
 </example>
 - Always consider resource constraints and limit the number of generated images to ensure that they do not exceed 10 when performing Exploratory Data Analysis (EDA), 
     - **Note that the generated images should be LIMITED to the most critical visualizations that provide valuable insights.**
-<example>   
-When using the matplotlib library for visualizing multiple subplots, if you need to display relationships between multiple variables, you can set up subplots within a single figure window instead of generating separate plots for each variable relationship. This approach not only makes effective use of visual space but also adheres to the rule of limiting the number of generated plots. For example, if there are 12 variable combinations, you can choose the most critical 10 combinations to display.
-</example>
 ## CODING RULES ##
 - Always use `print()` function if you need to print a value. 
 - Always use `plt.close()` to close the figure after saving the image.
@@ -36,6 +33,10 @@ After data cleaning, you can use assert statements to check whether the cleaned 
     - Note that the test dataset typically does not include the target variable, so special care must be taken when applying target encoding or feature engineering that depends on the target variable.
 - Always copy the DataFrame before processing it and use the copy to process.
 '''
+
+# <example>   
+# When using the matplotlib library for visualizing multiple subplots, if you need to display relationships between multiple variables, you can set up subplots within a single figure window instead of generating separate plots for each variable relationship. This approach not only makes effective use of visual space but also adheres to the rule of limiting the number of generated plots. For example, if there are 12 variable combinations, you can choose the most critical 10 combinations to display.
+# </example>
 
 
 PROMPT_DEVELOPER = '''
@@ -102,7 +103,8 @@ You must follow these subtasks:
 #############
 # RESPONSE #
 Subtask 1: Analyze the previous experience and suggestions. Think about what went wrong and how you can improve.
-Let's work this out in a step by step way.
+You should ONLY focus on Subtask1.
+Let's work **Subtask1** out in a step by step way.
 #############
 # START ANALYSIS #
 If you understand, please request the code and insight from previous steps, all the features of the data and 10 data samples in both training data and test data from me. Then you can start analyzing the previous experience and suggestions.
@@ -127,29 +129,93 @@ EXPLANATION
 '''
 
 
-PROMPT_DEVELOPER_DEBUG = '''
+# PROMPT_DEVELOPER_DEBUG = '''
+# # CONTEXT #
+# I'm getting an error executing the code you generated.
+# #############
+# # TASK #
+# Please modify the code according to the error messages ([ERROR MESSAGES]). You must follow these steps:
+# 1. Analyze and find out which code block causes the error.
+# 2. Think about how to correct the code block.
+# 3. Correct the wrong code block.
+# 4. Output the all the code blocks after correction.
+# Note that you are not allowed to output PREVIOUS CODE repeatedly.
+# #############
+# # PREVIOUS CODE #
+# {previous_code}
+# #############
+# # WRONG CODE #
+# {wrong_code}
+# #############
+# # ERROR MESSAGES #
+# {error_messages}
+# #############
+# # NOT PASS TEST CASE #
+# {not_pass_information}
+# #############
+# # CODE AFTER CORRECTION #
+# '''
+
+PROMPT_DEVELOPER_DEBUG_LOCATE = '''
 # CONTEXT #
 I'm getting an error executing the code you generated.
 #############
 # TASK #
-please modify the code according to the error messages ([ERROR MESSAGES]). You must follow these steps:
-1. Analyze and find out which code block causes the error.
-2. Think about how to correct the code block.
-4. Correct the wrong code block.
-3. Output the all the code blocks after correction.
-Note that you are not allowed to output PREVIOUS CODE repeatedly.
+Please locate the error in the code and output the exact error code snippet. I will provide you with the previous code, code contains error and error messages.
+NOTE that if assert statements just reports the error, you must find out the exact error code snippet which makes the assert statement fail.
+NOTE that the **last** code snippet in your response should be the **exact error code snippet** that I ask you to output.
 #############
 # PREVIOUS CODE #
 {previous_code}
 #############
-# WRONG CODE #
+# CODE CONTAINS ERROR #
 {wrong_code}
 #############
 # ERROR MESSAGES #
 {error_messages}
 #############
-# NOT PASS TEST CASE #
-{not_pass_information}
+# EXACT ERROR CODE SNIPPET #
+Let's work this out in a step by step way.
+'''
+
+PROMPT_DEVELOPER_DEBUG_FIX = '''
+# CONTEXT #
+I have an error code snippet with error messages. 
 #############
-# CODE AFTER CORRECTION #
+# TASK #
+Please correct the error code snippet according to the error messages. You must follow these steps:
+1. Think about how to correct the code block.
+2. Correct the wrong code block.
+NOTE that the **last** code snippet in your response should be the **code snippet after correction** that I ask you to output.
+#############
+# EXACT ERROR CODE SNIPPET #
+{exact_error_code_snippet}
+#############
+# ERROR MESSAGES #
+{error_messages}
+#############
+# CODE SNIPPET AFTER CORRECTION #
+Let's work this out in a step by step way.
+'''
+
+PROMPT_DEVELOPER_DEBUG_MERGE = '''
+# CONTEXT #
+When running the code you generated, I encountered some errors. I have analyzed and located the erroneous code snippet and have corrected it to produce the correct code snippet.
+#############
+# TASK #
+- CODE CONTAINS ERROR: The original code you generated contains an error.
+- EXACT ERROR CODE SNIPPET: The precise code snippet from your original code that contains the error, as identified through analysis.
+- CODE SNIPPET AFTER CORRECTION: The correct code snippet obtained after fixing the EXACT ERROR CODE SNIPPET.
+Please replace the erroneous code snippet (EXACT ERROR CODE SNIPPET) in CODE CONTAINS ERROR with the CODE SNIPPET AFTER CORRECTION to produce the fully corrected code.
+#############
+# CODE CONTAINS ERROR #
+{wrong_code}
+#############
+# EXACT ERROR CODE SNIPPET #
+{exact_error_code_snippet}
+#############
+# CODE SNIPPET AFTER CORRECTION #
+{code_snippet_after_correction}
+#############
+# ALL CORRECT CODE #
 '''

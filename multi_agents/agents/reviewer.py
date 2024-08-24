@@ -58,8 +58,8 @@ class Reviewer(Agent):
                             normalized_key = v
                             break
                     merged_dict["final_score"][normalized_key] = d["final_score"][key]
-        except KeyError as e:
-            logging.error(f"KeyError: {e}")
+        except Exception as e:
+            logging.error(f"Error: {e}")
             pdb.set_trace()
         
         return merged_dict
@@ -87,13 +87,15 @@ class Reviewer(Agent):
         all_raw_reply = []
         history.append({"role": "system", "content": f"{role_prompt} {self.description}"})
         round = 0
-        while round <= len(prompt_for_agents):
-            if round == 0:
+        while round <= 3 * len(prompt_for_agents) - 1:
+            if round % 3 == 0:
                 input = PROMPT_REVIEWER_ROUND0.format(steps_in_context=state.context, step_name=state.phase)
-            elif round >= 1:
-                input = prompt_for_agents[round-1]
+            elif round % 3 == 1:
+                input = prompt_for_agents[round//3 - 1]
+            elif round % 3 == 2:
+                input = PROMPT_REVIEWER_ROUND2
             raw_reply, history = self.llm.generate(input, history, max_tokens=4096)
-            if round >= 1:
+            if round % 3 == 2:
                 all_raw_reply.append(raw_reply)
             round += 1
 
@@ -106,6 +108,12 @@ class Reviewer(Agent):
             except KeyError:
                 pdb.set_trace()
 
+        # 保存history
+        with open(f'{state.restore_dir}/{self.role}_history.json', 'w') as f:
+            json.dump(history, f, indent=4)
+        with open(f'{state.restore_dir}/{self.role}_reply.txt', 'w') as f:
+            f.write("\n\n\n".join(all_raw_reply))
+
         review = self._merge_dicts(all_reply, state)
         final_score = review['final_score']
         final_suggestion = review['final_suggestion']
@@ -116,8 +124,6 @@ class Reviewer(Agent):
         # pdb.set_trace()
         with open(f'{state.restore_dir}/review.json', 'w') as f:
             json.dump(review, f, indent=4)
-        with open(f'{state.restore_dir}/{self.role}_reply.txt', 'w') as f:
-            f.write("\n\n\n".join(all_raw_reply))
 
         print(f"State {state.phase} - Agent {self.role} finishes working.")
         return {self.role: {"history": history, "score": final_score, "suggestion": final_suggestion, "result": review}}
