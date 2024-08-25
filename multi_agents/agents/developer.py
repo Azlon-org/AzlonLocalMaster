@@ -120,7 +120,7 @@ class Developer(Agent):
             print(f"All files in directory '{images_dir}' have been deleted successfully.")
 
         # Run the code
-        result = subprocess.run(['python3', path_to_run_code], capture_output=True, text=True)
+        result = subprocess.run(['python3', '-W', 'ignore', path_to_run_code], capture_output=True, text=True)
         error_flag = False
         path_to_error = f'{state.restore_dir}/{state.dir_name}_error.txt'
         path_to_output = f'{state.restore_dir}/{state.dir_name}_output.txt'

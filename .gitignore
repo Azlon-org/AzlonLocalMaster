@@ -3,6 +3,7 @@
 **/images/
 **/titanic/
 **/house_prices/
+**/predict_future_sales/
 
 test.py
 test.txt

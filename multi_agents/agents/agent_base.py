@@ -7,6 +7,7 @@ import logging
 import sys 
 import os
 import pdb
+import glob
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
@@ -56,7 +57,17 @@ class Agent:
         
         result = ""
         if state.phase in ["Preliminary Exploratory Data Analysis", "Data Cleaning"]:
-            train_data_sample = read_sample(f'{state.competition_dir}/train.csv', num_lines)
+            # train_data_sample = read_sample(f'{state.competition_dir}/train.csv', num_lines)
+            # 包含train的文件路径 过滤掉包含 'cleaned_train' 和 'processed_train' 的文件 选择第一个符合条件的
+            all_train_files = glob.glob(os.path.join(state.competition_dir, '*train*.csv'))
+            filtered_train_files = [f for f in all_train_files if 'cleaned_train' not in f and 'processed_train' not in f]
+            if filtered_train_files:
+                train_file_path = filtered_train_files[0]
+                train_data_sample = read_sample(train_file_path, num_lines)
+            else:
+                print("没有找到符合条件的文件")
+                exit()
+            train_data_sample = read_sample(train_file_path, num_lines)
             test_data_sample = read_sample(f'{state.competition_dir}/test.csv', num_lines)
             result += f"\n#############\n# TRAIN DATA WITH FEATURES #\n{train_data_sample}\n\n#############\n# TEST DATA WITH FEATURES #\n{test_data_sample}"
         elif state.phase in ["In-depth Exploratory Data Analysis", "Feature Engineering"]:
