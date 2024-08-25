@@ -1,7 +1,0 @@
-Model,Accuracy
-Logistic Regression,0.8212290502793296
-Decision Tree,0.7821229050279329
-Random Forest,0.8212290502793296
-Gradient Boosting,0.8324022346368715
-Support Vector Machine,0.8268156424581006
-K-Nearest Neighbors,0.8324022346368715
