@@ -7,6 +7,7 @@ import os
 import copy
 import subprocess
 import shutil
+import pdb
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
@@ -39,18 +40,45 @@ class Developer(Agent):
         return os.path.exists(path_to_previous_code), path_to_previous_code, path_to_previous_run_code
 
     def _delete_output_in_code(self, state: State, previous_code) -> str:
-        # 第一次扫描：替换 print 和 plt.show / plt.save 行，保留缩进
+        previous_run_code = copy.deepcopy(previous_code) # 深拷贝 防止修改原始数据
+        keywords = ('sns', '.plot', '.hist', '.plt')
+
+        # 第一次扫描：识别 for 循环，整段替换
+        for_loop_list = []
+        in_for_loop = False
+        # pdb.set_trace()
+        for i, line in enumerate(previous_run_code):
+            if line.startswith('    for'):
+                tmp_loop = []
+                indent = line[:len(line) - len(line.lstrip())]  # 获取缩进部分
+                tmp_loop.append(i) # 记录for循环的起始行
+                # print(i)
+                in_for_loop = True
+            elif in_for_loop and not line.startswith('    '+indent):
+                tmp_loop.append(i) # 记录for循环的终止行
+                # print(i)
+                in_for_loop = False
+                for_loop_list.append(tmp_loop)
+
+        if len(for_loop_list) > 0:
+            logging.info(f"for_loop_list: {for_loop_list}")
+
+        # 逆序替换 for 循环为 '    pass'
+        for start, end in for_loop_list[::-1]:
+            loop_code = "\n".join(previous_run_code[start:end])
+            if any(keyword in loop_code for keyword in keywords):  # 如果 for 循环中包含关键字
+                previous_run_code[start:end] = ['    pass']  # 替换相应行
+
+        # 第二次扫描：替换 print 和 plt.show / plt.save 行，保留缩进
         # pdb.set_trace()
         start_signs = ('print', 'plt')
-        keywords = ('sns', '.plot(', '.hist(')
-        previous_run_code = copy.deepcopy(previous_code)
         for i, line in enumerate(previous_run_code):
             stripped_line = line.lstrip()
             if stripped_line.startswith(start_signs) or any(keyword in stripped_line for keyword in keywords):
                 indent = line[:len(line) - len(stripped_line)]  # 获取缩进部分
                 previous_run_code[i] = indent + 'pass\n'
         
-        # 第二次扫描：合并连续的 pass 行
+        # 第三次扫描：合并连续的 pass 行
         new_code = []
         pass_found = False
         
@@ -90,6 +118,8 @@ class Developer(Agent):
         
         # Enclose the code in a function
         code_lines = [f"    {line}\n" for line in code_lines]
+        with open(f'{state.restore_dir}/single_step_code.txt', 'w') as f: # 保存单步的code 用于debug
+            f.write("".join(code_lines))
         code_with_output_lines = ["def generated_code_function():\n"] + previous_code + code_lines
         run_code_lines = ["def generated_code_function():\n"] + previous_run_code + code_lines
 
@@ -120,10 +150,33 @@ class Developer(Agent):
             print(f"All files in directory '{images_dir}' have been deleted successfully.")
 
         # Run the code
-        result = subprocess.run(['python3', '-W', 'ignore', path_to_run_code], capture_output=True, text=True)
+        timeout_flag = False
         error_flag = False
         path_to_error = f'{state.restore_dir}/{state.dir_name}_error.txt'
         path_to_output = f'{state.restore_dir}/{state.dir_name}_output.txt'
+
+        # timeout
+        if 'eda' in state.phase:
+            timeout = 120
+            timeout_info = "Your code is running out of time, please consider resource availability and reduce the number of data analysis plots drawn."
+        elif 'model' in state.phase:
+            timeout = 300
+            timeout_info = "Your code is running out of time, please consider resource availability and try fewer models."
+        else:
+            timeout = 60
+            timeout_info = "Your code is running out of time, please consider resource availability or other factors."
+        try:
+            result = subprocess.run(['python3', '-W', 'ignore', path_to_run_code], capture_output=True, text=True, timeout=timeout)
+        except subprocess.TimeoutExpired:
+            print("Code execution timed out.")
+            with open(path_to_error, 'w') as f:
+                f.write(timeout_info)
+            with open(path_to_output, 'w') as f:
+                f.write("")
+            error_flag = True
+            return error_flag
+        
+        # errors
         if result.stderr:
             print("Error encountered during code execution.")
             with open(path_to_error, 'w') as f:
@@ -252,7 +305,7 @@ class Developer(Agent):
                     prompt_round1 = self._generate_prompt_round1(state)
                     input = prompt_round1
                     raw_reply, history = self.llm.generate(input, history, max_tokens=4096)
-                    with open(f'{state.restore_dir}/{self.role}_reply.txt', 'w') as f:
+                    with open(f'{state.restore_dir}/{self.role}_first_reply.txt', 'w') as f:
                         f.write(raw_reply)
                 elif round >= 2:
                     print(f"The {round-1}th try.")
@@ -290,12 +343,12 @@ class Developer(Agent):
                     prompt_round1 = self._generate_prompt_round1(state)
                     input = prompt_round1
                     raw_reply, history = self.llm.generate(input, history, max_tokens=4096)
-                    with open(f'{state.restore_dir}/{self.role}_mid_reply.txt', 'w') as f:
+                    with open(f'{state.restore_dir}/{self.role}_first_mid_reply.txt', 'w') as f:
                         f.write(raw_reply)
                 elif round == 2:
                     input = PROMPT_DEVELOPER_WITH_EXPERIENCE_ROUND2
                     raw_reply, history = self.llm.generate(input, history, max_tokens=4096)
-                    with open(f'{state.restore_dir}/{self.role}_reply.txt', 'w') as f:
+                    with open(f'{state.restore_dir}/{self.role}_first_reply.txt', 'w') as f:
                         f.write(raw_reply)
                 elif round >= 3:
                     print(f"The {round-2}th try.")

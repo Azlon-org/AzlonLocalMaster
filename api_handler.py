@@ -91,6 +91,7 @@ class APIHandler:
             except (TimeoutError, openai.APIError, openai.APIConnectionError, openai.RateLimitError) as error:
                 # print(f'Attempt {attempt + 1} of {max_attempts} failed with error: {error}')
                 logging.error(f'Attempt {attempt + 1} of {max_attempts} failed with error: {error}')
+                time.sleep(10)
                 if attempt == max_attempts - 1:
                     return "Error: Max attempts reached."
 
