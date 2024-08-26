@@ -161,8 +161,8 @@ PROMPT_DEVELOPER_DEBUG_LOCATE = '''
 I'm getting an error executing the code you generated.
 #############
 # TASK #
-Please locate the error in the code and output the exact error code snippet. I will provide you with the previous code, code contains error and error messages.
-NOTE that if assert statements just reports the error, you must find out the exact error code snippet which makes the assert statement fail.
+Please locate the error in the code and output the exact error code snippet (with a small amount of context if you need). I will provide you with the previous code, code contains error and error messages.
+NOTE that if assert statements just reports the error, you must find out the exact error code snippet which makes the assert statement fail, not output the assert statement itself.
 NOTE that the **last** code snippet in your response should be the **exact error code snippet** that I ask you to output.
 #############
 # PREVIOUS CODE #
@@ -174,7 +174,7 @@ NOTE that the **last** code snippet in your response should be the **exact error
 # ERROR MESSAGES #
 {error_messages}
 #############
-# EXACT ERROR CODE SNIPPET #
+# RESPONSE: EXACT ERROR CODE SNIPPET #
 Let's work this out in a step by step way.
 '''
 
@@ -184,8 +184,8 @@ I have an error code snippet with error messages.
 #############
 # TASK #
 Please correct the error code snippet according to the error messages. You must follow these steps:
-1. Think about how to correct the code block.
-2. Correct the wrong code block.
+1. Think about how to correct the exact error code snippet.
+2. Correct the exact error code snippet.
 NOTE that the **last** code snippet in your response should be the **code snippet after correction** that I ask you to output.
 #############
 # EXACT ERROR CODE SNIPPET #
@@ -194,7 +194,7 @@ NOTE that the **last** code snippet in your response should be the **code snippe
 # ERROR MESSAGES #
 {error_messages}
 #############
-# CODE SNIPPET AFTER CORRECTION #
+# RESPONSE: CODE SNIPPET AFTER CORRECTION #
 Let's work this out in a step by step way.
 '''
 
@@ -206,7 +206,7 @@ When running the code you generated, I encountered some errors. I have analyzed 
 - CODE CONTAINS ERROR: The original code you generated contains an error.
 - EXACT ERROR CODE SNIPPET: The precise code snippet from your original code that contains the error, as identified through analysis.
 - CODE SNIPPET AFTER CORRECTION: The correct code snippet obtained after fixing the EXACT ERROR CODE SNIPPET.
-Please replace the erroneous code snippet (EXACT ERROR CODE SNIPPET) in CODE CONTAINS ERROR with the CODE SNIPPET AFTER CORRECTION to produce the fully corrected code.
+Please replace the EXACT ERROR CODE SNIPPET in CODE CONTAINS ERROR with the CODE SNIPPET AFTER CORRECTION to produce the fully corrected code.
 #############
 # CODE CONTAINS ERROR #
 {wrong_code}
@@ -217,5 +217,108 @@ Please replace the erroneous code snippet (EXACT ERROR CODE SNIPPET) in CODE CON
 # CODE SNIPPET AFTER CORRECTION #
 {code_snippet_after_correction}
 #############
-# ALL CORRECT CODE #
+# RESPONSE: ALL CORRECT CODE #
+'''
+
+
+
+PROMPT_DEVELOPER_TEST_LOCATE = '''
+# CONTEXT #
+Your code has a couple tests that don't pass.
+#############
+# TASK #
+For each test that does not pass, please analyze the code with problem, figure out which code snippet causes the test not pass, and output the exact code snippet with problem (with a small amount of context if you need). 
+I will provide you with the previous code, code with problem and not pass tests' information.
+NOTE that in your each analysis for each test, the **last** code snippet in your response should be the **exact code snippet with problem** that I ask you to output.
+#############
+# PREVIOUS CODE #
+{previous_code}
+#############
+# CODE WITH PROBLEM #
+{code_with_problem}
+#############
+# NOT PASS TEST CASES #
+{not_pass_information}
+#############
+# RESPONSE #
+Let's work this out in a step by step way.
+'''
+
+PROMPT_DEVELOPER_TEST_REORGANIZE_LOCATE_ANSWER = '''
+# TASK #
+Please reorganize the code snippets that you have identified as problematic in the previous step. 
+#############
+# RESPONSE: EXACT CODE SNIPPETS WITH PROBLEM #
+You should ONLY output the each code snippet with problem, without any other content.
+Here is the template you can use:
+## CODE SNIPPET 1 WITH PROBLEM ##
+```python
+code snippet 1 with problem
+```
+## CODE SNIPPET 2 WITH PROBLEM ##
+```python
+code snippet 2 with problem
+```
+...
+'''
+
+PROMPT_DEVELOPER_TEST_FIX = '''
+# CONTEXT #
+Your code has a couple tests that don't pass.
+#############
+# TASK #
+Please correct the exact code snippets with problem according to the not pass tests' information.
+You must follow these steps:
+1. Think about how to correct the code snippets with problem.
+2. Correct the code snippets with problem.
+#############
+# EXACT CODE SNIPPETS WITH PROBLEM #
+{exact_code_snippets_with_problem}
+#############
+# NOT PASS TEST CASES #
+{not_pass_information}
+#############
+# RESPONSE #
+Let's work this out in a step by step way.
+'''
+
+PROMPT_DEVELOPER_TEST_REORGANIZE_FIX_ANSWER = '''
+# TASK #
+Please reorganize the code snippets that you have corrected in the previous step.
+#############
+# RESPONSE: CODE SNIPPETS AFTER CORRECTION #
+You should ONLY output the each code snippet after correction, without any other content.
+NOTE that you should output the code snippets after correction in the order of the code snippets with problems, they have to correspond to each other.
+Here is the template you can use:
+## CODE SNIPPET 1 AFTER CORRECTION ##
+```python
+code snippet 1 after correction
+```
+## CODE SNIPPET 2 AFTER CORRECTION ##
+```python
+code snippet 2 after correction
+```
+...
+'''
+
+PROMPT_DEVELOPER_TEST_MERGE = '''
+# CONTEXT #
+Your code has a couple tests that don't pass. I have analyzed and located the problematic code snippets and have corrected them to produce the correct code snippets.
+#############
+# TASK #
+- CODE WITH PROBLEM: The original code you generated which failed some tests.
+- EXACT CODE SNIPPETS WITH PROBLEM: Precise code snippets from your original code that causes problem, as identified through analysis.
+- CODE SNIPPETS AFTER CORRECTION: The correct code snippets obtained after fixing the EXACT CODE SNIPPETS WITH PROBLEM.
+Please replace the EXACT CODE SNIPPETS WITH PROBLEM in CODE WITH PROBLEM with the CODE SNIPPETS AFTER CORRECTION to produce the fully corrected code.
+#############
+# CODE WITH PROBLEM #
+{code_with_problem}
+#############
+# EXACT CODE SNIPPETS WITH PROBLEM #
+{exact_code_snippets_with_problem}
+#############
+# CODE SNIPPETS AFTER CORRECTION #
+{code_snippets_after_correction}
+#############
+# RESPONSE: ALL CORRECT CODE #
 '''

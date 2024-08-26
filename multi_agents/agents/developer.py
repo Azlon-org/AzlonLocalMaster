@@ -41,7 +41,7 @@ class Developer(Agent):
 
     def _delete_output_in_code(self, state: State, previous_code) -> str:
         previous_run_code = copy.deepcopy(previous_code) # 深拷贝 防止修改原始数据
-        keywords = ('sns', '.plot', '.hist', '.plt')
+        keywords = ('sns.', '.plot', '.hist', '.plt')
 
         # 第一次扫描：识别 for 循环，整段替换
         for_loop_list = []
@@ -54,20 +54,20 @@ class Developer(Agent):
                 tmp_loop.append(i) # 记录for循环的起始行
                 # print(i)
                 in_for_loop = True
-            elif in_for_loop and not line.startswith('    '+indent):
+            elif in_for_loop and line.startswith(indent) and not line.startswith('    '+indent) and len(line.strip()) > 0:
                 tmp_loop.append(i) # 记录for循环的终止行
                 # print(i)
                 in_for_loop = False
                 for_loop_list.append(tmp_loop)
 
-        if len(for_loop_list) > 0:
-            logging.info(f"for_loop_list: {for_loop_list}")
+        # if len(for_loop_list) > 0:
+        #     logging.info(f"for_loop_list: {for_loop_list}")
 
         # 逆序替换 for 循环为 '    pass'
         for start, end in for_loop_list[::-1]:
             loop_code = "\n".join(previous_run_code[start:end])
             if any(keyword in loop_code for keyword in keywords):  # 如果 for 循环中包含关键字
-                previous_run_code[start:end] = ['    pass']  # 替换相应行
+                previous_run_code[start:end] = ['    pass\n']  # 替换相应行
 
         # 第二次扫描：替换 print 和 plt.show / plt.save 行，保留缩进
         # pdb.set_trace()
@@ -201,7 +201,7 @@ class Developer(Agent):
         test_tool = TestTool(memory=None, model='gpt-4o', type='api')
         not_pass_flag = False
         not_pass_tests = test_tool.execute_tests(state) # [(test1_number, test1_information), ...] 全通过返回[]
-        not_pass_information = "There are several unit tests failed. You need to modify your code."
+        not_pass_information = ""
         if not_pass_tests:
             not_pass_flag = True
             print("Unit tests failed.")
@@ -249,9 +249,9 @@ class Developer(Agent):
         logging.info("Start debugging the code.")
         debug_tool = DebugTool(model='gpt-4o', type='api')
         if error_flag:
-            reply, single_round_debug_history = debug_tool.debug_code_with_error(state, previous_code, wrong_code, error_messages, not_pass_information)
+            reply, single_round_debug_history = debug_tool.debug_code_with_error(state, previous_code, wrong_code, error_messages)
         elif not_pass_flag:
-            pass
+            reply, single_round_debug_history = debug_tool.debug_code_with_no_pass_test(state, previous_code, wrong_code, not_pass_information)
 
         return reply, single_round_debug_history
 

@@ -25,7 +25,7 @@ class DebugTool:
     ):
         self.llm = LLM(model, type)
 
-    def debug_code_with_error(self, state: State, previous_code: str, wrong_code: str, error_messages: str, not_pass_information: str) -> str:
+    def debug_code_with_error(self, state: State, previous_code: str, wrong_code: str, error_messages: str) -> str:
         single_round_debug_history = []
         # locate error
         input = PROMPT_DEVELOPER_DEBUG_LOCATE.format(
@@ -73,5 +73,46 @@ class DebugTool:
 
         return raw_reply, single_round_debug_history
 
-    def debug_code_with_no_pass_test(self, debug_history, previous_code: str, wrong_code: str, not_pass_information: str) -> str:
-        pass
+    def debug_code_with_no_pass_test(self, state: State, previous_code: str, code_with_problem: str, not_pass_information: str) -> str:
+        single_round_test_history = []
+        # locate error
+        input = PROMPT_DEVELOPER_TEST_LOCATE.format(
+            previous_code=previous_code,
+            code_with_problem=code_with_problem,
+            not_pass_information=not_pass_information
+        )
+        raw_reply, test_locate_history = self.llm.generate(input, [], max_tokens=4096)
+        input = PROMPT_DEVELOPER_TEST_REORGANIZE_LOCATE_ANSWER
+        exact_code_snippets_with_problem, test_locate_history = self.llm.generate(input, test_locate_history, max_tokens=4096)
+        single_round_test_history.append(test_locate_history)
+        with open(f'{state.restore_dir}/test_locate_problem.txt', 'w') as f:
+            f.write(exact_code_snippets_with_problem)
+
+        # fix bug
+        input = PROMPT_DEVELOPER_TEST_FIX.format(
+            exact_code_snippets_with_problem=exact_code_snippets_with_problem,
+            not_pass_information=not_pass_information
+        )
+        raw_reply, test_fix_history = self.llm.generate(input, [], max_tokens=4096)
+        single_round_test_history.append(test_fix_history)
+        input = PROMPT_DEVELOPER_TEST_REORGANIZE_FIX_ANSWER
+        code_snippets_after_correction, test_fix_history = self.llm.generate(input, test_fix_history, max_tokens=4096)
+        with open(f'{state.restore_dir}/test_fix_problem.txt', 'w') as f:
+            f.write(code_snippets_after_correction)
+
+
+        # merge code
+        input = PROMPT_DEVELOPER_TEST_MERGE.format(
+            code_with_problem=code_with_problem,
+            exact_code_snippets_with_problem=exact_code_snippets_with_problem,
+            code_snippets_after_correction=code_snippets_after_correction
+        )
+        raw_reply, merge_code_history = self.llm.generate(input, [], max_tokens=4096)
+        single_round_test_history.append(merge_code_history)
+        with open(f'{state.restore_dir}/test_merge_code.txt', 'w') as f:
+            f.write(raw_reply)
+
+        with open(f'{state.restore_dir}/single_round_test_history.json', 'w') as f:
+            json.dump(single_round_test_history, f, indent=4)
+
+        return raw_reply, single_round_test_history
