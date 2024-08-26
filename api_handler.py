@@ -80,7 +80,7 @@ class APIHandler:
         # print(f'Timeout is setting to {timeout} seconds.')
         # logging.info(f'Timeout is setting to {timeout} seconds.')
 
-        max_attempts = 3
+        max_attempts = 5
         for attempt in range(max_attempts):
             try:
                 response = generate_response(self.client, self.engine, messages, settings, type, timeout)
@@ -91,7 +91,7 @@ class APIHandler:
             except (TimeoutError, openai.APIError, openai.APIConnectionError, openai.RateLimitError) as error:
                 # print(f'Attempt {attempt + 1} of {max_attempts} failed with error: {error}')
                 logging.error(f'Attempt {attempt + 1} of {max_attempts} failed with error: {error}')
-                time.sleep(10)
+                time.sleep(30)
                 if attempt == max_attempts - 1:
                     return "Error: Max attempts reached."
 

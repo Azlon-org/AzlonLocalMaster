@@ -37,6 +37,7 @@ class SOP:
     # 执行完当前state，并返回新的state
     def step(self, state: State) -> Tuple[str, State]:
         state.make_dir() # 创建当前State的目录
+        state.make_context() # 创建当前State的context
         print(f"Current State: {state}")
         agents = state.agents # 获取当前State中的Agents
 
@@ -70,7 +71,7 @@ class SOP:
                 self.phase_to_iterations[state.phase] += 1
                 next_phase = state.phase # 如果评分低于3，继续当前阶段
                 update_state_info = "Repeat"
-                new_state = State(phase=state.phase) 
+                new_state = State(phase=state.phase, competition=self.competition) 
                 new_state.memory = copy.deepcopy(state.memory) # 深拷贝memory
                 new_state.memory.append({})  # 在列表中加入一个空dict
             else:
@@ -94,14 +95,14 @@ class SOP:
             if state.score < 3 and self.phase_to_iterations[state.phase] < self.max_iterations:
                 next_phase = state.phase # 如果评分低于3，继续当前阶段
                 update_state_info = "Repeat"
-                new_state = State(phase=state.phase) 
+                new_state = State(phase=state.phase, competition=self.competition) 
                 new_state.memory = copy.deepcopy(state.memory) # 深拷贝memory
                 new_state.memory.append({})  # 在列表中加入一个空dict
             else:
                 if state.score >= 3: # 如果评分大于等于3，进入下一个阶段
                     update_state_info = "Success"
                     next_phase = self.get_next_phase(state.phase)
-                    new_state = State(phase=next_phase, message=state.send_message())
+                    new_state = State(phase=next_phase, competition=self.competition, message=state.send_message())
                 else:
                     update_state_info = "Fail"
                     new_state = None

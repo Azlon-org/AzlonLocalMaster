@@ -8,10 +8,10 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 from typing import List, Dict, Any
 from utils import PREFIX_MULTI_AGENTS, load_config
-from prompts.prompt_base import STEPS_IN_CONTEXT_TEMPLATE
+from prompts.prompt_base import STEPS_IN_CONTEXT_PREFIX
 
 class State:
-    def __init__(self, phase, message="There is no message."):
+    def __init__(self, phase, competition, message="There is no message."):
         self.phase = phase
         self.memory = [{}]   # 用于记录State内部的信息 只存相同phase的 当前State的memory在最后一个
         self.message = message  # 来自上一个State的信息 
@@ -19,8 +19,9 @@ class State:
         self.score = 0     # 用于记录当前State的评分
         self.finished = False
         self.agents = load_config(f'{PREFIX_MULTI_AGENTS}/config.json')['phase_to_agents'][self.phase] # 用于记录当前State的Agent
-        self.competition = load_config(f'{PREFIX_MULTI_AGENTS}/config.json')['competition'] 
-        self.context = STEPS_IN_CONTEXT_TEMPLATE.format(competition_name=self.competition.replace('_', ' '))
+        # self.competition = load_config(f'{PREFIX_MULTI_AGENTS}/config.json')['competition'] 
+        self.competition = competition
+        self.context = ""   # 用于记录当前State的context
         self.phase_to_directory = load_config(f'{PREFIX_MULTI_AGENTS}/config.json')['phase_to_directory'] # 记录每个阶段的目录
         self.phase_to_unit_tests = load_config(f'{PREFIX_MULTI_AGENTS}/config.json')['phase_to_unit_tests'] # 记录每个阶段的单元测试
         self.restore_dir = ""   # 用于记录当前State的文件保存路径
@@ -29,6 +30,12 @@ class State:
 
     def __str__(self):
         return f"State: {self.phase}, Current Step: {self.current_step}, Current Agent: {self.agents[self.current_step]}, Finished: {self.finished}"
+
+    def make_context(self):
+        self.context = STEPS_IN_CONTEXT_PREFIX.replace("# {competition_name}", self.competition)
+        phases = load_config(f'{PREFIX_MULTI_AGENTS}/config.json')['phases']
+        for i, phase in enumerate(phases):
+            self.context += f"{i+1}. {phase}\n"
 
     # 创建当前State的目录
     def make_dir(self):

@@ -56,6 +56,8 @@ class TestTool:
             content = "submission"
         elif state.phase == "Data Cleaning":
             content = "cleaned"
+        elif state.phase == "Feature Engineering":
+            content = "processed"
         else:
             return True, 2, "Don't need to check the document in this phase"
 
@@ -105,7 +107,7 @@ class TestTool:
                     return False, 5, "There are duplicate rows in the submission.csv"
 
     def test_submission_columns(self, state: State):
-        _, file = self.test_no_duplicate_submission()
+        _, file = self.test_no_duplicate_submission(state)
         df = pd.read_csv(f"{state.competition_dir}/{file}")
         sub_columns = df.columns.values.tolist()
         print(sub_columns)
@@ -180,7 +182,7 @@ text:
     def test_submission_no_missing_values(self, state: State):
         files = os.listdir(state.competition_dir)
         for file in files:
-            if f"submission" in file:
+            if "submission" in file and "sample" not in file:
                 path = f"{state.competition_dir}/{file}"
                 df = pd.read_csv(path)
                 if df.isnull().sum().sum() == 0:
@@ -210,7 +212,7 @@ text:
         df = pd.read_csv(path)
         files = os.listdir(state.competition_dir)
         for file in files:
-            if f"submission" in file:
+            if "submission" in file and "sample" not in file:
                 path1 = f"{state.competition_dir}/{file}"
                 df1 = pd.read_csv(path1)
                 if len(df) == len(df1):
@@ -223,7 +225,7 @@ text:
         df = pd.read_csv(path)
         files = os.listdir(state.competition_dir)
         for file in files:
-            if "submission" in file:
+            if "submission" in file and "sample" not in file:
                 path1 = f"{state.competition_dir}/{file}"
                 df1 = pd.read_csv(path1)
                 # 比较两个 DataFrame 的列名集合是否相同
@@ -231,8 +233,30 @@ text:
                     return True, 15, "Submission.csv and sample_submission.csv files have the same column names"
                 else:
                     return False, 15, "Submission.csv and sample_submission.csv files have different column names"
-'''
 
+    def test_submission_first_columns(self, state: State):
+        path = f"{state.competition_dir}/sample_submission.csv"
+        df = pd.read_csv(path)
+        files = os.listdir(state.competition_dir)
+        false_info = ""
+        for file in files:
+            if "submission" in file and "sample" not in file:
+                path1 = f"{state.competition_dir}/{file}"
+                df1 = pd.read_csv(path1)
+                # 比较两个 DataFrame 的第一列值是否相同
+                if df.iloc[:, 0].equals(df1.iloc[:, 0]):
+                    return True, 16, "Submission.csv and sample_submission.csv files have the same first column values"
+                else:
+                    false_info = "Submission.csv should have the same first column values as sample_submission.csv file"
+                    false_info += f'''
+This is the first 10 lines of Submission.csv:
+{df1.head(10)}
+This is the first 10 lines of sample_submission.csv:
+{df.head(10)}
+'''
+                    return False, 16, false_info
+                
+'''
 4. 测试ID的唯一性
    - 确保 `id` 列中的值是唯一的，没有重复。
 

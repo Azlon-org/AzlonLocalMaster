@@ -10,6 +10,8 @@
 
 **/predict_future_sales/
 
+**/experiments_history/
+
 test.py
 test.txt
 api_key.txt

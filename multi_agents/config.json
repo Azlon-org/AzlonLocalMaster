@@ -1,6 +1,6 @@
 {
-    "competition": "titanic",
     "phases": ["Understand Background", "Preliminary Exploratory Data Analysis", "Data Cleaning", "In-depth Exploratory Data Analysis", "Feature Engineering", "Model Building, Validation, and Prediction"],
+    "_phases": ["Understand Background", "Data Cleaning", "Feature Engineering", "Model Building, Validation, and Prediction"],
     "phase_to_agents": {
         "Understand Background": ["Reader", "Reviewer"],
         "Preliminary Exploratory Data Analysis": ["Planner", "Developer", "Reviewer", "Summarizer"],
@@ -27,10 +27,10 @@
     },
     "phase_to_unit_tests": {
         "Understand Background": [],
-        "Preliminary Exploratory Data Analysis": ["test_example", "test_image_num"],
+        "Preliminary Exploratory Data Analysis": ["test_example", ""],
         "Data Cleaning": ["test_readable_cleaned_train", "test_readable_cleaned_test", "test_document_exist", "test_no_duplicate_cleaned_test", "test_no_duplicate_cleaned_train", "test_cleaned_train_no_missing_values", "test_cleaned_test_no_missing_values"],
-        "In-depth Exploratory Data Analysis": ["test_image_num"],
+        "In-depth Exploratory Data Analysis": [""],
         "Feature Engineering": [],
-        "Model Building, Validation, and Prediction": ["test_readable_submission", "test_document_exist", "test_no_duplicate_submission", "test_submission_columns", "test_submission_no_missing_values", "test_file_num", "test_column_names"]
+        "Model Building, Validation, and Prediction": ["test_readable_submission", "test_document_exist", "test_no_duplicate_submission", "", "test_submission_no_missing_values", "test_file_num", "test_column_names"]
     }
 }

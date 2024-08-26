@@ -2,14 +2,18 @@ AGENT_ROLE_TEMPLATE = '''
 You are an excellent {agent_role}.
 '''
 
-STEPS_IN_CONTEXT_TEMPLATE = '''
+# STEPS_IN_CONTEXT_TEMPLATE = '''
+# I am working on a data science competition called "# {competition_name}". I plan to complete it by following these steps:
+# 1. Understand Background
+# 2. Preliminary Exploratory Data Analysis (Preliminary EDA)
+# 3. Data Cleaning
+# 4. In-depth Exploratory Data Analysis (In-depth EDA)
+# 5. Feature Engineering
+# 6. Model Building, Validation, and Prediction
+# '''
+
+STEPS_IN_CONTEXT_PREFIX = '''
 I am working on a data science competition called "# {competition_name}". I plan to complete it by following these steps:
-1. Understand Background
-2. Preliminary Exploratory Data Analysis (Preliminary EDA)
-3. Data Cleaning
-4. In-depth Exploratory Data Analysis (In-depth EDA)
-5. Feature Engineering
-6. Model Building, Validation, and Prediction
 '''
 
 PROMPT_EACH_EXPERIENCE_WITH_SUGGESTION = '''

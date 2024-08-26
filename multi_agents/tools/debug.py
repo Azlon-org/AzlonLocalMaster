@@ -41,11 +41,11 @@ class DebugTool:
         # extract code
         pattern = r"```python(.*?)```"
         error_code_matches = re.findall(pattern, raw_reply, re.DOTALL)
-        exact_error_code_snippet = error_code_matches[-1]
+        most_relevant_code_snippet = error_code_matches[-1]
 
         # fix bug
         input = PROMPT_DEVELOPER_DEBUG_FIX.format(
-            exact_error_code_snippet=exact_error_code_snippet,
+            most_relevant_code_snippet=most_relevant_code_snippet,
             error_messages=error_messages
         )
         raw_reply, fix_bug_history = self.llm.generate(input, [], max_tokens=4096)
@@ -60,7 +60,7 @@ class DebugTool:
         # merge code
         input = PROMPT_DEVELOPER_DEBUG_MERGE.format(
             wrong_code=wrong_code,
-            exact_error_code_snippet=exact_error_code_snippet,
+            most_relevant_code_snippet=most_relevant_code_snippet,
             code_snippet_after_correction=code_snippet_after_correction
         )
         raw_reply, merge_code_history = self.llm.generate(input, [], max_tokens=4096)
@@ -83,14 +83,14 @@ class DebugTool:
         )
         raw_reply, test_locate_history = self.llm.generate(input, [], max_tokens=4096)
         input = PROMPT_DEVELOPER_TEST_REORGANIZE_LOCATE_ANSWER
-        exact_code_snippets_with_problem, test_locate_history = self.llm.generate(input, test_locate_history, max_tokens=4096)
+        code_snippets_with_problem, test_locate_history = self.llm.generate(input, test_locate_history, max_tokens=4096)
         single_round_test_history.append(test_locate_history)
         with open(f'{state.restore_dir}/test_locate_problem.txt', 'w') as f:
-            f.write(exact_code_snippets_with_problem)
+            f.write(code_snippets_with_problem)
 
         # fix bug
         input = PROMPT_DEVELOPER_TEST_FIX.format(
-            exact_code_snippets_with_problem=exact_code_snippets_with_problem,
+            code_snippets_with_problem=code_snippets_with_problem,
             not_pass_information=not_pass_information
         )
         raw_reply, test_fix_history = self.llm.generate(input, [], max_tokens=4096)
@@ -104,7 +104,7 @@ class DebugTool:
         # merge code
         input = PROMPT_DEVELOPER_TEST_MERGE.format(
             code_with_problem=code_with_problem,
-            exact_code_snippets_with_problem=exact_code_snippets_with_problem,
+            code_snippets_with_problem=code_snippets_with_problem,
             code_snippets_after_correction=code_snippets_after_correction
         )
         raw_reply, merge_code_history = self.llm.generate(input, [], max_tokens=4096)

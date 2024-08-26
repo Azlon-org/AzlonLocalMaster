@@ -7,17 +7,22 @@ from multi_agents.state import State
 from multi_agents.sop import SOP
 from utils import PREFIX_MULTI_AGENTS, load_config
 import pdb
-
+import argparse
 
 if __name__ == '__main__':
-    competition = load_config(f'{PREFIX_MULTI_AGENTS}/config.json')['competition']
+    # competition = load_config(f'{PREFIX_MULTI_AGENTS}/config.json')['competition']
+    parser = argparse.ArgumentParser(description='Run SOP for a competition.')
+    parser.add_argument('--competition', type=str, default='titanic', help='Competition name')
+    args = parser.parse_args()
+    competition = args.competition
+
     sop = SOP(competition)
-    start_state = State(phase="Understand Background")
+    start_state = State(phase="Understand Background", competition=competition)
     # start_state = State(phase="Preliminary Exploratory Data Analysis")
     # start_state = State(phase="Data Cleaning")
     # start_state = State(phase="In-depth Exploratory Data Analysis")
-    # start_state = State(phase="Feature Engineering")
-    # start_state = State(phase="Model Building, Validation, and Prediction")
+    # start_state = State(phase="Feature Engineering", competition=competition)
+    # start_state = State(phase="Model Building, Validation, and Prediction", competition=competition)
     start_message = ""
     new_state = start_state
 

@@ -109,7 +109,7 @@ class Developer(Agent):
         path_to_run_code = f'{state.restore_dir}/{state.dir_name}_run_code.py'
 
         # Extract code from the file
-        pattern = r"```python(.*?)```\n"
+        pattern = r"```python(.*?)```"
         matches = re.findall(pattern, raw_reply, re.DOTALL)
         code_lines = []
         # pdb.set_trace()
@@ -118,6 +118,9 @@ class Developer(Agent):
         
         # Enclose the code in a function
         code_lines = [f"    {line}\n" for line in code_lines]
+        if len(code_lines) == 0:
+            logging.error("No code found in the reply.")
+            pdb.set_trace()
         with open(f'{state.restore_dir}/single_step_code.txt', 'w') as f: # 保存单步的code 用于debug
             f.write("".join(code_lines))
         code_with_output_lines = ["def generated_code_function():\n"] + previous_code + code_lines
@@ -156,14 +159,14 @@ class Developer(Agent):
         path_to_output = f'{state.restore_dir}/{state.dir_name}_output.txt'
 
         # timeout
-        if 'eda' in state.phase:
-            timeout = 120
-            timeout_info = "Your code is running out of time, please consider resource availability and reduce the number of data analysis plots drawn."
-        elif 'model' in state.phase:
+        if 'Analysis' in state.phase:
             timeout = 300
+            timeout_info = "Your code is running out of time, please consider resource availability and reduce the number of data analysis plots drawn."
+        elif 'Model' in state.phase:
+            timeout = 600
             timeout_info = "Your code is running out of time, please consider resource availability and try fewer models."
         else:
-            timeout = 60
+            timeout = 180
             timeout_info = "Your code is running out of time, please consider resource availability or other factors."
         try:
             result = subprocess.run(['python3', '-W', 'ignore', path_to_run_code], capture_output=True, text=True, timeout=timeout)
@@ -205,9 +208,9 @@ class Developer(Agent):
         if not_pass_tests:
             not_pass_flag = True
             print("Unit tests failed.")
-            for test_number, test_information in not_pass_tests:
+            for test_flag, test_number, test_information in not_pass_tests:
                 print(f"Test {test_number}: {test_information}")
-                not_pass_information += "\n## TEST CASE NUMBER {test_number} ##\n{test_information}"
+                not_pass_information += f"\n## TEST CASE NUMBER {test_number} ##\n{test_information}"
         else:
             not_pass_information = "All unit tests passed."
         return not_pass_flag, not_pass_information
