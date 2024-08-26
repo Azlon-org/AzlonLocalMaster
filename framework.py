@@ -8,6 +8,7 @@ from multi_agents.sop import SOP
 from utils import PREFIX_MULTI_AGENTS, load_config
 import pdb
 
+
 if __name__ == '__main__':
     competition = load_config(f'{PREFIX_MULTI_AGENTS}/config.json')['competition']
     sop = SOP(competition)
