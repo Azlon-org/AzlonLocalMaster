@@ -75,7 +75,7 @@ If you understand, please request the code and insight from previous steps, all 
 '''
 
 
-PROMPT_DEVELOPER_WITH_EXPERIENCE_ROUND0 = '''
+PROMPT_DEVELOPER_WITH_EXPERIENCE_ROUND0_0 = '''
 # CONTEXT #
 {steps_in_context}
 Currently, I am at step :{step_name}.
@@ -111,7 +111,7 @@ If you understand, please request the code and insight from previous steps, all 
 '''
 
 
-PROMPT_DEVELOPER_WITH_EXPERIENCE_ROUND2 = '''
+PROMPT_DEVELOPER_WITH_EXPERIENCE_ROUND0_2 = '''
 #############
 # RESPONSE: BLOCK (CODE & EXPLANATION) #
 Subtask 2: Develop a new solution based on the previous experience and suggestions.
@@ -161,9 +161,10 @@ PROMPT_DEVELOPER_DEBUG_LOCATE = '''
 I'm getting an error executing the code you generated.
 #############
 # TASK #
-Please locate the error in the code and output the most relevant code snippet (5 to 10 lines in length). I will provide you with the previous code, code contains error and error messages.
+Please locate the error in the code and output the most relevant code snippet causes error (5 to 10 lines in length). I will provide you with the previous code, code contains error and error messages.
 NOTE that if assert statements just reports the error, you must find out the most relevant code snippet which makes the assert statement fail, not output the assert statement itself.
-NOTE that the **last** code snippet in your response should be the **most relevant code snippet** that I ask you to output.
+NOTE that the **last** code snippet in your response should be the **most relevant code snippet causes error** that I ask you to output.
+NOTE THAT YOU ARE ONLY REQUIRED TO OUTPUT THE MOST RELEVANT CODE SNIPPET THAT CAUSES THE ERROR. DO NOT CORRECT THE CODE OR MODIFY THE CODE.
 #############
 # PREVIOUS CODE #
 {previous_code}
@@ -174,8 +175,16 @@ NOTE that the **last** code snippet in your response should be the **most releva
 # ERROR MESSAGES #
 {error_messages}
 #############
-# RESPONSE: MOST RELEVANT CODE SNIPPET #
-Let's work this out in a step by step way.
+# RESPONSE: MOST RELEVANT CODE SNIPPET CAUSES ERROR #
+{debug_times_info}
+Let's work this out in a step by step way. 
+'''
+
+PROMPT_DEVELOPER_DEBUG_ASK_FOR_HELP = '''This is the {i}-th time you try to fix the error. Remember You can try 5 times in total. 
+Please think carefully about whether you can solve the problem by yourself or not. If you can't solve it, feel free to ask for help.
+You can ask for help by output the following messages:
+1. HELP
+2. I NEED HELP
 '''
 
 PROMPT_DEVELOPER_DEBUG_FIX = '''

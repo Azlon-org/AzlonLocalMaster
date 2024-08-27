@@ -123,7 +123,7 @@ text:
         # print(json_data['final_answer'])
         text = json_data['final_answer']
         
-        prompt = prompt.format(text=text['Submission_Format'])
+        prompt = prompt.format(text=text['submission_Format'])
         reply, _ = self.llm.generate(prompt, history=None)
         # convert the reply to a list
         reply = reply.split(", ")
@@ -216,9 +216,9 @@ text:
                 path1 = f"{state.competition_dir}/{file}"
                 df1 = pd.read_csv(path1)
                 if len(df) == len(df1):
-                    return True, 14, "Submission.csv and sample_submission.csv files have the same number of rows"
+                    return True, 14, "submission.csv and sample_submission.csv files have the same number of rows"
                 else:
-                    return False, 14, "Submission.csv and sample_submission.csv files have different number of rows"
+                    return False, 14, "submission.csv and sample_submission.csv files have different number of rows"
     
     def test_column_names(self, state: State):
         path = f"{state.competition_dir}/sample_submission.csv"
@@ -230,9 +230,9 @@ text:
                 df1 = pd.read_csv(path1)
                 # 比较两个 DataFrame 的列名集合是否相同
                 if set(df.columns) == set(df1.columns):
-                    return True, 15, "Submission.csv and sample_submission.csv files have the same column names"
+                    return True, 15, "submission.csv and sample_submission.csv files have the same column names"
                 else:
-                    return False, 15, "Submission.csv and sample_submission.csv files have different column names"
+                    return False, 15, "submission.csv and sample_submission.csv files have different column names"
 
     def test_submission_first_columns(self, state: State):
         path = f"{state.competition_dir}/sample_submission.csv"
@@ -245,14 +245,27 @@ text:
                 df1 = pd.read_csv(path1)
                 # 比较两个 DataFrame 的第一列值是否相同
                 if df.iloc[:, 0].equals(df1.iloc[:, 0]):
-                    return True, 16, "Submission.csv and sample_submission.csv files have the same first column values"
+                    return True, 16, "submission.csv and sample_submission.csv files have the same first column values"
                 else:
-                    false_info = "Submission.csv should have the same first column values as sample_submission.csv file"
+                    false_info = "submission.csv should have the same first column values as sample_submission.csv file"
                     false_info += f'''
-This is the first 10 lines of Submission.csv:
+This is the first 10 lines of submission.csv:
 {df1.head(10)}
 This is the first 10 lines of sample_submission.csv:
 {df.head(10)}
+If you use some transformation on the features in submission.csv, please make sure you have reversed the transformation before submitting the file.
+Here is an example that specific transformation applied on features in submisson.csv is not reversed:
+<example>
+- submission.csv:
+Id,SalePrice
+1.733237550296372,-0.7385090666351347
+1.7356102231920547,-0.2723912737214865
+...
+- sample_submission.csv:
+Id,SalePrice
+1461,169277.0524984
+1462,187758.393988768
+</example>
 '''
                     return False, 16, false_info
                 

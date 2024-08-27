@@ -258,7 +258,7 @@ class Developer(Agent):
 
         return reply, single_round_debug_history
 
-    def _generate_prompt_round1(self, state: State) -> str:
+    def _generate_prompt_round0(self, state: State) -> str:
         prompt_round1 = ""
         # 读取上一个阶段的code
         is_previous_code, path_to_previous_code, _ = self._is_previous_code(state)
@@ -289,6 +289,7 @@ class Developer(Agent):
         max_tries = 5
         error_flag = False
         not_pass_flag = False
+        retry_flag = False
         not_pass_information = ""
         restore_path = state.restore_dir
         competition_path = state.competition_dir
@@ -300,24 +301,26 @@ class Developer(Agent):
 
         if len(state.memory) == 1: # 如果之前没有memory，说明是第一次执行
             history.append({"role": "system", "content": f"{role_prompt} {self.description}"})
-            while round <= 1+max_tries:
-                if round == 0:
+            while round <= max_tries:
+                if round == 0 or retry_flag:
                     input = PROMPT_DEVELOPER.format(steps_in_context=state.context, step_name=state.phase, message=state.message, competition_info=competition_info, plan=plan, constraints=constraints, task=task)
                     raw_reply, history = self.llm.generate(input, history, max_tokens=4096)
-                elif round == 1:
-                    prompt_round1 = self._generate_prompt_round1(state)
-                    input = prompt_round1
+                    prompt_round0 = self._generate_prompt_round0(state)
+                    input = prompt_round0
                     raw_reply, history = self.llm.generate(input, history, max_tokens=4096)
                     with open(f'{state.restore_dir}/{self.role}_first_reply.txt', 'w') as f:
                         f.write(raw_reply)
-                elif round >= 2:
-                    print(f"The {round-1}th try.")
+                    retry_flag = False
+                elif round >= 1:
+                    print(f"The {round}-th try.")
                     path_to_code, path_to_run_code = self._generate_code_file(state, raw_reply)
                     error_flag = self._run_code(state, path_to_run_code)
-                    if error_flag and round <= 1+max_tries:
+                    if error_flag and round < max_tries: # 如果最后一轮还有错，就不再debug
                         # 每一轮单独debug
                         raw_reply, single_round_debug_history = self._debug_code(state, error_flag, not_pass_flag, not_pass_information, raw_reply) # 这里我先把develop和debug解耦 后续便于加上retrieve history然后debug
-                        debug_history.append(copy.deepcopy(single_round_debug_history)) # 好像没必要深拷贝
+                        debug_history.append(single_round_debug_history) # 没必要深拷贝
+                        if raw_reply == "HELP":
+                            retry_flag = True
                     else:
                         break
                 round += 1
@@ -338,28 +341,29 @@ class Developer(Agent):
                             "You have advanced reasoning abilities and can improve your answers through reflection."
             experience_with_suggestion = self._gather_experience_with_suggestion(state)
             history.append({"role": "system", "content": f"{role_prompt} {self.description}"})
-            while round <= 2+max_tries:
+            while round <= max_tries:
                 if round == 0:
-                    input = PROMPT_DEVELOPER_WITH_EXPERIENCE_ROUND0.format(steps_in_context=state.context, step_name=state.phase, message=state.message, competition_info=competition_info, plan=plan, constraints=constraints, task=task, experience_with_suggestion=experience_with_suggestion)
+                    input = PROMPT_DEVELOPER_WITH_EXPERIENCE_ROUND0_0.format(steps_in_context=state.context, step_name=state.phase, message=state.message, competition_info=competition_info, plan=plan, constraints=constraints, task=task, experience_with_suggestion=experience_with_suggestion)
                     raw_reply, history = self.llm.generate(input, history, max_tokens=4096)
-                elif round == 1:
-                    prompt_round1 = self._generate_prompt_round1(state)
-                    input = prompt_round1
+                    prompt_round0 = self._generate_prompt_round0(state)
+                    input = prompt_round0
                     raw_reply, history = self.llm.generate(input, history, max_tokens=4096)
                     with open(f'{state.restore_dir}/{self.role}_first_mid_reply.txt', 'w') as f:
                         f.write(raw_reply)
-                elif round == 2:
-                    input = PROMPT_DEVELOPER_WITH_EXPERIENCE_ROUND2
+                    input = PROMPT_DEVELOPER_WITH_EXPERIENCE_ROUND0_2
                     raw_reply, history = self.llm.generate(input, history, max_tokens=4096)
                     with open(f'{state.restore_dir}/{self.role}_first_reply.txt', 'w') as f:
                         f.write(raw_reply)
-                elif round >= 3:
+                    retry_flag = False
+                elif round >= 1:
                     print(f"The {round-2}th try.")
                     path_to_code, path_to_run_code = self._generate_code_file(state, raw_reply)
                     error_flag = self._run_code(state, path_to_run_code)
-                    if error_flag and round < 2+max_tries:
+                    if error_flag and round < max_tries:
                         raw_reply, single_round_debug_history = self._debug_code(state, error_flag, not_pass_flag, not_pass_information, raw_reply)
-                        debug_history.append(copy.deepcopy(single_round_debug_history))
+                        debug_history.append(single_round_debug_history)
+                        if raw_reply == "HELP":
+                            retry_flag = True
                     else:
                         break
                 round += 1

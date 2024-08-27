@@ -31,6 +31,6 @@
         "Data Cleaning": ["test_readable_cleaned_train", "test_readable_cleaned_test", "test_document_exist", "test_no_duplicate_cleaned_test", "test_no_duplicate_cleaned_train", "test_cleaned_train_no_missing_values", "test_cleaned_test_no_missing_values"],
         "In-depth Exploratory Data Analysis": [""],
         "Feature Engineering": [],
-        "Model Building, Validation, and Prediction": ["test_readable_submission", "test_document_exist", "test_no_duplicate_submission", "", "test_submission_no_missing_values", "test_file_num", "test_column_names"]
+        "Model Building, Validation, and Prediction": ["test_readable_submission", "test_document_exist", "test_no_duplicate_submission", "test_submission_no_missing_values", "test_file_num", "test_column_names", "test_submission_first_columns"]
     }
 }

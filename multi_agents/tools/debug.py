@@ -18,6 +18,7 @@ from prompts.prompt_developer import *
 # 在developer中把information准备好，debug写成解耦的，只负责debug，不负责信息准备
 
 class DebugTool:
+    debug_times = 0
     def __init__(
         self,
         model: str = 'gpt-4o',
@@ -26,17 +27,25 @@ class DebugTool:
         self.llm = LLM(model, type)
 
     def debug_code_with_error(self, state: State, previous_code: str, wrong_code: str, error_messages: str) -> str:
+        DebugTool.debug_times += 1
+        debug_times_info = ""
+        if DebugTool.debug_times >= 3:
+            debug_times_info = PROMPT_DEVELOPER_DEBUG_ASK_FOR_HELP.format(i=DebugTool.debug_times)
         single_round_debug_history = []
         # locate error
         input = PROMPT_DEVELOPER_DEBUG_LOCATE.format(
             previous_code=previous_code,
             wrong_code=wrong_code,
             error_messages=error_messages,
+            debug_times_info=debug_times_info
         )
         raw_reply, locate_history = self.llm.generate(input, [], max_tokens=4096)
         single_round_debug_history.append(locate_history)
         with open(f'{state.restore_dir}/debug_locate_error.txt', 'w') as f:
             f.write(raw_reply)
+        if "HELP" in raw_reply:
+            DebugTool.debug_times = 0
+            return "HELP", single_round_debug_history
 
         # extract code
         pattern = r"```python(.*?)```"
