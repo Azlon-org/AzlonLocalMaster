@@ -31,13 +31,15 @@ class Developer(Agent):
             model=model,
             type=type
         )
+        self.all_error_messages = []
 
     def _is_previous_code(self, state: State) -> Tuple[bool, str, str]:
         previous_phase = state.get_previous_phase()
         previous_dir_name = state.phase_to_directory[previous_phase]
         path_to_previous_code = f'{state.competition_dir}/{previous_dir_name}/{previous_dir_name}_code.py'
         path_to_previous_run_code = f'{state.competition_dir}/{previous_dir_name}/{previous_dir_name}_run_code.py'
-        return os.path.exists(path_to_previous_code), path_to_previous_code, path_to_previous_run_code
+        path_to_last_step_code = f'{state.competition_dir}/{previous_dir_name}/single_step_code.txt'
+        return os.path.exists(path_to_previous_code), path_to_previous_code, path_to_previous_run_code, path_to_last_step_code
 
     def _delete_output_in_code(self, state: State, previous_code) -> str:
         previous_run_code = copy.deepcopy(previous_code) # 深拷贝 防止修改原始数据
@@ -94,7 +96,7 @@ class Developer(Agent):
         return new_code
 
     def _generate_code_file(self, state: State, raw_reply) -> Tuple[str, str]:
-        is_previous_code, path_to_previous_code, _ = self._is_previous_code(state)
+        is_previous_code, path_to_previous_code, _, _ = self._is_previous_code(state)
         if is_previous_code:
             with open(path_to_previous_code, 'r', encoding='utf-8') as f_1:
                 previous_code = f_1.readlines()
@@ -121,8 +123,8 @@ class Developer(Agent):
         if len(code_lines) == 0:
             logging.error("No code found in the reply.")
             pdb.set_trace()
-        with open(f'{state.restore_dir}/single_step_code.txt', 'w') as f: # 保存单步的code 用于debug
-            f.write("".join(code_lines))
+        with open(f'{state.restore_dir}/single_step_code.txt', 'w') as f: # 保存单步的code
+            f.write("\n".join(matches))
         code_with_output_lines = ["def generated_code_function():\n"] + previous_code + code_lines
         run_code_lines = ["def generated_code_function():\n"] + previous_run_code + code_lines
 
@@ -172,6 +174,7 @@ class Developer(Agent):
             result = subprocess.run(['python3', '-W', 'ignore', path_to_run_code], capture_output=True, text=True, timeout=timeout)
         except subprocess.TimeoutExpired:
             print("Code execution timed out.")
+            self.all_error_messages.append(timeout_info)
             with open(path_to_error, 'w') as f:
                 f.write(timeout_info)
             with open(path_to_output, 'w') as f:
@@ -184,9 +187,11 @@ class Developer(Agent):
             print("Error encountered during code execution.")
             with open(path_to_error, 'w') as f:
                 f.write(result.stderr)
+            self.all_error_messages.append(result.stderr)
             error_flag = True
         else:
             print("Code executed successfully without errors.")
+            self.all_error_messages = []
             try:
                 # Delete error file.
                 os.remove(path_to_error)
@@ -211,13 +216,22 @@ class Developer(Agent):
             for test_flag, test_number, test_information in not_pass_tests:
                 print(f"Test {test_number}: {test_information}")
                 not_pass_information += f"\n## TEST CASE NUMBER {test_number} ##\n{test_information}"
+            # print("Not pass information: ", not_pass_information)
         else:
-            not_pass_information = "All unit tests passed."
+            not_pass_information = ""
+            print("All unit tests passed.")
+            try:
+                # Delete error file.
+                path_to_not_pass_info = f'{state.restore_dir}/{state.dir_name}_not_pass_information.txt'
+                os.remove(path_to_not_pass_info)
+                print(f"File '{path_to_not_pass_info}' has been deleted successfully.")
+            except FileNotFoundError:
+                print(f"File '{path_to_not_pass_info}' doesn't exist, you don't need to delete it.")
         return not_pass_flag, not_pass_information
 
     def _debug_code(self, state: State, error_flag: bool, not_pass_flag: bool, not_pass_information: str, raw_reply: str) -> str:
         # prepare debug information, and then debug
-        is_previous_code, path_to_previous_code, _ = self._is_previous_code(state)
+        is_previous_code, path_to_previous_code, _, path_to_last_step_code = self._is_previous_code(state)
         if is_previous_code:
             with open(path_to_previous_code, 'r', encoding='utf-8') as f_1:
                 previous_code = f_1.readlines()
@@ -252,7 +266,7 @@ class Developer(Agent):
         logging.info("Start debugging the code.")
         debug_tool = DebugTool(model='gpt-4o', type='api')
         if error_flag:
-            reply, single_round_debug_history = debug_tool.debug_code_with_error(state, previous_code, wrong_code, error_messages)
+            reply, single_round_debug_history = debug_tool.debug_code_with_error(state, copy.deepcopy(self.all_error_messages), previous_code, wrong_code, error_messages)
         elif not_pass_flag:
             reply, single_round_debug_history = debug_tool.debug_code_with_no_pass_test(state, previous_code, wrong_code, not_pass_information)
 
@@ -261,7 +275,7 @@ class Developer(Agent):
     def _generate_prompt_round0(self, state: State) -> str:
         prompt_round1 = ""
         # 读取上一个阶段的code
-        is_previous_code, path_to_previous_code, _ = self._is_previous_code(state)
+        is_previous_code, path_to_previous_code, _, path_to_last_step_code = self._is_previous_code(state)
         if is_previous_code:
             with open(path_to_previous_code, 'r', encoding='utf-8') as f_1:
                 previous_code = f_1.readlines()
@@ -286,6 +300,7 @@ class Developer(Agent):
         debug_history = []
         test_history = []
         round = 0
+        test_round = 0
         max_tries = 5
         error_flag = False
         not_pass_flag = False
@@ -301,8 +316,15 @@ class Developer(Agent):
 
         if len(state.memory) == 1: # 如果之前没有memory，说明是第一次执行
             history.append({"role": "system", "content": f"{role_prompt} {self.description}"})
-            while round <= max_tries:
-                if round == 0 or retry_flag:
+        else:
+            self.description = "You are skilled at writing and implementing code according to plan." \
+                            "You have advanced reasoning abilities and can improve your answers through reflection."
+            experience_with_suggestion = self._gather_experience_with_suggestion(state)
+            history.append({"role": "system", "content": f"{role_prompt} {self.description}"})
+
+        while round <= max_tries:
+            if round == 0 or retry_flag:
+                if len(state.memory) == 1:
                     input = PROMPT_DEVELOPER.format(steps_in_context=state.context, step_name=state.phase, message=state.message, competition_info=competition_info, plan=plan, constraints=constraints, task=task)
                     raw_reply, history = self.llm.generate(input, history, max_tokens=4096)
                     prompt_round0 = self._generate_prompt_round0(state)
@@ -311,38 +333,7 @@ class Developer(Agent):
                     with open(f'{state.restore_dir}/{self.role}_first_reply.txt', 'w') as f:
                         f.write(raw_reply)
                     retry_flag = False
-                elif round >= 1:
-                    print(f"The {round}-th try.")
-                    path_to_code, path_to_run_code = self._generate_code_file(state, raw_reply)
-                    error_flag = self._run_code(state, path_to_run_code)
-                    if error_flag and round < max_tries: # 如果最后一轮还有错，就不再debug
-                        # 每一轮单独debug
-                        raw_reply, single_round_debug_history = self._debug_code(state, error_flag, not_pass_flag, not_pass_information, raw_reply) # 这里我先把develop和debug解耦 后续便于加上retrieve history然后debug
-                        debug_history.append(single_round_debug_history) # 没必要深拷贝
-                        if raw_reply == "HELP":
-                            retry_flag = True
-                    else:
-                        break
-                round += 1
-            
-            if not error_flag:
-                # 进行unit test
-                test_round = 0
-                while test_round < max_tries:
-                    not_pass_flag, not_pass_information = self._conduct_unit_test(state)
-                    if not_pass_flag:
-                        raw_reply, test_history = self._debug_code(state, error_flag, not_pass_flag, not_pass_information, raw_reply)
-                    else:
-                        break
-                    test_round += 1
-
-        else:
-            self.description = "You are skilled at writing and implementing code according to plan." \
-                            "You have advanced reasoning abilities and can improve your answers through reflection."
-            experience_with_suggestion = self._gather_experience_with_suggestion(state)
-            history.append({"role": "system", "content": f"{role_prompt} {self.description}"})
-            while round <= max_tries:
-                if round == 0:
+                else:
                     input = PROMPT_DEVELOPER_WITH_EXPERIENCE_ROUND0_0.format(steps_in_context=state.context, step_name=state.phase, message=state.message, competition_info=competition_info, plan=plan, constraints=constraints, task=task, experience_with_suggestion=experience_with_suggestion)
                     raw_reply, history = self.llm.generate(input, history, max_tokens=4096)
                     prompt_round0 = self._generate_prompt_round0(state)
@@ -355,29 +346,39 @@ class Developer(Agent):
                     with open(f'{state.restore_dir}/{self.role}_first_reply.txt', 'w') as f:
                         f.write(raw_reply)
                     retry_flag = False
-                elif round >= 1:
-                    print(f"The {round-2}th try.")
-                    path_to_code, path_to_run_code = self._generate_code_file(state, raw_reply)
-                    error_flag = self._run_code(state, path_to_run_code)
-                    if error_flag and round < max_tries:
-                        raw_reply, single_round_debug_history = self._debug_code(state, error_flag, not_pass_flag, not_pass_information, raw_reply)
-                        debug_history.append(single_round_debug_history)
-                        if raw_reply == "HELP":
-                            retry_flag = True
-                    else:
+            elif round >= 1:
+                if error_flag and round < max_tries: # 如果最后一轮还有错，就不再debug
+                    # 每一轮单独debug
+                    raw_reply, single_round_debug_history = self._debug_code(state, error_flag, not_pass_flag, not_pass_information, raw_reply) # 这里我先把develop和debug解耦 后续便于加上retrieve history然后debug
+                    debug_history.append(single_round_debug_history) # 没必要深拷贝
+                    if raw_reply == "HELP":
+                        logging.info("The developer asks for help when debugging the code. Regenerating the code.")
+                        retry_flag = True
+                elif not error_flag: # 如果没有错误
+                    # 进行unit test 如果根据unit test修改后的code存在问题 
+                    while test_round < 2*max_tries and not error_flag:
+                        print(f"Start the {test_round+1}-th unit test.")
+                        not_pass_flag, not_pass_information = self._conduct_unit_test(state)
+                        if not_pass_flag: # 如果unit test不通过 进行debug test 假设run code又出错 就要重新debug code
+                            raw_reply, single_round_test_history = self._debug_code(state, error_flag, not_pass_flag, not_pass_information, raw_reply)
+                            test_history.append(single_round_test_history)
+                            _, path_to_run_code = self._generate_code_file(state, raw_reply) # 这里后面再重复一遍生成文件和运行代码也没事 因为这里不涉及llm生成代码 raw_reply是一样的
+                            error_flag = self._run_code(state, path_to_run_code)
+                        else:
+                            break
+                        test_round += 1
+                    if not not_pass_flag or test_round == max_tries:
                         break
-                round += 1
+                else:
+                    break
+            print(f"The {round+1}-th try.")
+            if retry_flag:
+                round -= 1
+            else:
+                _, path_to_run_code = self._generate_code_file(state, raw_reply)
+                error_flag = self._run_code(state, path_to_run_code)
+            round += 1
 
-            if not error_flag:
-                # 进行unit test
-                test_round = 0
-                while test_round < max_tries:
-                    not_pass_flag, not_pass_information = self._conduct_unit_test(state)
-                    if not_pass_flag:
-                        raw_reply, test_history = self._debug_code(state, error_flag, not_pass_flag, not_pass_information, raw_reply)
-                    else:
-                        break
-                    test_round += 1
 
         # 保存history
         with open(f'{state.restore_dir}/{self.role}_history.json', 'w') as f:
@@ -392,7 +393,13 @@ class Developer(Agent):
             execution_flag = False
             print(f"State {state.phase} - Agent {self.role} finishes working with error.")
         else:
-            print(f"State {state.phase} - Agent {self.role} finishes working.")
+            if not_pass_flag:
+                execution_flag = False
+                print(f"State {state.phase} - Agent {self.role} finishes working with not pass tests.")
+                with open(f'{state.restore_dir}/{state.dir_name}_not_pass_information.txt', 'w') as f:
+                    f.write(not_pass_information)
+            else:
+                print(f"State {state.phase} - Agent {self.role} finishes working.")
 
         input_used_in_review = f"   <competition_info>\n{competition_info}\n    </competition_info>\n   <plan>\n{plan}\n    </plan>"
         return {self.role: {"history": history, "role": self.role, "description": self.description, "task": task, "input": input_used_in_review, "result": raw_reply, "status": execution_flag}}

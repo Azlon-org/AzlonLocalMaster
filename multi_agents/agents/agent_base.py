@@ -37,9 +37,16 @@ class Agent:
             score = reviewer_memory.get("score", {}).get(f"agent {self.role}", 3)
             experience_with_suggestion += PROMPT_EACH_EXPERIENCE_WITH_SUGGESTION.format(index=i, experience=result, suggestion=suggestion, score=score)
             if self.role == 'developer':
-                with open(f'{state.competition_dir}/{state.dir_name}/{state.dir_name}_error.txt', 'r') as f:
-                    error_message = f.read()
-                experience_with_suggestion += f"\n<ERROR MESSAGE>\n{error_message}\n</ERROR MESSAGE>"
+                path_to_error = f'{state.competition_dir}/{state.dir_name}/{state.dir_name}_error.txt'
+                path_to_not_pass_info = f'{state.competition_dir}/{state.dir_name}/{state.dir_name}_not_pass_information.txt'
+                if os.path.exists(path_to_error):
+                    with open(path_to_error, 'r') as f:
+                        error_message = f.read()
+                    experience_with_suggestion += f"\n<ERROR MESSAGE>\n{error_message}\n</ERROR MESSAGE>"
+                elif os.path.exists(path_to_not_pass_info):
+                    with open(path_to_not_pass_info, 'r') as f:
+                        not_pass_info = f.read()
+                    experience_with_suggestion += f"\n<NOT PASS INFORMATION>\n{not_pass_info}\n</NOT PASS INFORMATION"
         return experience_with_suggestion
     
     def _read_data(self, state: State, num_lines: int = 11) -> str:

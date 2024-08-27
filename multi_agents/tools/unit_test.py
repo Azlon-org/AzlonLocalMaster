@@ -39,6 +39,7 @@ class TestTool:
                     print(f"Test '{func_name}' succeeded") # assert result
             else:
                 print(f"Function '{func_name}' not found in TestTool class")
+                result = True, 0, f"Function '{func_name}' not found in TestTool class"
         return not_pass_tests
 
     def test_example(self, state: State):
@@ -254,7 +255,7 @@ This is the first 10 lines of submission.csv:
 This is the first 10 lines of sample_submission.csv:
 {df.head(10)}
 If you use some transformation on the features in submission.csv, please make sure you have reversed the transformation before submitting the file.
-Here is an example that specific transformation applied on features in submisson.csv is not reversed:
+Here is an example that specific transformation applied on features (ID, SalePrice) in submisson.csv is **not reversed**, which is wrong:
 <example>
 - submission.csv:
 Id,SalePrice
