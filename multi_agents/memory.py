@@ -8,17 +8,22 @@ import json
 from llm import OpenaiEmbeddings
 
 
-def transfer_text_to_json(content: str):
-    # Use regular expression to find the JSON data
-    json_match = re.search(r'```json\n(.*?)```', content, re.DOTALL)
-
-    if json_match:
-        # Extract the JSON string
-        json_str = json_match.group(1)
-        data = json.loads(json_str)
-        return data
-    else:
-        return None
+def split_text(text: str, max_chunk_length: int = 8191, overlap_ratio: float = 0.1):
+    if not (0 <= overlap_ratio < 1):
+        raise ValueError("Overlap ratio must be between 0 and 1 (exclusive).")
+    
+    # Calculate the length of overlap in characters
+    overlap_length = int(max_chunk_length * overlap_ratio)
+    chunks = []
+    start = 0
+    
+    while start < len(text):
+        end = min(start + max_chunk_length, len(text))
+        chunk = text[start:end]
+        chunks.append(chunk)
+        start += max_chunk_length - overlap_length
+        
+    return chunks
 
 
 class Memory:
@@ -30,43 +35,33 @@ class Memory:
 
         # Load the embedding model 
         self.embedding_model = embedding_model
+        self.id = 0 # the id of the data in the collection
         
-    def insert_vectors(self, chunks: list):
+    def insert_vectors(self, chunks: list, doc_name: str):
         results = chunks
         # insert the vectors into the collection
-        for idx, result in tqdm(enumerate(results)):
-            text_embedding = self.embedding_model.encode(result)[0].embedding
-            
+        for result in tqdm(results):
+            text_embedding = self.embedding_model.encode(input=result)[0].embedding
+
+            metadata = {
+                'doc name': doc_name,
+            }
+
             # insert the vectors into the collection
             self.collection.add(
                 documents=result,
-                ids=f'{idx}',
+                ids=f'{self.id}',
                 embeddings=text_embedding,
+                metadatas=metadata
             )
+            self.id += 1
         print('---------------------------------')
         print(f'Finished inserting vectors for <{self.collection_name}>!')
         print('---------------------------------')
 
     # use the query to search the most similar context
-    def search_context(self, query: str, n_results=2) -> dict:
+    def search_context(self, query: str, n_results=5) -> dict:
         query_embeddings = self.embedding_model.encode(query)[0].embedding
-        results =  self.collection.query(query_embeddings=query_embeddings, n_results=n_results, include=['documents', 'distances', 'embeddings'])
+        results =  self.collection.query(query_embeddings=query_embeddings, n_results=n_results, include=['documents', 'distances', 'metadatas'])
         return results
-
-
-def test_db():
-
-    with open("multi_agents/competition/titanic/understand_background/summarizer_reply.txt", 'r') as f:
-        text = f.read()
-    json_data = transfer_text_to_json(text)
-    # trasnfer json data to list of strings
-    # json_data = json_data.split('\n')
-    print(json_data['final_answer'])
-
-    # chunks = chunk_text(json_data)
-    # print(chunks)  
-
-
-if __name__ == '__main__':
-    test_db()
-    pass
+    
