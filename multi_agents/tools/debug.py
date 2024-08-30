@@ -9,7 +9,7 @@ sys.path.append('..')
 sys.path.append('../..')
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
-from memory import Memory, transfer_text_to_json
+from memory import Memory
 from llm import OpenaiEmbeddings, LLM
 from state import State
 from utils import load_config
@@ -24,10 +24,11 @@ class DebugTool:
         type: str = 'api'       
     ):
         self.llm = LLM(model, type)
-        self.debug_times = 0
 
     def debug_code_with_error(self, state: State, all_error_messages: list, previous_code: str, wrong_code: str, error_messages: str) -> str:
-        self.debug_times += 1
+        debug_times = len(all_error_messages)
+        print(f"Debug times: {debug_times}")
+
         single_round_debug_history = []
         # locate error
         input = PROMPT_DEVELOPER_DEBUG_LOCATE.format(
@@ -40,13 +41,13 @@ class DebugTool:
         with open(f'{state.restore_dir}/debug_locate_error.txt', 'w') as f:
             f.write(locate_reply)
 
-        if self.debug_times >= 3:
-            input = PROMPT_DEVELOPER_DEBUG_ASK_FOR_HELP.format(i=self.debug_times, all_error_messages=all_error_messages)
+        if debug_times >= 3:
+            input = PROMPT_DEVELOPER_DEBUG_ASK_FOR_HELP.format(i=debug_times, all_error_messages=all_error_messages)
             help_reply, help_history = self.llm.generate(input, [], max_tokens=4096)
             single_round_debug_history.append(help_history)
             with open(f'{state.restore_dir}/debug_ask_for_help.txt', 'w') as f:
                 f.write(help_reply)
-            if "HELP" in help_reply:
+            if any(keyword in help_reply for keyword in ["<HELP>", "</HELP>", "I need help", "need help"]):
                 return "HELP", single_round_debug_history
 
         # extract code

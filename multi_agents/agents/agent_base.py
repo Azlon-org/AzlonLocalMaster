@@ -127,6 +127,16 @@ class Agent:
         reply = {}
 
         return reply
+    
+    def _parse_markdown(self, raw_reply: str) -> str:
+        markdown_match = re.search(r'```markdown(.*?)```', raw_reply, re.DOTALL)
+        if markdown_match:
+            reply_str = markdown_match.group(1).strip()
+            return reply_str
+        else:
+            logging.error("Failed to parse markdown from raw reply.")
+            pdb.set_trace()
+            return raw_reply
 
     def action(self, state: State) -> Dict[str, Any]:
         # pdb.set_trace()

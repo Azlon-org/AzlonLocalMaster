@@ -68,15 +68,15 @@ class Reader(Agent):
                 raw_reply, history = self.llm.generate(input, history, max_tokens=4096)
                 round += 1
         result = raw_reply
-        reply = self._parse_json(raw_reply)
+        reply = self._parse_markdown(raw_reply)
 
         summary = reply 
 
         # 保存history
         with open(f'{state.restore_dir}/{self.role}_history.json', 'w') as f:
             json.dump(history, f, indent=4)
-        with open(f'{state.competition_dir}/competition_info.json', 'w') as f:
-            json.dump(summary, f, indent=4)
+        with open(f'{state.competition_dir}/competition_info.txt', 'w') as f:
+            f.write(summary)
         with open(f'{state.restore_dir}/{self.role}_reply.txt', 'w') as f:
             f.write(raw_reply)
         with open(f'{state.restore_dir}/{self.role}_mid_reply.txt', 'w') as f:

@@ -95,7 +95,7 @@ class Developer(Agent):
         
         return new_code
 
-    def _generate_code_file(self, state: State, raw_reply) -> Tuple[str, str]:
+    def _generate_code_file(self, state: State, raw_reply) -> Tuple[bool, str, str]:
         is_previous_code, path_to_previous_code, _, _ = self._is_previous_code(state)
         if is_previous_code:
             with open(path_to_previous_code, 'r', encoding='utf-8') as f_1:
@@ -110,6 +110,7 @@ class Developer(Agent):
         path_to_code = f'{state.restore_dir}/{state.dir_name}_code.py'
         path_to_run_code = f'{state.restore_dir}/{state.dir_name}_run_code.py'
 
+        no_code_flag = False
         # Extract code from the file
         pattern = r"```python(.*?)```"
         matches = re.findall(pattern, raw_reply, re.DOTALL)
@@ -122,9 +123,13 @@ class Developer(Agent):
         code_lines = [f"    {line}\n" for line in code_lines]
         if len(code_lines) == 0:
             logging.error("No code found in the reply.")
-            pdb.set_trace()
+            # pdb.set_trace()
+            no_code_flag = True
+            return True, "no code", "no code"
+        
         with open(f'{state.restore_dir}/single_step_code.txt', 'w') as f: # 保存单步的code
             f.write("\n".join(matches))
+
         code_with_output_lines = ["def generated_code_function():\n"] + previous_code + code_lines
         run_code_lines = ["def generated_code_function():\n"] + previous_run_code + code_lines
 
@@ -137,9 +142,9 @@ class Developer(Agent):
             f_w.write("".join(run_code_lines))
             f_w.write('\n\nif __name__ == "__main__":\n    generated_code_function()')
         
-        return path_to_code, path_to_run_code
+        return no_code_flag, path_to_code, path_to_run_code
 
-    def _run_code(self, state: State, path_to_run_code: str) -> str:
+    def _run_code(self, state: State, no_code_flag: bool, path_to_run_code: str) -> str:
         # Delete previous images files
         if 'eda' in state.restore_dir:
             images_dir = f'{state.restore_dir}/images/'
@@ -159,6 +164,13 @@ class Developer(Agent):
         error_flag = False
         path_to_error = f'{state.restore_dir}/{state.dir_name}_error.txt'
         path_to_output = f'{state.restore_dir}/{state.dir_name}_output.txt'
+
+        if no_code_flag:
+            with open(path_to_error, 'w') as f:
+                f.write("No code found in the reply.")
+            with open(path_to_output, 'w') as f:
+                f.write("")
+            return True
 
         # timeout
         if 'Analysis' in state.phase:
@@ -304,37 +316,35 @@ class Developer(Agent):
         max_tries = 5
         error_flag = False
         not_pass_flag = False
+        no_code_flag = False
         retry_flag = False
         not_pass_information = ""
         restore_path = state.restore_dir
         competition_path = state.competition_dir
         task = PROMPT_DEVELOPER_TASK
         constraints = PROMPT_DEVELOPER_CONSTRAINTS.format(restore_path=restore_path, competition_path=competition_path, step_name=state.phase)
-        with open(f'{state.competition_dir}/competition_info.json', 'r') as f:
-            competition_info = json.load(f)
-        plan = state.memory[-1]["planner"]["plan"]
+        with open(f'{state.competition_dir}/competition_info.txt', 'r') as f:
+            competition_info = f.read()
+        plan = state.memory[-1]["planner"]["plan"] # 这里plan的格式是markdown
 
         if len(state.memory) == 1: # 如果之前没有memory，说明是第一次执行
-            history.append({"role": "system", "content": f"{role_prompt} {self.description}"})
+            history.append({"role": "system", "content": f"{role_prompt} {self.description}\n when you are writing code, you should follow the plan and the following constraints.\n{constraints}"})
         else:
             self.description = "You are skilled at writing and implementing code according to plan." \
                             "You have advanced reasoning abilities and can improve your answers through reflection."
             experience_with_suggestion = self._gather_experience_with_suggestion(state)
-            history.append({"role": "system", "content": f"{role_prompt} {self.description}"})
+            history.append({"role": "system", "content": f"{role_prompt} {self.description}\n when you are writing code, you should follow the plan and the following constraints.\n{constraints}"})
 
         while round <= max_tries:
-            if round == 0 or retry_flag:
+            if round == 0 or retry_flag or no_code_flag:
                 if len(state.memory) == 1:
-                    input = PROMPT_DEVELOPER.format(steps_in_context=state.context, step_name=state.phase, message=state.message, competition_info=competition_info, plan=plan, constraints=constraints, task=task)
+                    input = PROMPT_DEVELOPER.format(steps_in_context=state.context, step_name=state.phase, competition_info=competition_info, plan=plan, task=task)
                     raw_reply, history = self.llm.generate(input, history, max_tokens=4096)
                     prompt_round0 = self._generate_prompt_round0(state)
                     input = prompt_round0
                     raw_reply, history = self.llm.generate(input, history, max_tokens=4096)
-                    with open(f'{state.restore_dir}/{self.role}_first_reply.txt', 'w') as f:
-                        f.write(raw_reply)
-                    retry_flag = False
                 else:
-                    input = PROMPT_DEVELOPER_WITH_EXPERIENCE_ROUND0_0.format(steps_in_context=state.context, step_name=state.phase, message=state.message, competition_info=competition_info, plan=plan, constraints=constraints, task=task, experience_with_suggestion=experience_with_suggestion)
+                    input = PROMPT_DEVELOPER_WITH_EXPERIENCE_ROUND0_0.format(steps_in_context=state.context, step_name=state.phase, competition_info=competition_info, plan=plan, task=task, experience_with_suggestion=experience_with_suggestion)
                     raw_reply, history = self.llm.generate(input, history, max_tokens=4096)
                     prompt_round0 = self._generate_prompt_round0(state)
                     input = prompt_round0
@@ -343,9 +353,18 @@ class Developer(Agent):
                         f.write(raw_reply)
                     input = PROMPT_DEVELOPER_WITH_EXPERIENCE_ROUND0_2
                     raw_reply, history = self.llm.generate(input, history, max_tokens=4096)
+                if retry_flag:
+                    logging.info("The developer asks for help when debugging the code. Regenerating the code.")
+                    with open(f'{state.restore_dir}/{self.role}_retry_reply.txt', 'w') as f:
+                        f.write(raw_reply)
+                elif no_code_flag:
+                    logging.info("Last reply has no code. Regenerating the code.")
+                    with open(f'{state.restore_dir}/{self.role}_no_code_reply.txt', 'w') as f:
+                        f.write(raw_reply)
+                else:
                     with open(f'{state.restore_dir}/{self.role}_first_reply.txt', 'w') as f:
                         f.write(raw_reply)
-                    retry_flag = False
+                retry_flag = False
             elif round >= 1:
                 if error_flag and round < max_tries: # 如果最后一轮还有错，就不再debug
                     # 每一轮单独debug
@@ -362,8 +381,8 @@ class Developer(Agent):
                         if not_pass_flag: # 如果unit test不通过 进行debug test 假设run code又出错 就要重新debug code
                             raw_reply, single_round_test_history = self._debug_code(state, error_flag, not_pass_flag, not_pass_information, raw_reply)
                             test_history.append(single_round_test_history)
-                            _, path_to_run_code = self._generate_code_file(state, raw_reply) # 这里后面再重复一遍生成文件和运行代码也没事 因为这里不涉及llm生成代码 raw_reply是一样的
-                            error_flag = self._run_code(state, path_to_run_code)
+                            no_code_flag, _, path_to_run_code = self._generate_code_file(state, raw_reply) # 这里后面再重复一遍生成文件和运行代码也没事 因为这里不涉及llm生成代码 raw_reply是一样的
+                            error_flag = self._run_code(state, no_code_flag, path_to_run_code)
                         else:
                             break
                         test_round += 1
@@ -375,10 +394,9 @@ class Developer(Agent):
             if retry_flag:
                 round -= 1
             else:
-                _, path_to_run_code = self._generate_code_file(state, raw_reply)
-                error_flag = self._run_code(state, path_to_run_code)
+                no_code_flag, _, path_to_run_code = self._generate_code_file(state, raw_reply)
+                error_flag = self._run_code(state, no_code_flag, path_to_run_code)
             round += 1
-
 
         # 保存history
         with open(f'{state.restore_dir}/{self.role}_history.json', 'w') as f:

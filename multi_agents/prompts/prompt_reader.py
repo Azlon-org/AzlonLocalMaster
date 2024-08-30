@@ -4,11 +4,18 @@ Please conduct a comprehensive analysis of the competition, focusing on the foll
 2. Files: Analyze each provided file, detailing its purpose and how it should be used in the competition.
 3. Problem Definition: Clarify the problem's definition and requirements.
 4. Data Information: Gather detailed information about the data, including its structure and contents.
-5. Target Variable: Identify the target variable that needs to be predicted or optimized.
+    1. ID type: features that are unique identifiers for each data point, which will NOT be used in the model training.
+    2. Numerical type: features that are numerical values.
+    3. Categorical type: features that are categorical values.
+    4. Datetime type: features that are datetime values.
+5. Target Variable: Identify the target variable that needs to be predicted or optimized, which is provided in the training set but not in the test set.
 6. Evaluation Metrics: Determine the evaluation metrics that will be used to assess the submissions.
 7. Submission Format: Understand the required format for the final submission.
 8. Other Key Aspects: Highlight any other important aspects that could influence the approach to the competition.
-Ensure that the analysis is thorough, with a strong emphasis on understanding the purpose and usage of each file provided.
+Ensure that the analysis is thorough, with a strong emphasis on :
+1. Understanding the purpose and usage of each file provided.
+2. Figuring out the target variable and evaluation metrics.
+3. Classification of the features.
 '''
 
 
@@ -29,21 +36,44 @@ If you understand, please request the overview of this data science competition 
 
 PROMPT_READER_ROUND2 = '''
 # TASK #
-Please extract essential information from your answer and reorganize into a specified JSON format. You need to organize the information in a clear and concise manner, ensuring that the content is logically structured and easy to understand. You must ensure that the essential information is complete and accurate.
+Please extract essential information from your answer and reorganize into a specified JSON format. 
+You need to organize the information in a clear and concise manner, ensuring that the content is logically structured and easy to understand. 
+You must ensure that the essential information is complete and accurate.
 #############
-# RESPONSE: JSON FORMAT #
-Here is the JSON format you should follow:
-```json
-{{
-    "Competition Overview": ... ,
-    "Files": ... ,
-    "Problem Definition": ... ,
-    "Data Information": ... ,
-    "Target Variable": ... ,
-    "Evaluation Metrics": ... ,
-    "Submission Format": ... ,
-    "Other Key Aspects": ...
-}}
+# RESPONSE: MARKDOWN FORMAT #
+Here is the MARKDOWN format you should follow:
+```markdown
+## Competition Information
+### 1. Competition Overview
+[Brief description of the competition]
+
+### 2. Files
+[List and description of provided files]
+
+### 3. Problem Definition
+[Clear statement of the problem to be solved]
+
+### 4. Data Information
+#### 4.1 ID type
+[List of ID features]
+#### 4.2 Numerical type
+[List of numerical features]
+#### 4.3 Categorical type
+[List of categorical features]
+#### 4.4 Datetime type
+[List of datetime features]
+
+### 5. Target Variable
+[Description of the target variable]
+
+### 6. Evaluation Metrics
+[Explanation of evaluation criteria]
+
+### 7. Submission Format
+[Details on required submission format]
+
+### 8. Other Key Aspects
+[Additional important information]
 ```
 #############
 # START REORGANIZING #
@@ -66,7 +96,7 @@ You must follow these subtasks:
 #############
 # RESPONSE #
 Subtask 1: Analyze the previous experience and suggestions. Think about what went wrong and how you can improve.
-Let's work **Subtask1** out in a step by step way.
+Let's work **Subtask 1** out in a step by step way.
 #############
 # START ANALYSIS #
 If you understand, please request the Overview of this data science competition from me.
@@ -74,20 +104,41 @@ If you understand, please request the Overview of this data science competition 
 
 PROMPT_READER_WITH_EXPERIENCE_ROUND2 = '''
 #############
-# RESPONSE: JSON FORMAT #
+# RESPONSE: MARKDOWN FORMAT #
 Subtask2: Develop a new solution based on the previous experience and suggestions.
-Here is the JSON format you should follow:
-```json
-{{
-    "Competition Overview": ... ,
-    "Files": ... ,
-    "Problem Definition": ... ,
-    "Data Information": ... ,
-    "Target Variable": ... ,
-    "Evaluation Metrics": ... ,
-    "Submission Format": ... ,
-    "Other Key Aspects": ...
-}}
+Here is the MARKDOWN format you should follow:
+```markdown
+## Competition Information
+### 1. Competition Overview
+[Brief description of the competition]
+
+### 2. Files
+[List and description of provided files]
+
+### 3. Problem Definition
+[Clear statement of the problem to be solved]
+
+### 4. Data Information
+#### 4.1 ID type
+[List of ID features]
+#### 4.2 Numerical type
+[List of numerical features]
+#### 4.3 Categorical type
+[List of categorical features]
+#### 4.4 Datetime type
+[List of datetime features]
+
+### 5. Target Variable
+[Description of the target variable]
+
+### 6. Evaluation Metrics
+[Explanation of evaluation criteria]
+
+### 7. Submission Format
+[Details on required submission format]
+
+### 8. Other Key Aspects
+[Additional important information]
 ```
 '''
 

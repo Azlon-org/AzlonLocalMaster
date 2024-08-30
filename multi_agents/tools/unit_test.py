@@ -8,7 +8,8 @@ sys.path.append('..')
 sys.path.append('../..')
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
-from memory import Memory, transfer_text_to_json
+# from memory import Memory, transfer_text_to_json
+from memory import Memory
 from llm import OpenaiEmbeddings, LLM
 from state import State
 from utils import load_config
@@ -107,35 +108,35 @@ class TestTool:
                 else:
                     return False, 5, "There are duplicate rows in the submission.csv"
 
-    def test_submission_columns(self, state: State):
-        _, file = self.test_no_duplicate_submission(state)
-        df = pd.read_csv(f"{state.competition_dir}/{file}")
-        sub_columns = df.columns.values.tolist()
-        print(sub_columns)
+#     def test_submission_columns(self, state: State):
+#         _, file = self.test_no_duplicate_submission(state)
+#         df = pd.read_csv(f"{state.competition_dir}/{file}")
+#         sub_columns = df.columns.values.tolist()
+#         print(sub_columns)
 
-        prompt = '''Concluse the and the column names of a csv document. Just output in the following format: "name 1", "name 2", ... , "name n"!
-text: 
-{text}
-'''
-        with open(f"{state.competition_dir}/{state.phase}/summarizer_reply.txt", 'r') as f:
-            text = f.read()
-        json_data = transfer_text_to_json(text)
-        # trasnfer json data to list of strings
-        # print(json_data['final_answer'])
-        text = json_data['final_answer']
+#         prompt = '''Concluse the and the column names of a csv document. Just output in the following format: "name 1", "name 2", ... , "name n"!
+# text: 
+# {text}
+# '''
+#         with open(f"{state.competition_dir}/{state.phase}/summarizer_reply.txt", 'r') as f:
+#             text = f.read()
+#         json_data = transfer_text_to_json(text)
+#         # trasnfer json data to list of strings
+#         # print(json_data['final_answer'])
+#         text = json_data['final_answer']
         
-        prompt = prompt.format(text=text['submission_Format'])
-        reply, _ = self.llm.generate(prompt, history=None)
-        # convert the reply to a list
-        reply = reply.split(", ")
-        reply = [name.replace('"', '') for name in reply]
-        reply = [name.replace("\n", '') for name in reply]
-        reply = [name.replace(" ", '') for name in reply]
+#         prompt = prompt.format(text=text['submission_Format'])
+#         reply, _ = self.llm.generate(prompt, history=None)
+#         # convert the reply to a list
+#         reply = reply.split(", ")
+#         reply = [name.replace('"', '') for name in reply]
+#         reply = [name.replace("\n", '') for name in reply]
+#         reply = [name.replace(" ", '') for name in reply]
         
-        if set(sub_columns) == set(reply):
-            return True, 6, "The columns are correct"
-        else:
-            return False, 6, "The columns are not correct"
+#         if set(sub_columns) == set(reply):
+#             return True, 6, "The columns are correct"
+#         else:
+#             return False, 6, "The columns are not correct"
 
     def test_readable_cleaned_train(self, state: State):
         path = f"{state.competition_dir}/cleaned_train.csv"
@@ -235,7 +236,7 @@ text:
                 else:
                     return False, 15, "submission.csv and sample_submission.csv files have different column names"
 
-    def test_submission_first_columns(self, state: State):
+    def test_submission_first_column(self, state: State):
         path = f"{state.competition_dir}/sample_submission.csv"
         df = pd.read_csv(path)
         files = os.listdir(state.competition_dir)

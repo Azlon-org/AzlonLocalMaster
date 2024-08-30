@@ -56,7 +56,7 @@ class SOP:
                 state_info, new_state = self.update_state(state)
                 if state_info == 'Success':
                     state.restore_memory()
-                    state.restore_report()
+                    # state.restore_report()
 
         return state_info, new_state
 

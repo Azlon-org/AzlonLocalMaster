@@ -1,9 +1,13 @@
 PROMPT_DEVELOPER_TASK = '''
-Develop a solution based on the plan provided by the Planner. Implement the specific tasks outlined in the plan, ensuring that the code is clear, concise, and efficient. You must consider the data types, project requirements, and resource constraints. Ensure that the code is well-documented and can be easily understood by others.
+Develop a solution based on the plan provided by the Planner. 
+Implement the specific tasks and methods outlined in the plan, ensuring that the code is clear, concise, and efficient.
+You must consider the data types, project requirements, and resource constraints. 
+Ensure that the code is well-documented and can be easily understood by others.
 '''
 
 
 PROMPT_DEVELOPER_CONSTRAINTS = '''
+# CONSTRAINTS #
 ## FILE SAVE PATH ##
 - Always save the image file in the `{restore_path}/images/` directory.
 - Always save the data file in the `{competition_path}/` directory.
@@ -26,6 +30,7 @@ Data visualization: When using libraries such as seaborn or matplotlib to create
 - Before performing data merging or joining operations, ensure that the data types of all relevant columns are consistent to avoid errors caused by type mismatches.
 </example>
 - At each critical step of writing code, always reasonable `assert` statements to verify the correctness of the code segments and the successful execution of step {step_name}.
+    - If current step is Preliminary EDA or In-depth EDA, do NOT write `assert` statements.
 <example>
 After data cleaning, you can use assert statements to check whether the cleaned dataset is empty or if the data types of specific columns meet expectations.
 </example>
@@ -43,21 +48,19 @@ PROMPT_DEVELOPER = '''
 # CONTEXT #
 {steps_in_context}
 Currently, I am at step: {step_name}.
-#############
-# MESSAGE FROM LAST STEP #
-{message}
+
 #############
 # COMPETITION INFORMATION #
 {competition_info}
+
 #############
 # PLAN #
 {plan}
-#############
-# CONSTRAINTS #
-{constraints}
+
 #############
 # TASK #
 {task}
+
 #############
 # RESPONSE: BLOCK (CODE & EXPLANATION) #
 TASK 1:
@@ -69,6 +72,7 @@ THOUGHT PROCESS
 CODE
 EXPLANATION
 ...
+
 #############
 # START CODING #
 If you understand, please request the code and insight from previous steps, all the features of the data and 10 data samples in both training data and test data from me.
@@ -79,32 +83,33 @@ PROMPT_DEVELOPER_WITH_EXPERIENCE_ROUND0_0 = '''
 # CONTEXT #
 {steps_in_context}
 Currently, I am at step :{step_name}.
-#############
-# MESSAGE FROM LAST STEP #
-{message}
+
 #############
 # COMPETITION INFORMATION #
 {competition_info}
+
 #############
 # PLAN #
 {plan}
-#############
-# CONSTRAINTS #
-{constraints}
+
 #############
 # TASK #
-{task} In the past, you have attempted this task multiple times. However, due to errors in your answers or insufficient quality, you have not succeeded. I will provide you with your previous attempts' experiences and a professional reviewer's suggestions for improvement (PREVIOUS EXPERIENCE WITH SUGGESTION). Based on these, please learn from previous experience, try again to mitigate similar failures and successfully complete the task.
+{task} In the past, you have attempted this task multiple times. However, due to errors in your answers or insufficient quality, you have not succeeded. 
+I will provide you with your previous attempts' experiences and a professional reviewer's suggestions for improvement (PREVIOUS EXPERIENCE WITH SUGGESTION). Based on these, please learn from previous experience, try again to mitigate similar failures and successfully complete the task.
 You must follow these subtasks:
 1. Analyze the previous experience and suggestions. Think about what went wrong and how you can improve.
 2. Develop a new solution based on the previous experience and suggestions.
+
 #############
 # PREVIOUS EXPERIENCE WITH SUGGESTION #
 {experience_with_suggestion}
+
 #############
 # RESPONSE #
 Subtask 1: Analyze the previous experience and suggestions. Think about what went wrong and how you can improve.
 You should ONLY focus on Subtask1.
 Let's work **Subtask1** out in a step by step way.
+
 #############
 # START ANALYSIS #
 If you understand, please request the code and insight from previous steps, all the features of the data and 10 data samples in both training data and test data from me. Then you can start analyzing the previous experience and suggestions.
@@ -112,7 +117,6 @@ If you understand, please request the code and insight from previous steps, all 
 
 
 PROMPT_DEVELOPER_WITH_EXPERIENCE_ROUND0_2 = '''
-#############
 # RESPONSE: BLOCK (CODE & EXPLANATION) #
 Subtask 2: Develop a new solution based on the previous experience and suggestions.
 TASK 1:
@@ -124,6 +128,7 @@ THOUGHT PROCESS
 CODE
 EXPLANATION
 ...
+
 #############
 # START CODING #
 '''
@@ -161,9 +166,11 @@ PROMPT_DEVELOPER_DEBUG_LOCATE = '''
 I'm getting an error executing the code you generated.
 #############
 # TASK #
-Please locate the error in the code and output the most relevant code snippet causes error (5 to 10 lines in length). I will provide you with the previous code, code contains error and error messages.
+Please locate the error in the code and output the most relevant code snippet causes error (5 to 10 lines in length). 
+I will provide you with the previous code, code contains error and error messages.
 NOTE that if assert statements just reports the error, you must find out the most relevant code snippet which makes the assert statement fail, not output the assert statement itself.
     - However, if you believe the assert statement is redundant, you can output it.
+    - This rule can be apply to raise error statement or other statements that only used to give information without performing any calculations, drawing graphs, or making changes to the dataset.
 NOTE that the **last** code snippet in your response should be the **most relevant code snippet causes error** that I ask you to output.
 DO NOT correct the error in this step. Just analyze and locate the error.
 #############
@@ -181,18 +188,29 @@ Let's work this out in a step by step way.
 '''
 
 PROMPT_DEVELOPER_DEBUG_ASK_FOR_HELP = '''
-# INPORTANT NOTE #
-This is the {i}-th time you try to fix the error. Remember You can ONLY try 4 times in total. 
-Please review all error messages collected from your previous attempts. 
-If they are similar, it means you are not making progress, and you should ask for help to avoid wasting time and resource.
+# IMPORTANT NOTE #
+This is your {i}-th attempt to fix the error. Remember, you can ONLY try 4 times in total.
+
+Please carefully review all error messages collected from your previous attempts.
+
+Criteria for judgment:
+1. If the error messages from the last two attempts are identical, or
+2. If more than two out of the last three error messages contain the same keywords or error types
+
+Then, this indicates you are not making progress and should request help to avoid wasting time and resources.
+
+Requesting help:
+If the above criteria are met, please output the following message:
+<MESSAGE> <HELP> I need help. </HELP> </MESSAGE>
+
+If you don't need help, DO NOT output the above message.
+
 #############
 # ALL ERROR MESSAGES #
 {all_error_messages}
 #############
 # RESPONSE #
-You can ask for help by output the following messages:
-1. HELP
-2. I NEED HELP
+Please respond according to the instructions above.
 '''
 
 PROMPT_DEVELOPER_DEBUG_FIX = '''
@@ -270,11 +288,11 @@ You should ONLY output the each code snippet with problem, without any other con
 Here is the template you can use:
 ## CODE SNIPPET 1 WITH PROBLEM ##
 ```python
-code snippet 1 with problem
+[code snippet 1 with problem]
 ```
 ## CODE SNIPPET 2 WITH PROBLEM ##
 ```python
-code snippet 2 with problem
+[code snippet 2 with problem]
 ```
 ...
 '''
@@ -309,11 +327,11 @@ NOTE that you should output the code snippets after correction in the order of t
 Here is the template you can use:
 ## CODE SNIPPET 1 AFTER CORRECTION ##
 ```python
-code snippet 1 after correction
+[code snippet 1 after correction]
 ```
 ## CODE SNIPPET 2 AFTER CORRECTION ##
 ```python
-code snippet 2 after correction
+[code snippet 2 after correction]
 ```
 ...
 '''
