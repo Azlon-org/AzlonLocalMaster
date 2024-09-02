@@ -49,25 +49,43 @@ class TestTool:
     
     def test_document_exist(self, state: State):
         '''
-        check if the csv document exists in the data_dir
+        Check if the required CSV documents exist in the data_dir.
         '''
-        # check in the state.competition_dir, if the document exists
-        # read all the files in the directory
+        # Check in the state.competition_dir if the documents exist
+        # Read all the files in the directory
         files = os.listdir(state.competition_dir)
+        
         if state.phase == "Model Building, Validation, and Prediction":
-            content = "submission"
+            # Check for the existence of submission.csv
+            required_file = "submission.csv"
+            if required_file in files:
+                return True, 2, f"{required_file} exists"
+            else:
+                return False, 2, f"{required_file} does not exist"
+        
         elif state.phase == "Data Cleaning":
-            content = "cleaned"
+            # Check for the existence of cleaned_train and cleaned_test
+            required_files = ["cleaned_train", "cleaned_test"]
+            missing_files = [file for file in required_files if not any(file in f for f in files)]
+            
+            if not missing_files:
+                return True, 2, "cleaned_train and cleaned_test data exist"
+            else:
+                return False, 2, f"Missing files: {', '.join(missing_files)}"
+        
         elif state.phase == "Feature Engineering":
-            content = "processed"
+            # Check for the existence of processed_train and processed_test
+            required_files = ["processed_train", "processed_test"]
+            missing_files = [file for file in required_files if not any(file in f for f in files)]
+            
+            if not missing_files:
+                return True, 2, "processed_train and processed_test data exist"
+            else:
+                return False, 2, f"Missing files: {', '.join(missing_files)}"
+        
         else:
             return True, 2, "Don't need to check the document in this phase"
 
-        for file in files:
-            if f"{content}" in file:
-                return True, 2, f"{content} data exists"
-        
-        return False, 2, f"{content} data does not exist"
     
     def test_no_duplicate_cleaned_train(self, state: State):
         '''

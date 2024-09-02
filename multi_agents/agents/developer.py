@@ -354,6 +354,7 @@ class Developer(Agent):
                     input = PROMPT_DEVELOPER_WITH_EXPERIENCE_ROUND0_2
                     raw_reply, history = self.llm.generate(input, history, max_tokens=4096)
                 if retry_flag:
+                    self.all_error_messages = [] # retry后清空error messages
                     logging.info("The developer asks for help when debugging the code. Regenerating the code.")
                     with open(f'{state.restore_dir}/{self.role}_retry_reply.txt', 'w') as f:
                         f.write(raw_reply)

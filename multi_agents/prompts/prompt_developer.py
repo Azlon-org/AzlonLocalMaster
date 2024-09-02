@@ -29,15 +29,16 @@ Data visualization: When using libraries such as seaborn or matplotlib to create
 - Before calculating a correlation matrix, confirm that the dataset only contains numerical data. If there is non-numerical data, handle it appropriately, such as by removing or converting it to numerical data.
 - Before performing data merging or joining operations, ensure that the data types of all relevant columns are consistent to avoid errors caused by type mismatches.
 </example>
-- At each critical step of writing code, always reasonable `assert` statements to verify the correctness of the code segments and the successful execution of step {step_name}.
-    - If current step is Preliminary EDA or In-depth EDA, do NOT write `assert` statements.
-<example>
-After data cleaning, you can use assert statements to check whether the cleaned dataset is empty or if the data types of specific columns meet expectations.
-</example>
 - Always ensure that the same modifications, such as feature scaling, missing value handling, and categorical variable encoding, are applied to both the training set and the test set when handling datasets. 
     - Note that the test dataset typically does not include the target variable, so special care must be taken when applying target encoding or feature engineering that depends on the target variable.
 - Always copy the DataFrame before processing it and use the copy to process.
 '''
+
+# - At each critical step of writing code, always reasonable `assert` statements to verify the correctness of the code segments and the successful execution of step {step_name}.
+#     - If current step is Preliminary EDA or In-depth EDA, do NOT write `assert` statements.
+# <example>
+# After data cleaning, you can use assert statements to check whether the cleaned dataset is empty or if the data types of specific columns meet expectations.
+# </example>
 
 # <example>   
 # When using the matplotlib library for visualizing multiple subplots, if you need to display relationships between multiple variables, you can set up subplots within a single figure window instead of generating separate plots for each variable relationship. This approach not only makes effective use of visual space but also adheres to the rule of limiting the number of generated plots. For example, if there are 12 variable combinations, you can choose the most critical 10 combinations to display.
@@ -76,6 +77,7 @@ EXPLANATION
 #############
 # START CODING #
 If you understand, please request the code and insight from previous steps, all the features of the data and 10 data samples in both training data and test data from me.
+You should output all the code and explanation in ONE response (After you request the information from me).
 '''
 
 

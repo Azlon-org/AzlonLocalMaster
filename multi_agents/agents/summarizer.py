@@ -17,6 +17,7 @@ from llm import LLM
 from state import State
 from prompts.prompt_base import *
 from prompts.prompt_summarizer import *
+from tools import *
 
 class Summarizer(Agent):
     def __init__(self, model: str, type: str):  
@@ -36,8 +37,46 @@ class Summarizer(Agent):
 
         return prompt_round1
     
-    def _specified_prompt(self, state: State) -> str:
-        pass
+    def _get_insight_from_visualization(self, state: State) -> str:
+        images_dir = f"{state.restore_dir}/images"
+        if not os.path.exists(images_dir):
+            return "There is no image in this stage."
+        else:
+            images = os.listdir(images_dir)
+        if len(images) == 0:
+            return "There is no image in this stage."
+        images_str = "\n".join(images)
+        num_of_chosen_images = min(5, len(images))
+        chosen_images = []
+        input = PROMPT_SUMMARIZER_IMAGE_CHOOSE.format(steps_in_context=state.context, stage=state.phase, num=num_of_chosen_images+3, images=images_str)
+        raw_reply, _ = self.llm.generate(input, [], max_tokens=4096)
+        with open(f'{state.restore_dir}/chosen_images_reply.txt', 'w') as f:
+            f.write(raw_reply)
+        try:
+            raw_chosen_images = self._parse_json(raw_reply)['images']
+            for image in raw_chosen_images:
+                if image in images:
+                    chosen_images.append(image)
+                    if len(chosen_images) == num_of_chosen_images:
+                        break
+        except Exception as e:
+            logging.error(f"Error parsing JSON: {e}")
+            for image in images:
+                if image in raw_reply:
+                    chosen_images.append(image)
+                    if len(chosen_images) == num_of_chosen_images:
+                        break
+
+        image_to_text_tool = ImageToTextTool(model='gpt-4o', type='api')
+        images_to_descriptions = image_to_text_tool.image_to_text(state, chosen_images)
+        insight_from_visualization = ""
+        for image, description in images_to_descriptions.items():
+            insight_from_visualization += f"## IMAGE: {image} ##\n{description}\n"
+        with open(f'{state.restore_dir}/insight_from_visualization.txt', 'w') as f:
+            f.write(insight_from_visualization)
+
+        return insight_from_visualization
+
 
     def _execute(self, state: State, role_prompt: str) -> Dict[str, Any]:
         # 实现总结功能 阅读当前state的memory 生成report
@@ -79,7 +118,8 @@ class Summarizer(Agent):
         input = PROMPT_SUMMARIZER_ANSWER_QUESTIONS.format(steps_in_context=state.context, step_name=state.phase, questions=questions)
         _, answer_questions_history = self.llm.generate(input, answer_questions_history, max_tokens=4096)
         
-        input = PROMPT_INFORMATION_FOR_ANSWER.format(competition_info=competition_info, plan=plan, code=code, output=output, review=review)
+        insight_from_visualization = self._get_insight_from_visualization(state)
+        input = PROMPT_INFORMATION_FOR_ANSWER.format(competition_info=competition_info, plan=plan, code=code, output=output, insight_from_visualization=insight_from_visualization, review=review)
         answer_questions_reply, answer_questions_history = self.llm.generate(input, answer_questions_history, max_tokens=4096)
         with open(f'{state.restore_dir}/answer_questions_reply.txt', 'w') as f:
             f.write(answer_questions_reply)

@@ -68,7 +68,7 @@ def read_image(prompt, image_path):
             ]
         }
     ]
-    reply = api_handler.get_output(messages, type='image')
+    reply = api_handler.get_output(messages, type='image', max_tokens=4096)
     return reply
 
 def extract_and_run_code(competition, path_to_competition_step):

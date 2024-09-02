@@ -1,3 +1,36 @@
+PROMPT_SUMMARIZER_IMAGE_CHOOSE = '''
+# CONTEXT #
+{steps_in_context}
+
+#############
+# TASK #
+Currently, you are in stage: {stage}.
+According to the current stage, you need to choose {num} images from the following images, they should be most relevant to the current stage, and useful for the next stage.
+
+#############
+# IMAGES #
+{images}
+
+#############
+# RESPONSE #
+Please give me the image names that you choose. You should follow the format:
+```json
+{{
+    "images": list=[
+        "[image name 1]",
+        "[image name 2]",
+        "[image name 3]",
+        ...
+    ]
+}}
+```
+
+#############
+# START CHOOSING IMAGES #
+Let's work this out in a step by step way.
+'''
+
+
 PROMPT_SUMMARIZER_DESIGN_QUESITONS = '''
 # CONTEXT #
 {steps_in_context}
@@ -73,7 +106,7 @@ Currently, I am at step: {step_name}.
 # TASK #
 Please answer a series of questions that will help summarize the current step.
 Your answer should be concise and detailed, for example, if the question is about how to clean data, your answer should be specific to each feature.
-I will provide the competition information (COMPETITION INFO), the plan given by the planner for this stage (PLAN), the code written by the developer in this stage and the output of the code execution (CODE AND OUTPUT), as well as the reviewer's evaluation of the planner's and developer's task completion for this stage (REVIEW).
+I will provide the competition information (COMPETITION INFO), the plan given by the planner for this stage (PLAN), the code written by the developer in this stage and the output of the code execution (CODE AND OUTPUT), insight from images you generated (INSIGHT FROM VISUALIZATION), as well as the reviewer's evaluation of the planner's and developer's task completion for this stage (REVIEW).
 When answering each question, you can first consider which information you need to use, and then answer the question based on this information.
 
 #############
@@ -86,7 +119,7 @@ Let's work this out in a step by step way.
 
 #############
 # START ANSWER QUESTIONS #
-If you are ready, please request from me the COMPETITION INFO, PLAN, CODE AND OUTPUT, REVIEW.
+If you are ready, please request from me the COMPETITION INFO, PLAN, CODE AND OUTPUT, INSIGHT FROM VISUALIZATION, REVIEW.
 '''
 
 PROMPT_INFORMATION_FOR_ANSWER = '''
@@ -104,6 +137,10 @@ PROMPT_INFORMATION_FOR_ANSWER = '''
 
 ## OUTPUT ##
 {output}
+
+#############
+# INSIGHT FROM VISUALIZATION #
+{insight_from_visualization}
 
 #############
 # REVIEW #
