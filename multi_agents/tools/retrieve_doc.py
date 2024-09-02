@@ -67,12 +67,12 @@ text: {content}
 
 
 def main():
-    embeddings = OpenaiEmbeddings(api_key='insert your api key')
+    embeddings = OpenaiEmbeddings(api_key='')
     llm = LLM('gpt-4o', 'api')
 
     tool = RetrieveTool(llm, embeddings)
     # tool.create_db()
-    conclusion = tool.query_sklearn('Use the LinearRegression function to predict the target variable.')
+    conclusion = tool.query_sklearn('Use the linear regression model.')
     print(conclusion)
 
 
