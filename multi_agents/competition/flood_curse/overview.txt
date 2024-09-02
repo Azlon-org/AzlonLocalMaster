@@ -1,0 +1,100 @@
+# Flood Curse
+
+Help Yuji find a safe place
+
+![img](https://www.kaggle.com/competitions/82922/images/header)
+
+## Flood Curse
+
+**Late Submission**
+
+more_horiz
+
+## Overview
+
+**Welcome to the CognifAI Mini-Assignment 1**
+
+Hello everyone! We are excited to present an engaging and accessible contest for our community to hone their machine learning skills as part of the roadmap2 initiative.
+
+**Quick Guide**
+
+1. Review the problem statement below.
+2. Download the CSV files from the 'Data' tab.
+3. Train your model and generate a `submission.csv` file in the specified format.
+4. Submit your predictions.
+5. Navigate to the 'Code' tab and create a new Notebook.
+6. Import your notebook or copy/paste your code, run all the cells, and share it with MINI_ASSIGNMENTS.
+
+**Problem Statement**
+After finally defeating Sukuna, Yuji is looking for a safe place to settle down. He needs your help to evaluate the flood risk in various locations, identified by unique IDs and described by several features. Your task is to predict the probability of flooding in these places based on the given features.
+
+Join us in this exciting challenge and put your machine learning skills to the test!
+
+Start
+
+Jul 16, 2024
+
+###### Close
+
+Jul 18, 2024
+
+### Evaluation
+
+link
+
+keyboard_arrow_up
+
+1. Submissions are evaluated using the [R2 score](https://scikit-learn.org/stable/modules/generated/sklearn.metrics.r2_score.html).
+2. Visualising data using Pandas, performing efficient training using Numpy and utilising Matplotlib to show accuracy results will attract extra points.
+
+## Submission File
+
+For each `id` row in the test set, you must predict the value of the target, `FloodProbability`. The file should contain a header and have the following format:
+
+```
+id,FloodProbability
+1117957,0.5
+1117958,0.5
+1117959,0.5
+etc.
+```
+
+### Timeline
+
+link
+
+keyboard_arrow_up
+
+- **Start Time** - 05:00pm, July 16, 2024
+- **End Time** - 11:59pm, July 17, 2024
+
+### About 
+
+link
+
+keyboard_arrow_up
+
+In this mini assignment series, we plan to host different contests on kaggle based on CognifAI's Roadmap2: 
+https://docs.google.com/document/d/1as0WJGmB5-DMgLnrkX6--xbxhw_dpUI1g0fCNAOjKPk/edit
+
+### Citation
+
+link
+
+keyboard_arrow_up
+
+Kshitij M.G., likki1911, MINI_ASSIGNMENTS. (2024). Flood Curse. Kaggle. https://kaggle.com/competitions/flood-curse
+
+
+
+
+
+## Dataset Description
+
+This dataset is particularly well suited for visualizations, clustering, and general EDA. Show off your skills!
+
+### Files
+
+- train.csv - the training dataset; the id represnts a place and each column represents a feature of that place; `FloodProbability` is the target
+- test.csv - the test dataset; your objective is to predict the FloodProbability for each row
+- sample_submission.csv - a sample submission file in the correct format
