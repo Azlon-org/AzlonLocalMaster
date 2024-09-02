@@ -1,0 +1,75 @@
+# Crab Age Regression Dataset: AI-Generated Insights
+
+Empower Your Analysis: Competitors will utilize this dataset to build and refine regression models, predicting crab age from key biological.
+
+![img](https://www.kaggle.com/competitions/77970/images/header)
+
+## Crab Age Regression Dataset: AI-Generated Insights
+
+**Late Submission**
+
+more_horiz
+
+## Overview
+
+**Welcome to the 2023 Kaggle Playground Series!** Thank you to everyone who participated in and contributed to Season 3 Playground Series so far! 
+
+**Your Goal:** For this Episode of the Series, your task is to use regression to predict the age of crabs given physical attributes. Good luck!
+
+Start
+
+15 days ago
+
+###### Close
+
+2 days ago
+
+### Evaluation
+
+link
+
+keyboard_arrow_up
+
+## Evaluation
+
+Submissions will be evaluated using [Mean Absolute Error (MAE)](https://en.wikipedia.org/wiki/Mean_absolute_error),
+
+![MAE](https://raw.githubusercontent.com/visipedia/iwildcam_comp/master/assets/MAE.png)
+
+where each `x_i` represents the predicted target, `y_i` represents the ground truth, and `n` is the number of rows in the test set.
+
+## Submission File
+
+For each `id` in the test set, you must predict the target `Age`. The file should contain a header and have the following format:
+
+```
+id,yield
+74051,10.2
+74051,3.6
+74051,11.9
+etc.
+```
+
+### Citation
+
+link
+
+keyboard_arrow_up
+
+Haseeb_in_Data. (2024). Crab Age Regression Dataset: AI-Generated Insights. Kaggle. https://kaggle.com/competitions/crab-age-regression-dataset-ai-generated-insights
+
+
+
+
+
+## Dataset Description
+
+The dataset for this competition (both train and test) was generated from a deep learning model trained on the [Crab Age Prediction](https://www.kaggle.com/datasets/sidhus/crab-age-prediction)dataset. Feature distributions are close to, but not exactly the same, as the original. Feel free to use the original dataset as part of this competition, both to explore differences as well as to see whether incorporating the original in training improves model performance.
+
+**Note:** You can use [this notebook](https://www.kaggle.com/inversion/make-synthetic-crab-age-data) to generate additional synthetic data for this competition if you would like.
+
+## Files
+
+- **train.csv** - the training dataset; `Age` is the target
+- **test.csv** - the test dataset; your objective is to predict the probability of `Age` (the ground truth is `int` but you can predict `int` or `float`)
+- **sample_submission.csv** - a sample submission file in the correct format
