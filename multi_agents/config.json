@@ -25,12 +25,20 @@
         "Feature Engineering": "feature_engineering",
         "Model Building, Validation, and Prediction": "model_build_predict"
     },
-    "phase_to_unit_tests": {
+    "_phase_to_unit_tests": {
         "Understand Background": [],
         "Preliminary Exploratory Data Analysis": ["test_example", ""],
         "Data Cleaning": ["test_readable_cleaned_train", "test_readable_cleaned_test", "test_document_exist", "test_no_duplicate_cleaned_test", "test_no_duplicate_cleaned_train", "test_cleaned_train_no_missing_values", "test_cleaned_test_no_missing_values"],
         "In-depth Exploratory Data Analysis": [""],
         "Feature Engineering": [],
-        "Model Building, Validation, and Prediction": ["test_readable_submission", "test_document_exist", "test_no_duplicate_submission", "test_submission_no_missing_values", "test_file_num", "test_column_names", "test_submission_first_columns"]
+        "Model Building, Validation, and Prediction": ["test_readable_submission", "test_document_exist", "test_no_duplicate_submission", "test_submission_no_missing_values", "test_file_num", "test_column_names", "test_submission_first_column"]
+    },
+    "phase_to_unit_tests": {
+        "Understand Background": [],
+        "Preliminary Exploratory Data Analysis": [],
+        "Data Cleaning": ["test_document_exist"],
+        "In-depth Exploratory Data Analysis": [],
+        "Feature Engineering": ["test_document_exist"],
+        "Model Building, Validation, and Prediction": ["test_document_exist", "test_submission_first_column"]
     }
 }

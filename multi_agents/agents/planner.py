@@ -29,7 +29,7 @@ class Planner(Agent):
 
     def _get_previous_plan_and_report(self, state: State):
         previous_plan = ""
-        previous_phases = state.get_previous_phase(type="all")
+        previous_phases = state.get_previous_phase(type="plan")
         for previous_phase in previous_phases:
             previous_dir_name = state.phase_to_directory[previous_phase]
             previous_plan += f"## {previous_phase.upper()} ##\n"
@@ -40,7 +40,7 @@ class Planner(Agent):
                     previous_plan += '\n'
             else:
                 previous_plan = "There is no plan in this step."
-        path_to_previous_report = f'{state.competition_dir}/{previous_dir_name}/Report.txt'
+        path_to_previous_report = f'{state.competition_dir}/{previous_dir_name}/report.txt'
         if os.path.exists(path_to_previous_report):
             previous_report = read_file(path_to_previous_report)
         else:
@@ -51,48 +51,54 @@ class Planner(Agent):
         # 实现规划功能
         history = []
         round = 0
-        with open(f'{state.competition_dir}/competition_info.json', 'r') as f:
-            competition_info = json.load(f)
+        with open(f'{state.competition_dir}/competition_info.txt', 'r') as f:
+            competition_info = f.read()
         if len(state.memory) == 1: # 如果之前没有memory，说明是第一次执行
             history.append({"role": "system", "content": f"{role_prompt} {self.description}"})
-            while True:
-                if round == 0:
-                    task = PROMPT_PLANNER_TASK.format(step_name=state.phase)
-                    input = PROMPT_PLANNER.format(steps_in_context=state.context, step_name=state.phase, message=state.message, competition_info=competition_info, task=task)
-                elif round == 1:
-                    input = f"\n#############\n# PREVIOUS PLAN #\n{self._get_previous_plan_and_report(state)[0]}\n#############\n# PREVIOUS REPORT #\n{self._get_previous_plan_and_report(state)[1]}"
-                    input += self._read_data(state)
-                elif round == 2:
-                    planner_mid_reply = raw_reply
-                    input = PROMPT_PLNNAER_ROUND2
-                elif round == 3: 
-                    break
-                raw_reply, history = self.llm.generate(input, history, max_tokens=4096)
-                round += 1
+            # Round 0
+            task = PROMPT_PLANNER_TASK.format(step_name=state.phase)
+            input = PROMPT_PLANNER.format(steps_in_context=state.context, step_name=state.phase, competition_info=competition_info, task=task)
+            _, history = self.llm.generate(input, history, max_tokens=4096)
+
+            # Round 1
+            input = f"\n#############\n# PREVIOUS PLAN #\n{self._get_previous_plan_and_report(state)[0]}\n#############\n# PREVIOUS REPORT #\n{self._get_previous_plan_and_report(state)[1]}"
+            input += self._read_data(state)
+            raw_plan_reply, history = self.llm.generate(input, history, max_tokens=4096)
+            with open(f'{state.restore_dir}/raw_plan_reply.txt', 'w') as f:
+                f.write(raw_plan_reply)
+
+            # Round 2
+            input = PROMPT_PLNNAER_REORGANIZE_IN_MARKDOWN
+            organized_markdown_plan, history = self.llm.generate(input, history, max_tokens=4096)
+            markdown_plan = self._parse_markdown(organized_markdown_plan)
+            with open(f'{state.restore_dir}/markdown_plan.txt', 'w') as f:
+                f.write(markdown_plan)
+
+            # Round 3
+            input = PROMPT_PLNNAER_REORGANIZE_IN_JSON
+            raw_json_plan, history = self.llm.generate(input, history, max_tokens=4096)
+            try:
+                json_plan = self._parse_json(raw_json_plan)['final_answer']
+            except Exception as e:
+                logging.info(f"Error parsing JSON: {e}")
+                json_plan = self._parse_json(raw_json_plan)
+            with open(f'{state.restore_dir}/json_plan.json', 'w') as f:
+                json.dump(json_plan, f, indent=4)
+
         else:
             last_planner_score = state.memory[-2].get("reviewer", {}).get("score", {}).get("agent planner", 0)
             if last_planner_score >= 3: # 如果上一轮中planner的评分大于等于3，说明上一个planner的规划结果是可以接受的
                 return {"planner": state.memory[-2]["planner"]}
             else:
                 return {"planner": state.memory[-2]["planner"]}
-        result = raw_reply
-        reply = self._parse_json(raw_reply)
-
-        try:
-            plan = reply["final_answer"]
-        except KeyError:
-            logging.info("Final answer not found in reply.")
-            plan = reply
+            
+        # 保存plan和result
+        plan = markdown_plan
+        result = markdown_plan
 
         # 保存history
         with open(f'{state.restore_dir}/{self.role}_history.json', 'w') as f:
             json.dump(history, f, indent=4)
-        with open(f'{state.restore_dir}/plan.json', 'w') as f:
-            json.dump(plan, f, indent=4) # 保存规划结果
-        with open(f'{state.restore_dir}/{self.role}_mid_reply.txt', 'w') as f:
-            f.write(planner_mid_reply)
-        with open(f'{state.restore_dir}/{self.role}_reply.txt', 'w') as f:
-            f.write(raw_reply)
 
         input_used_in_review = f"   <competition_info>\n{competition_info}\n    </competition_info>"
 

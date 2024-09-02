@@ -22,7 +22,7 @@ def generate_response(client, engine, messages, settings, type, timeout):
             response = client.chat.completions.create(
                 messages = messages,
                 model = engine,
-                temperature = settings.get('temperature', 0.3),
+                temperature = settings.get('temperature', 0.7),
                 max_tokens = settings.get('max_tokens', 50),
                 top_p = settings.get('top_p', 1.0),
                 frequency_penalty = settings.get('frequency_penalty', 0.0),
@@ -65,7 +65,7 @@ class APIHandler:
         self.client = openai.OpenAI(api_key=self.api_key, base_url=self.base_url)
         # self.client = openai.OpenAI(api_key=self.api_key)
     
-    def get_output(self, messages, max_tokens, top_p=1.0, temperature=0.3, frequency_penalty=0.0, presence_penalty=0.0, stop=None, type='text'):
+    def get_output(self, messages, max_tokens, top_p=1.0, temperature=0.7, frequency_penalty=0.0, presence_penalty=0.0, stop=None, type='text'):
         settings = {
             'max_tokens': max_tokens,
             'temperature': temperature,

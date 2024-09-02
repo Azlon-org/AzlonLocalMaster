@@ -46,16 +46,32 @@ class State:
             os.makedirs(f'{path_to_dir}/images')
         self.restore_dir = path_to_dir
 
-    def get_previous_phase(self, type: str="last"):
+    def get_previous_phase(self, type: str="code"):
         phases = load_config(f'{PREFIX_MULTI_AGENTS}/config.json')['phases']
         current_phase_index = phases.index(self.phase)
-        if type == 'last':
-            previous_phase = phases[current_phase_index - 1]
-        elif type == 'all':
+        if type == 'code':
+            if self.phase == 'Data Cleaning':
+                previous_phase = 'Understand Background'
+            elif self.phase == 'Feature Engineering':
+                previous_phase = 'Data Cleaning'
+            else:
+                previous_phase = phases[current_phase_index - 1]
+        elif type == 'plan':
             previous_phase = phases[:current_phase_index]
+        elif type == 'report':
+            previous_phase = phases[current_phase_index - 1]
         else:
             raise Exception(f"Unknown type: {type}")
         return previous_phase
+
+    def get_next_phase(self):
+        phases = load_config(f'{PREFIX_MULTI_AGENTS}/config.json')['phases']
+        current_phase_index = phases.index(self.phase)
+        if current_phase_index < len(phases) - 1:
+            next_phase = phases[current_phase_index + 1]
+        else:
+            next_phase = None
+        return next_phase
 
     # 更新State内部的信息
     def update_memory(self, memory): 
@@ -71,7 +87,7 @@ class State:
     def restore_report(self):
         report = self.memory[-1].get('summarizer', {}).get('report', '')
         if len(report) > 0:
-            with open(f'{self.restore_dir}/Report.txt', 'w') as f:
+            with open(f'{self.restore_dir}/report.txt', 'w') as f:
                 f.write(report)
             print(f"Report in Phase: {self.phase} is restored.")
         else:

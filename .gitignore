@@ -4,13 +4,19 @@
 
 **/images/
 
-**/titanic/
+# **/titanic/
 
 **/house_prices/
 
 **/predict_future_sales/
 
+**/spaceship_titanic/
+
 **/experiments_history/
+
+**/strong_baseline/
+
+**/weak_baseline/
 
 test.py
 test.txt
