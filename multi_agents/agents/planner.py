@@ -57,7 +57,8 @@ class Planner(Agent):
             history.append({"role": "system", "content": f"{role_prompt} {self.description}"})
             # Round 0
             task = PROMPT_PLANNER_TASK.format(step_name=state.phase)
-            input = PROMPT_PLANNER.format(steps_in_context=state.context, step_name=state.phase, competition_info=competition_info, task=task)
+            user_rules = state.generate_rules()
+            input = PROMPT_PLANNER.format(steps_in_context=state.context, step_name=state.phase, user_rules=user_rules, competition_info=competition_info, task=task)
             _, history = self.llm.generate(input, history, max_tokens=4096)
 
             # Round 1

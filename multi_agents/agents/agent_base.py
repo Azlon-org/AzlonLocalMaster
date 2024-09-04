@@ -99,7 +99,7 @@ class Agent:
 
         raw_reply = raw_reply.strip()
         logging.info(f"Attempting to extract JSON from raw reply.")
-        json_match = re.search(r'```json(.*?)```', raw_reply, re.DOTALL)
+        json_match = re.search(r'```json(.*)```', raw_reply, re.DOTALL) # 贪婪模式捕获
         
         if json_match:
             reply_str = json_match.group(1).strip()
@@ -129,7 +129,7 @@ class Agent:
         return reply
     
     def _parse_markdown(self, raw_reply: str) -> str:
-        markdown_match = re.search(r'```markdown(.*?)```', raw_reply, re.DOTALL)
+        markdown_match = re.search(r'```markdown(.*)```', raw_reply, re.DOTALL) # 贪婪模式捕获
         if markdown_match:
             reply_str = markdown_match.group(1).strip()
             return reply_str

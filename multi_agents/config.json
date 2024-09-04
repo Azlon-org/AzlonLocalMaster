@@ -40,5 +40,115 @@
         "In-depth Exploratory Data Analysis": [],
         "Feature Engineering": ["test_document_exist"],
         "Model Building, Validation, and Prediction": ["test_document_exist", "test_submission_first_column"]
+    },
+    "rulebook_parameters": {
+        "Preliminary Exploratory Data Analysis": {
+            "status": 1,
+            "default_rules_with_parameters": {
+                "Missing Values Analysis": [
+                    [1],
+                    [
+                        "If the percentage of missing values in a feature is greater than {placeholder}, then mark the feature as needing to be dropped.",
+                        0.2
+                    ]
+                ]
+            }
+        },
+        "Data Cleaning":{
+            "status": 1,
+            "default_rules_with_parameters": {
+                "Handling Missing Values": [
+                    [1, 0, 1],
+                    [
+                        "If the percentage of missing values in a feature is greater than {placeholder}, dropped the feature.",
+                        0.2
+                    ],
+                    [
+                        "For numerical features, fill missing values with {placeholder}.",
+                        "median"
+                    ],
+                    [
+                        "For categorical features, fill missing values with {placeholder}.",
+                        "mode"
+                    ]
+                ],
+                "Handling Outliers": [
+                    [0, 1],
+                    [
+                        "If you use the standard deviation method to detect outliers, consider truncating or deleting values that exceed {placeholder} standard deviations.",
+                        3
+                    ],
+                    [
+                        "If you use the IQR method to detect outliers, consider truncating or deleting values that exceed {placeholder} IQR.",
+                        1.5
+                    ]
+                ]
+            },
+            "user_defined_rules": {}
+        },
+        "In-depth Exploratory Data Analysis": {
+            "status": 0
+        },
+        "Feature Engineering":{
+            "status": 1,
+            "default_rules_with_parameters": {
+                "Feature Selection": [
+                    [0, 0],
+                    [
+                        "Use correlation-based methods to remove features with a correlation to the target variable below the {placeholder}",
+                        0.05
+                    ],
+                    [
+                        "Use tree-based feature importance methods to retain the top {placeholder} most important features.",
+                        50
+                    ]
+                ],
+                "Feature Transformation": [
+                    [1, 1],
+                    [
+                        "Apply logarithmic transformation to numerical features with skewness greater than the {placeholder}",
+                        0.5
+                    ],
+                    [
+                        "Set the maximum degree for polynomial features. Maximum degree = {placeholder}",
+                        2
+                    ]
+                ],
+                "Feature Encoding": [
+                    [0],
+                    [
+                        "For categorical variables with cardinality below the {placeholder}, use one-hot encoding.\nFor categorical variables with high cardinality, use target encoding or frequency encoding.",
+                        10
+                    ]
+                ],
+                "Feture Interaction": [
+                    [1],
+                    [
+                        "Create interaction terms for important features, limiting the maximum degree of interaction. Maximum degree = {placeholder}",
+                        2
+                    ]
+                ]
+            },
+            "user_defined_rules": {}
+        },
+        "Model Building, Validation, and Prediction": {
+            "status": 0,
+            "default_rules_with_parameters": {
+                "Data Splitting": [
+                    [0],
+                    [
+                        "Split the data into training and testing sets, with the test set proportion set to {placeholder}",
+                        20
+                    ]
+                ],
+                "Cross Validation": [
+                    [0],
+                    [
+                        "Use k-fold cross-validation, setting k to {placeholder}",
+                        5
+                    ]
+                ]
+            }
+        }
     }
 }

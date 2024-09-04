@@ -1,7 +1,6 @@
 import os
 import pandas as pd
 import json
-import chromadb
 import sys
 
 sys.path.append('..')

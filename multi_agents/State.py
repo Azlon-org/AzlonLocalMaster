@@ -24,6 +24,7 @@ class State:
         self.context = ""   # 用于记录当前State的context
         self.phase_to_directory = load_config(f'{PREFIX_MULTI_AGENTS}/config.json')['phase_to_directory'] # 记录每个阶段的目录
         self.phase_to_unit_tests = load_config(f'{PREFIX_MULTI_AGENTS}/config.json')['phase_to_unit_tests'] # 记录每个阶段的单元测试
+        self.rulebook_parameters = load_config(f'{PREFIX_MULTI_AGENTS}/config.json')['rulebook_parameters'] # 记录每个阶段的规则手册参数
         self.restore_dir = ""   # 用于记录当前State的文件保存路径
         self.competition_dir = f'{PREFIX_MULTI_AGENTS}/competition/{self.competition}' # 用于记录当前competition的路径（import data的路径）
         self.dir_name = self.phase_to_directory[self.phase]
@@ -36,6 +37,27 @@ class State:
         phases = load_config(f'{PREFIX_MULTI_AGENTS}/config.json')['phases']
         for i, phase in enumerate(phases):
             self.context += f"{i+1}. {phase}\n"
+
+    def generate_rules(self):
+        rules = ""
+        if self.rulebook_parameters[self.phase]['status']:
+            default_rules = self.rulebook_parameters[self.phase]['default_rules_with_parameters']
+            rules = ""
+            for key, values in default_rules.items():
+                if sum(values[0]) == 0:
+                    continue
+                rules += f"If you need to {key}, please follow the following rules:\n"
+                for i, rule in enumerate(values[1:]):
+                    if values[0][i] == 1:
+                        formatted_rule = rule[0].format(placeholder=rule[1])
+                        rules += f"- {formatted_rule}\n"
+                rules += "\n"
+        else:
+            rules = "There is no rule for this stage."
+        with open(f'{self.restore_dir}/user_rules.txt', 'w') as f:
+            f.write(rules)
+
+        return rules
 
     # 创建当前State的目录
     def make_dir(self):

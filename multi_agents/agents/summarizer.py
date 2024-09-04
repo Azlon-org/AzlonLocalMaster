@@ -80,6 +80,10 @@ class Summarizer(Agent):
 
     def _execute(self, state: State, role_prompt: str) -> Dict[str, Any]:
         # 实现总结功能 阅读当前state的memory 生成report
+        if state.memory[-1].get("developer", {}).get("status", True) == False:
+            print(f"State {state.phase} - Agent {self.role} gives up summarizing because the code execution failed.")
+            return {self.role: {"history": [], "report": ""}}
+
         history = []
         history.append({"role": "system", "content": f"{role_prompt} {self.description}"})
 
@@ -105,6 +109,7 @@ class Summarizer(Agent):
         questions = self._parse_markdown(reorganize_questions_reply)
         with open(f'{state.restore_dir}/questions.txt', 'w') as f:
             f.write(questions)
+        history.append(design_questions_history)
 
         # Answer questions
         with open(f'{state.restore_dir}/single_step_code.txt', 'r') as f:
@@ -129,6 +134,7 @@ class Summarizer(Agent):
         report = self._parse_markdown(reorganize_answers_reply)
         with open(f'{state.restore_dir}/report.txt', 'w') as f:
             f.write(report)
+        history.append(answer_questions_history)
 
         # 保存history
         with open(f'{state.restore_dir}/{self.role}_history.json', 'w') as f:

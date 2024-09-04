@@ -4,12 +4,15 @@ I will provide you with COMPETITION INFORMATION, RESOURCE CONSTRAINTS, and previ
 In your response, briefly outline the task objectives, then specify the essential methods and constraints to consider. 
 Focus strictly on tasks relevant to this step, avoiding those belonging to other phases.
 <example>
-- During the in-depth EDA step, only consider features that significantly impact the target variable when plotting data analysis charts to avoid long runtimes and redundant information.
+During the in-depth EDA step:
+- only consider features that significantly impact the target variable when plotting data analysis charts to avoid long runtimes and redundant information.
 - Analyze the distribution and statistical properties of features without deleting or reducing them, as feature reduction belongs to the feature engineering step.
 </example>
 Ensure the plan addresses key dependencies, resource availability, and time constraints without overcomplicating the process. The goal is to create an efficient and adaptable plan, emphasizing clarity and practicality over complexity.
 NOTE that The plan should include a maximum of four tasks, with clear methods and constraints, guiding developers to effectively execute the critical steps of the current phase.
+NOTE that when you want to output some statistical information about the data, your FIRST choice should be TEXT format, if the information is not easy to describe in text, then you can generate images.
 NOTE that your method should be concise and detailed, for example, if the task is about how to clean data, your method should be specific to features you are going to clean.
+NOTE that when you design the plan, always take into account the methods and specific values mentioned in the USER RULES as the FIRST priority.
 '''
 
 
@@ -19,8 +22,13 @@ PROMPT_PLANNER = '''
 Currently, I am at step: {step_name}.
 
 #############
+# USER RULES #
+{user_rules}
+
+#############
 # COMPETITION INFORMATION #
 {competition_info}
+
 #############
 # RESOURCE CONSTRAINTS #
 - Always consider the runtime and efficiency of your code when writing code, especially for data visualization, handling large datasets, or complex algorithms.
@@ -42,6 +50,7 @@ Let's work this out in a step by step way.
 # START PLANNING #
 If you understand, please request the report and plan from the previous step. These documents contain important information that will guide your planning. In addition to the report and plan, I will also provide some sample data for your analysis. This will help you create a more accurate and tailored plan for the current step. Your plan should closely follow the previous step, maintain logical consistency, and avoid any duplication of tasks.
 '''
+
 
 PROMPT_PLNNAER_REORGANIZE_IN_MARKDOWN = '''
 # TASK #
@@ -68,6 +77,7 @@ Constraints: [Any constraints or considerations to keep in mind]
 #############
 # START REORGANIZING #
 '''
+
 
 PROMPT_PLNNAER_REORGANIZE_IN_JSON = '''
 # TASK #
