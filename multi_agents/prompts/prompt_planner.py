@@ -1,17 +1,19 @@
 PROMPT_PLANNER_TASK = '''
-Design a clear and concise plan for the current development phase: {phase_name}. The developer will execute tasks based on your plan. 
-I will provide you with COMPETITION INFORMATION, RESOURCE CONSTRAINTS, and previous reports and plans. Using this information, structure the plan thoughtfully.
+Please design plan that is clear and specific to each FEATURE for the current development phase: {phase_name}. The developer will execute tasks based on your plan. 
+I will provide you with COMPETITION INFORMATION, RESOURCE CONSTRAINTS, and previous reports and plans.
 In your response, briefly outline the task objectives, then specify the essential methods and constraints to consider. 
-Focus strictly on tasks relevant to this phase, avoiding those belonging to other phases.
+ONLY focus on tasks relevant to this phase, avoiding those belonging to other phases.
 <example>
-During the in-depth EDA phase   :
-- only consider features that significantly impact the target variable when plotting data analysis charts to avoid long runtimes and redundant information.
-- Analyze the distribution and statistical properties of features without deleting or reducing them, as feature reduction belongs to the feature engineering phase.
+During the in-depth EDA phase, you CAN:
+- Perform detailed univariate analysis on KEY features.
+you CAN NOT:
+- Modify any feature or modify data.
 </example>
-Ensure the plan addresses key dependencies, resource availability, and time constraints without overcomplicating the process. The goal is to create an efficient and adaptable plan, emphasizing clarity and practicality over complexity.
-NOTE that The plan should include a maximum of four tasks, with clear methods and constraints, guiding developers to effectively execute the critical steps of the current phase.
-NOTE that when you want to output some statistical information about the data, your FIRST choice should be TEXT format, if the information is not easy to describe in text, then you can generate images.
-NOTE that your method should be concise and detailed, for example, if the task is about how to clean data, your method should be specific to features you are going to clean.
+Ensure the plan addresses key dependencies, resource availability, and time constraints without overcomplicating the process.
+NOTE that The plan should include a maximum of FOUR tasks, with clear methods and constraints, guiding developers to effectively execute the critical steps of the current phase.
+NOTE that when you want to output some statistical information about the data, your FIRST choice should be output to terminal in TEXT format (print). Before you print statistics, first print a description of the statistics.
+    - if the information is not easy to describe in text, then you can generate images.
+NOTE that your method should be very detailed, for example, if the task is about how to clean data, your method should be specific to each feature (Omission NOT allowed) you are going to clean.
 NOTE that when you design the plan, always take into account the methods and specific values mentioned in the USER RULES as the FIRST priority.
 '''
 
@@ -20,7 +22,7 @@ PROMPT_PLANNER = '''
 # CONTEXT #
 {phases_in_context}
 Currently, I am at phase: {phase_name}.
-
+{state_info}
 #############
 # USER RULES #
 {user_rules}
@@ -63,12 +65,12 @@ Here is the MARKDOWN format you should follow:
 ## PLAN
 ### STEP 1
 Task: [The specific task to be performed]
-Method: [Methods to be used]
+Method and involved features: [Methods to be used and involved features]
 Constraints: [Any constraints or considerations to keep in mind]
 
 ### STEP 2
 Task: [The specific task to be performed]
-Method: [Methods to be used]
+Method and involved features: [Methods to be used and involved features]
 Constraints: [Any constraints or considerations to keep in mind]
 
 ...
@@ -91,7 +93,7 @@ Here is the JSON format you should follow:
     "final_answer": list=[
         {{
             "task": str="The specific task to be performed",
-            "method": list=["Methods to be used"],
+            "method and involved features": list=["Methods to be used and involved features"],
             "constraints": list=["Any constraints or considerations to keep in mind"]
         }}
     ]

@@ -49,9 +49,8 @@ def generate_response(client, engine, messages, settings, type, timeout):
 
 class APIHandler:
     def __init__(self, model):
-        if model not in ['gpt-3.5-turbo', 'gpt-4-turbo', 'gpt-4o']:
-            raise NotImplementedError(f"Model {model} not implemented.")
         self.engine = model
+        # print(f"Model: {model}.")
         # self.api_key = os.getenv("OPENAI_API_KEY")
         # self.base_url = None
         with open(f'{DIR}/api_key.txt', 'r') as f:

@@ -34,7 +34,7 @@ Let's work this out in a step by step way.
 
 #############
 # START ANALYSIS #
-If you understand, please request the overview of this data science competition from me.
+If you understand, please request the overview of this data science competition, features and 20 samples in train set and test set from me.
 '''
 
 PROMPT_READER_ROUND2 = '''

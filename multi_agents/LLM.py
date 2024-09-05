@@ -19,7 +19,7 @@ class LLM:
 
     def generate(self, prompt: str, history: list, max_tokens=4096) -> str:
         # Generate text based on prompt
-        return multi_chat(prompt, history, max_tokens)
+        return multi_chat(self.model, prompt, history, max_tokens)
     
 class OpenaiEmbeddings:
     def __init__(self, api_key: str, base_url: str = None, model: str = 'text-embedding-3-small'):

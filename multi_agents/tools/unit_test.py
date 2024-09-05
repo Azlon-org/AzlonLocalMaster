@@ -61,27 +61,27 @@ class TestTool:
             if required_file in files:
                 return True, 2, f"{required_file} exists"
             else:
-                return False, 2, f"{required_file} does not exist in {state.competition_dir}"
+                return False, 2, f"{required_file} does not exist in {state.competition_dir}/"
         
         elif state.phase == "Data Cleaning":
             # Check for the existence of cleaned_train and cleaned_test
-            required_files = ["cleaned_train", "cleaned_test"]
+            required_files = ["cleaned_train.csv", "cleaned_test.csv"]
             missing_files = [file for file in required_files if not any(file in f for f in files)]
             
             if not missing_files:
-                return True, 2, "cleaned_train and cleaned_test data exist"
+                return True, 2, "cleaned_train.csv and cleaned_test.csv data exist"
             else:
-                return False, 2, f"Missing files: {', '.join(missing_files)}, it should be saved in {state.competition_dir}"
+                return False, 2, f"Missing files: {', '.join(missing_files)}, it should be saved in {state.competition_dir}/"
         
         elif state.phase == "Feature Engineering":
             # Check for the existence of processed_train and processed_test
-            required_files = ["processed_train", "processed_test"]
+            required_files = ["processed_train.csv", "processed_test.csv"]
             missing_files = [file for file in required_files if not any(file in f for f in files)]
             
             if not missing_files:
-                return True, 2, "processed_train and processed_test data exist"
+                return True, 2, "processed_train.csv and processed_test.csv data exist"
             else:
-                return False, 2, f"Missing files: {', '.join(missing_files)}, it should be saved in {state.competition_dir}"
+                return False, 2, f"Missing files: {', '.join(missing_files)}, it should be saved in {state.competition_dir}/"
         
         else:
             return True, 2, "Don't need to check the document in this phase"

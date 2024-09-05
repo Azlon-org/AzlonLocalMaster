@@ -30,7 +30,7 @@ def read_file(file_path: str):
         with open(file_path, 'r', encoding='utf-8') as f:
             return f.readlines()
     
-def multi_chat(prompt, history=None, max_tokens=4096):
+def multi_chat(model: APIHandler, prompt, history=None, max_tokens=4096):
     """
     Multi-round chat with the assistant.
     """
@@ -39,8 +39,7 @@ def multi_chat(prompt, history=None, max_tokens=4096):
 
     messages = history + [{'role': 'user', 'content': prompt}]
 
-    api_handler = APIHandler('gpt-4o')
-    reply = api_handler.get_output(messages, max_tokens=max_tokens)
+    reply = model.get_output(messages, max_tokens=max_tokens)
     history.append({'role': 'user', 'content': prompt})
     history.append({'role': 'assistant', 'content': reply})
     

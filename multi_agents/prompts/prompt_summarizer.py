@@ -51,9 +51,10 @@ Based on this information, design 5 key questions that are most worth focusing o
 
 <sample questions>  
 (Assuming the phase is Preliminary EDA and the next phase is Data Cleaning)  
-1. Which features have missing values, and what is the proportion of missing values?  
-2. Are there any obvious outliers in the data? If so, which features do they mainly affect?  
-3. What interesting findings did you have in this phase? What do you think should be done in the next phase to better complete this competition?  
+1. What files did you process? Which files were generated? Answer with detailed file path. (This is a FIXED question for each phase.)
+2. Which features have missing values, and what is the proportion of missing values?  
+3. Are there any obvious outliers in the data? If so, which features do they mainly affect?  
+4. What interesting findings did you have in this phase? What do you think should be done in the next phase to better complete this competition?  
 ...
 </sample questions>
 
@@ -78,7 +79,7 @@ Please reorganize the questions that you have designed in the previous reply.
 ```markdown
 ## QUESTIONS
 ### Question 1
-[content of question 1]
+What files did you process? Which files were generated? Answer with detailed file path.
 
 ### Question 2
 [content of question 2]
@@ -157,7 +158,7 @@ Please reorganize the answers that you have given in the previous step, and synt
 # REPORT
 ## QUESTIONS AND ANSWERS  
 ### Question 1
-[repeat question 1]
+What files did you process? Which files were generated? Answer with detailed file path.
 ### Answer 1
 [answer to question 1]
 

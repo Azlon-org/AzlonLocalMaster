@@ -22,15 +22,15 @@ class SOP:
 
     def _create_agents(self, agent_name: str) -> Agent:
         if agent_name == "Reader":
-            return Reader('gpt-4o', 'api')
+            return Reader('gpt-4o-mini', 'api')
         elif agent_name == "Planner":
             return Planner('gpt-4o', 'api')
         elif agent_name == "Developer":
             return Developer('gpt-4o', 'api')
         elif agent_name == "Reviewer":
-            return Reviewer('gpt-4o', 'api')
+            return Reviewer('gpt-4o-mini', 'api')
         elif agent_name == "Summarizer":
-            return Summarizer('gpt-4o', 'api')
+            return Summarizer('gpt-4o-mini', 'api')
         else:
             raise Exception(f"Unknown agent: {agent_name}")
 

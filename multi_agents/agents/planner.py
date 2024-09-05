@@ -53,12 +53,13 @@ class Planner(Agent):
         round = 0
         with open(f'{state.competition_dir}/competition_info.txt', 'r') as f:
             competition_info = f.read()
+        state_info = state.get_state_info()
         if len(state.memory) == 1: # 如果之前没有memory，说明是第一次执行
             history.append({"role": "system", "content": f"{role_prompt}{self.description}"})
             # Round 0
             task = PROMPT_PLANNER_TASK.format(phase_name=state.phase)
             user_rules = state.generate_rules()
-            input = PROMPT_PLANNER.format(phases_in_context=state.context, phase_name=state.phase, user_rules=user_rules, competition_info=competition_info, task=task)
+            input = PROMPT_PLANNER.format(phases_in_context=state.context, phase_name=state.phase, state_info=state_info, user_rules=user_rules, competition_info=competition_info, task=task)
             _, history = self.llm.generate(input, history, max_tokens=4096)
 
             # Round 1

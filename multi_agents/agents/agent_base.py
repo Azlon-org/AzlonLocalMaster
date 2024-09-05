@@ -63,7 +63,7 @@ class Agent:
             return "".join(sample_lines)
         
         result = ""
-        if state.phase in ["Preliminary Exploratory Data Analysis", "Data Cleaning"]:
+        if state.phase in ["Understand Background", "Preliminary Exploratory Data Analysis", "Data Cleaning"]:
             # train_data_sample = read_sample(f'{state.competition_dir}/train.csv', num_lines)
             # 包含train的文件路径 过滤掉包含 'cleaned_train' 和 'processed_train' 的文件 选择第一个符合条件的
             all_train_files = glob.glob(os.path.join(state.competition_dir, '*train*.csv'))

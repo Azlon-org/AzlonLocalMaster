@@ -36,6 +36,10 @@ class State:
         phases = load_config(f'{PREFIX_MULTI_AGENTS}/config.json')['phases']
         for i, phase in enumerate(phases):
             self.context += f"{i+1}. {phase}\n"
+    
+    def get_state_info(self):
+        state_info = ""
+        return state_info
 
     def generate_rules(self):
         rules = ""

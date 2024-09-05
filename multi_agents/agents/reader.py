@@ -59,7 +59,8 @@ class Reader(Agent):
                     task = PROMPT_READER_TASK
                     input = PROMPT_READER_WITH_EXPERIENCE_ROUND0.format(phases_in_context=state.context, task=task, experience_with_suggestion=experience_with_suggestion)
                 elif round == 1: 
-                    input = f"\n#############\n# OVERVIEW #\n{overview}"
+                    input = f"# OVERVIEW #\n{overview}\n############# "
+                    input += self._read_data(state)
                 elif round == 2:
                     reader_mid_reply = raw_reply
                     input = PROMPT_READER_WITH_EXPERIENCE_ROUND2
