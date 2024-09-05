@@ -21,14 +21,17 @@ Ensure that the analysis is thorough, with a strong emphasis on :
 
 PROMPT_READER = '''
 # CONTEXT #
-{steps_in_context}
-Currently, I am at step: Background Understand.
+{phases_in_context}
+Currently, I am at phase: Background Understand.
+
 #############
 # TASK #
 {task} 
+
 #############
 # RESPONSE #
 Let's work this out in a step by step way.
+
 #############
 # START ANALYSIS #
 If you understand, please request the overview of this data science competition from me.
@@ -39,6 +42,7 @@ PROMPT_READER_ROUND2 = '''
 Please extract essential information from your answer and reorganize into a specified JSON format. 
 You need to organize the information in a clear and concise manner, ensuring that the content is logically structured and easy to understand. 
 You must ensure that the essential information is complete and accurate.
+
 #############
 # RESPONSE: MARKDOWN FORMAT #
 Here is the MARKDOWN format you should follow:
@@ -75,6 +79,7 @@ Here is the MARKDOWN format you should follow:
 ### 8. Other Key Aspects
 [Additional important information]
 ```
+
 #############
 # START REORGANIZING #
 '''
@@ -82,28 +87,31 @@ Here is the MARKDOWN format you should follow:
 
 PROMPT_READER_WITH_EXPERIENCE_ROUND0 = '''
 # CONTEXT #
-{steps_in_context}
-Currently, I am at step one: Background Understand.
+{phases_in_context}
+Currently, I am at phase: Background Understand.
+
 #############
 # TASK #
 {task} In the past, you have attempted this task multiple times. However, due to errors in your answers or insufficient quality, you have not succeeded. I will provide you with your previous attempts' experiences and a professional reviewer's suggestions for improvement (PREVIOUS EXPERIENCE WITH SUGGESTION). Based on these, please formulate a new, concise high-level plan to mitigate similar failures and successfully complete the task.
 You must follow these subtasks:
 1. Analyze the previous experience and suggestions. Think about what went wrong and how you can improve.
 2. Develop a new solution based on the previous experience and suggestions.
+
 #############
 # PREVIOUS EXPERIENCE WITH SUGGESTION #
 {experience_with_suggestion}
+
 #############
 # RESPONSE #
 Subtask 1: Analyze the previous experience and suggestions. Think about what went wrong and how you can improve.
 Let's work **Subtask 1** out in a step by step way.
+
 #############
 # START ANALYSIS #
 If you understand, please request the Overview of this data science competition from me.
 '''
 
 PROMPT_READER_WITH_EXPERIENCE_ROUND2 = '''
-#############
 # RESPONSE: MARKDOWN FORMAT #
 Subtask2: Develop a new solution based on the previous experience and suggestions.
 Here is the MARKDOWN format you should follow:

@@ -61,7 +61,7 @@ class TestTool:
             if required_file in files:
                 return True, 2, f"{required_file} exists"
             else:
-                return False, 2, f"{required_file} does not exist"
+                return False, 2, f"{required_file} does not exist in {state.competition_dir}"
         
         elif state.phase == "Data Cleaning":
             # Check for the existence of cleaned_train and cleaned_test
@@ -71,7 +71,7 @@ class TestTool:
             if not missing_files:
                 return True, 2, "cleaned_train and cleaned_test data exist"
             else:
-                return False, 2, f"Missing files: {', '.join(missing_files)}"
+                return False, 2, f"Missing files: {', '.join(missing_files)}, it should be saved in {state.competition_dir}"
         
         elif state.phase == "Feature Engineering":
             # Check for the existence of processed_train and processed_test
@@ -81,7 +81,7 @@ class TestTool:
             if not missing_files:
                 return True, 2, "processed_train and processed_test data exist"
             else:
-                return False, 2, f"Missing files: {', '.join(missing_files)}"
+                return False, 2, f"Missing files: {', '.join(missing_files)}, it should be saved in {state.competition_dir}"
         
         else:
             return True, 2, "Don't need to check the document in this phase"

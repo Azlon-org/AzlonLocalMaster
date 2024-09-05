@@ -43,25 +43,25 @@
     },
     "rulebook_parameters": {
         "Preliminary Exploratory Data Analysis": {
-            "status": 1,
+            "status": 0,
             "default_rules_with_parameters": {
                 "Missing Values Analysis": [
                     [1],
                     [
                         "If the percentage of missing values in a feature is greater than {placeholder}, then mark the feature as needing to be dropped.",
-                        0.2
+                        0.3
                     ]
                 ]
             }
         },
         "Data Cleaning":{
-            "status": 1,
+            "status": 0,
             "default_rules_with_parameters": {
                 "Handling Missing Values": [
                     [1, 0, 1],
                     [
                         "If the percentage of missing values in a feature is greater than {placeholder}, dropped the feature.",
-                        0.2
+                        0.3
                     ],
                     [
                         "For numerical features, fill missing values with {placeholder}.",
@@ -90,7 +90,7 @@
             "status": 0
         },
         "Feature Engineering":{
-            "status": 1,
+            "status": 0,
             "default_rules_with_parameters": {
                 "Feature Selection": [
                     [0, 0],

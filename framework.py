@@ -17,12 +17,12 @@ if __name__ == '__main__':
     competition = args.competition
 
     sop = SOP(competition)
-    # start_state = State(phase="Understand Background", competition=competition)
+    start_state = State(phase="Understand Background", competition=competition)
     # start_state = State(phase="Preliminary Exploratory Data Analysis", competition=competition)
-    # start_state = State(phase="Data Cleaning")
+    # start_state = State(phase="Data Cleaning", competition=competition)
     # start_state = State(phase="In-depth Exploratory Data Analysis", competition=competition)
     # start_state = State(phase="Feature Engineering", competition=competition)
-    start_state = State(phase="Model Building, Validation, and Prediction", competition=competition)
+    # start_state = State(phase="Model Building, Validation, and Prediction", competition=competition)
     start_message = ""
     new_state = start_state
 

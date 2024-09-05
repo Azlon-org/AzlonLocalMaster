@@ -8,7 +8,7 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 from typing import List, Dict, Any
 from utils import PREFIX_MULTI_AGENTS, load_config
-from prompts.prompt_base import STEPS_IN_CONTEXT_PREFIX
+from prompts.prompt_base import PHASES_IN_CONTEXT_PREFIX
 
 class State:
     def __init__(self, phase, competition, message="There is no message."):
@@ -19,7 +19,6 @@ class State:
         self.score = 0     # 用于记录当前State的评分
         self.finished = False
         self.agents = load_config(f'{PREFIX_MULTI_AGENTS}/config.json')['phase_to_agents'][self.phase] # 用于记录当前State的Agent
-        # self.competition = load_config(f'{PREFIX_MULTI_AGENTS}/config.json')['competition'] 
         self.competition = competition
         self.context = ""   # 用于记录当前State的context
         self.phase_to_directory = load_config(f'{PREFIX_MULTI_AGENTS}/config.json')['phase_to_directory'] # 记录每个阶段的目录
@@ -33,7 +32,7 @@ class State:
         return f"State: {self.phase}, Current Step: {self.current_step}, Current Agent: {self.agents[self.current_step]}, Finished: {self.finished}"
 
     def make_context(self):
-        self.context = STEPS_IN_CONTEXT_PREFIX.replace("# {competition_name}", self.competition)
+        self.context = PHASES_IN_CONTEXT_PREFIX.replace("# {competition_name}", self.competition)
         phases = load_config(f'{PREFIX_MULTI_AGENTS}/config.json')['phases']
         for i, phase in enumerate(phases):
             self.context += f"{i+1}. {phase}\n"

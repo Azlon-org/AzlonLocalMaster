@@ -34,12 +34,12 @@ class Reader(Agent):
         round = 0
         # Understand Background 读取overview.txt，生成competition_info.txt
         if len(state.memory) == 1: # 如果之前没有memory，说明是第一次执行
-            history.append({"role": "system", "content": f"{role_prompt} {self.description}"})
+            history.append({"role": "system", "content": f"{role_prompt}{self.description}"})
             # pdb.set_trace()
             while True:
                 if round == 0:
                     task = PROMPT_READER_TASK
-                    input = PROMPT_READER.format(steps_in_context=state.context, task=task)
+                    input = PROMPT_READER.format(phases_in_context=state.context, task=task)
                 elif round == 1: 
                     input = f"\n#############\n# OVERVIEW #\n{overview}"
                 elif round == 2: 
@@ -57,7 +57,7 @@ class Reader(Agent):
             while True:
                 if round == 0:
                     task = PROMPT_READER_TASK
-                    input = PROMPT_READER_WITH_EXPERIENCE_ROUND0.format(steps_in_context=state.context, task=task, experience_with_suggestion=experience_with_suggestion)
+                    input = PROMPT_READER_WITH_EXPERIENCE_ROUND0.format(phases_in_context=state.context, task=task, experience_with_suggestion=experience_with_suggestion)
                 elif round == 1: 
                     input = f"\n#############\n# OVERVIEW #\n{overview}"
                 elif round == 2:

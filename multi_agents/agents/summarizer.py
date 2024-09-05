@@ -40,15 +40,15 @@ class Summarizer(Agent):
     def _get_insight_from_visualization(self, state: State) -> str:
         images_dir = f"{state.restore_dir}/images"
         if not os.path.exists(images_dir):
-            return "There is no image in this stage."
+            return "There is no image in this phase."
         else:
             images = os.listdir(images_dir)
         if len(images) == 0:
-            return "There is no image in this stage."
+            return "There is no image in this phase."
         images_str = "\n".join(images)
         num_of_chosen_images = min(5, len(images))
         chosen_images = []
-        input = PROMPT_SUMMARIZER_IMAGE_CHOOSE.format(steps_in_context=state.context, stage=state.phase, num=num_of_chosen_images+3, images=images_str)
+        input = PROMPT_SUMMARIZER_IMAGE_CHOOSE.format(phases_in_context=state.context, phase_name=state.phase, num=num_of_chosen_images+3, images=images_str)
         raw_reply, _ = self.llm.generate(input, [], max_tokens=4096)
         with open(f'{state.restore_dir}/chosen_images_reply.txt', 'w') as f:
             f.write(raw_reply)
@@ -95,8 +95,8 @@ class Summarizer(Agent):
 
         # Design questions
         design_questions_history = []
-        next_step_name = state.get_next_phase()
-        input = PROMPT_SUMMARIZER_DESIGN_QUESITONS.format(steps_in_context=state.context, step_name=state.phase, next_step_name=next_step_name)
+        next_phase_name = state.get_next_phase()
+        input = PROMPT_SUMMARIZER_DESIGN_QUESITONS.format(phases_in_context=state.context, phase_name=state.phase, next_phase_name=next_phase_name)
         _, design_questions_history = self.llm.generate(input, design_questions_history, max_tokens=4096)
 
         input = f"# COMPETITION INFO #\n{competition_info}\n#############\n# PLAN #\n{plan}"
@@ -112,7 +112,7 @@ class Summarizer(Agent):
         history.append(design_questions_history)
 
         # Answer questions
-        with open(f'{state.restore_dir}/single_step_code.txt', 'r') as f:
+        with open(f'{state.restore_dir}/single_phase_code.txt', 'r') as f:
             code = f.read()
         with open(f'{state.restore_dir}/{state.dir_name}_output.txt', 'r') as f:
             output = f.read()
@@ -120,7 +120,7 @@ class Summarizer(Agent):
             review = json.load(f)
 
         answer_questions_history = []
-        input = PROMPT_SUMMARIZER_ANSWER_QUESTIONS.format(steps_in_context=state.context, step_name=state.phase, questions=questions)
+        input = PROMPT_SUMMARIZER_ANSWER_QUESTIONS.format(phases_in_context=state.context, phase_name=state.phase, questions=questions)
         _, answer_questions_history = self.llm.generate(input, answer_questions_history, max_tokens=4096)
         
         insight_from_visualization = self._get_insight_from_visualization(state)

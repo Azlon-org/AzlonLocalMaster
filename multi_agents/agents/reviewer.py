@@ -85,11 +85,11 @@ class Reviewer(Agent):
         prompt_for_agents = self._generate_prompt_for_agents(state)
         history = []
         all_raw_reply = []
-        history.append({"role": "system", "content": f"{role_prompt} {self.description}"})
+        history.append({"role": "system", "content": f"{role_prompt}{self.description}"})
         round = 0
         while round <= 3 * len(prompt_for_agents) - 1:
             if round % 3 == 0:
-                input = PROMPT_REVIEWER_ROUND0.format(steps_in_context=state.context, step_name=state.phase)
+                input = PROMPT_REVIEWER_ROUND0.format(phases_in_context=state.context, phase_name=state.phase)
             elif round % 3 == 1:
                 input = prompt_for_agents[round//3 - 1]
             elif round % 3 == 2:

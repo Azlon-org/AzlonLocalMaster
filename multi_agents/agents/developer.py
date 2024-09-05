@@ -38,8 +38,8 @@ class Developer(Agent):
         previous_dir_name = state.phase_to_directory[previous_phase]
         path_to_previous_code = f'{state.competition_dir}/{previous_dir_name}/{previous_dir_name}_code.py'
         path_to_previous_run_code = f'{state.competition_dir}/{previous_dir_name}/{previous_dir_name}_run_code.py'
-        path_to_last_step_code = f'{state.competition_dir}/{previous_dir_name}/single_step_code.txt'
-        return os.path.exists(path_to_previous_code), path_to_previous_code, path_to_previous_run_code, path_to_last_step_code
+        path_to_last_phase_code = f'{state.competition_dir}/{previous_dir_name}/single_phase_code.txt'
+        return os.path.exists(path_to_previous_code), path_to_previous_code, path_to_previous_run_code, path_to_last_phase_code
 
     def _delete_output_in_code(self, state: State, previous_code) -> str:
         previous_run_code = copy.deepcopy(previous_code) # 深拷贝 防止修改原始数据
@@ -127,7 +127,7 @@ class Developer(Agent):
             no_code_flag = True
             return True, "no code", "no code"
         
-        with open(f'{state.restore_dir}/single_step_code.txt', 'w') as f: # 保存单步的code
+        with open(f'{state.restore_dir}/single_phase_code.txt', 'w') as f: # 保存单步的code
             f.write("\n".join(matches))
 
         code_with_output_lines = ["def generated_code_function():\n"] + previous_code + code_lines
@@ -243,7 +243,7 @@ class Developer(Agent):
 
     def _debug_code(self, state: State, error_flag: bool, not_pass_flag: bool, not_pass_information: str, raw_reply: str) -> str:
         # prepare debug information, and then debug
-        is_previous_code, path_to_previous_code, _, path_to_last_step_code = self._is_previous_code(state)
+        is_previous_code, path_to_previous_code, _, path_to_last_phase_code = self._is_previous_code(state)
         if is_previous_code:
             with open(path_to_previous_code, 'r', encoding='utf-8') as f_1:
                 previous_code = f_1.readlines()
@@ -287,7 +287,7 @@ class Developer(Agent):
     def _generate_prompt_round0(self, state: State) -> str:
         prompt_round1 = ""
         # 读取上一个阶段的code
-        is_previous_code, path_to_previous_code, _, path_to_last_step_code = self._is_previous_code(state)
+        is_previous_code, path_to_previous_code, _, path_to_last_phase_code = self._is_previous_code(state)
         if is_previous_code:
             with open(path_to_previous_code, 'r', encoding='utf-8') as f_1:
                 previous_code = f_1.readlines()
@@ -322,29 +322,29 @@ class Developer(Agent):
         restore_path = state.restore_dir
         competition_path = state.competition_dir
         task = PROMPT_DEVELOPER_TASK
-        constraints = PROMPT_DEVELOPER_CONSTRAINTS.format(restore_path=restore_path, competition_path=competition_path, step_name=state.phase)
+        constraints = PROMPT_DEVELOPER_CONSTRAINTS.format(restore_path=restore_path, competition_path=competition_path, phase_name=state.phase)
         with open(f'{state.competition_dir}/competition_info.txt', 'r') as f:
             competition_info = f.read()
         plan = state.memory[-1]["planner"]["plan"] # 这里plan的格式是markdown
 
         if len(state.memory) == 1: # 如果之前没有memory，说明是第一次执行
-            history.append({"role": "system", "content": f"{role_prompt} {self.description}\n when you are writing code, you should follow the plan and the following constraints.\n{constraints}"})
+            history.append({"role": "system", "content": f"{role_prompt}{self.description}\n when you are writing code, you should follow the plan and the following constraints.\n{constraints}"})
         else:
             self.description = "You are skilled at writing and implementing code according to plan." \
                             "You have advanced reasoning abilities and can improve your answers through reflection."
             experience_with_suggestion = self._gather_experience_with_suggestion(state)
-            history.append({"role": "system", "content": f"{role_prompt} {self.description}\n when you are writing code, you should follow the plan and the following constraints.\n{constraints}"})
+            history.append({"role": "system", "content": f"{role_prompt}{self.description}\n when you are writing code, you should follow the plan and the following constraints.\n{constraints}"})
 
         while round <= max_tries:
             if round == 0 or retry_flag or no_code_flag:
                 if len(state.memory) == 1:
-                    input = PROMPT_DEVELOPER.format(steps_in_context=state.context, step_name=state.phase, competition_info=competition_info, plan=plan, task=task)
+                    input = PROMPT_DEVELOPER.format(phases_in_context=state.context, phase_name=state.phase, competition_info=competition_info, plan=plan, task=task)
                     raw_reply, history = self.llm.generate(input, history, max_tokens=4096)
                     prompt_round0 = self._generate_prompt_round0(state)
                     input = prompt_round0
                     raw_reply, history = self.llm.generate(input, history, max_tokens=4096)
                 else:
-                    input = PROMPT_DEVELOPER_WITH_EXPERIENCE_ROUND0_0.format(steps_in_context=state.context, step_name=state.phase, competition_info=competition_info, plan=plan, task=task, experience_with_suggestion=experience_with_suggestion)
+                    input = PROMPT_DEVELOPER_WITH_EXPERIENCE_ROUND0_0.format(phases_in_context=state.context, phase_name=state.phase, competition_info=competition_info, plan=plan, task=task, experience_with_suggestion=experience_with_suggestion)
                     raw_reply, history = self.llm.generate(input, history, max_tokens=4096)
                     prompt_round0 = self._generate_prompt_round0(state)
                     input = prompt_round0

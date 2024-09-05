@@ -1,12 +1,12 @@
 PROMPT_PLANNER_TASK = '''
-Design a clear and concise plan for the current development step: {step_name}. The developer will execute tasks based on your plan. 
+Design a clear and concise plan for the current development phase: {phase_name}. The developer will execute tasks based on your plan. 
 I will provide you with COMPETITION INFORMATION, RESOURCE CONSTRAINTS, and previous reports and plans. Using this information, structure the plan thoughtfully.
 In your response, briefly outline the task objectives, then specify the essential methods and constraints to consider. 
-Focus strictly on tasks relevant to this step, avoiding those belonging to other phases.
+Focus strictly on tasks relevant to this phase, avoiding those belonging to other phases.
 <example>
-During the in-depth EDA step:
+During the in-depth EDA phase   :
 - only consider features that significantly impact the target variable when plotting data analysis charts to avoid long runtimes and redundant information.
-- Analyze the distribution and statistical properties of features without deleting or reducing them, as feature reduction belongs to the feature engineering step.
+- Analyze the distribution and statistical properties of features without deleting or reducing them, as feature reduction belongs to the feature engineering phase.
 </example>
 Ensure the plan addresses key dependencies, resource availability, and time constraints without overcomplicating the process. The goal is to create an efficient and adaptable plan, emphasizing clarity and practicality over complexity.
 NOTE that The plan should include a maximum of four tasks, with clear methods and constraints, guiding developers to effectively execute the critical steps of the current phase.
@@ -18,8 +18,8 @@ NOTE that when you design the plan, always take into account the methods and spe
 
 PROMPT_PLANNER = '''
 # CONTEXT #
-{steps_in_context}
-Currently, I am at step: {step_name}.
+{phases_in_context}
+Currently, I am at phase: {phase_name}.
 
 #############
 # USER RULES #
@@ -48,7 +48,7 @@ Let's work this out in a step by step way.
 
 #############
 # START PLANNING #
-If you understand, please request the report and plan from the previous step. These documents contain important information that will guide your planning. In addition to the report and plan, I will also provide some sample data for your analysis. This will help you create a more accurate and tailored plan for the current step. Your plan should closely follow the previous step, maintain logical consistency, and avoid any duplication of tasks.
+If you understand, please request the report and plan from the previous phase. These documents contain important information that will guide your planning. In addition to the report and plan, I will also provide some sample data for your analysis. This will help you create a more accurate and tailored plan for the current phase. Your plan should closely follow the previous phase, maintain logical consistency, and avoid any duplication of tasks.
 '''
 
 

@@ -76,15 +76,15 @@ class Agent:
                 exit()
             train_data_sample = read_sample(train_file_path, num_lines)
             test_data_sample = read_sample(f'{state.competition_dir}/test.csv', num_lines)
-            result += f"\n#############\n# TRAIN DATA WITH FEATURES #\n{train_data_sample}\n\n#############\n# TEST DATA WITH FEATURES #\n{test_data_sample}"
+            result += f"\n#############\n# TRAIN DATA WITH FEATURES #\n{train_data_sample}\n#############\n# TEST DATA WITH FEATURES #\n{test_data_sample}"
         elif state.phase in ["In-depth Exploratory Data Analysis", "Feature Engineering"]:
             cleaned_train_data_sample = read_sample(f'{state.competition_dir}/cleaned_train.csv', num_lines)
             cleaned_test_data_sample = read_sample(f'{state.competition_dir}/cleaned_test.csv', num_lines)
-            result += f"\n#############\n# CLEANED TRAIN DATA WITH FEATURES #\n{cleaned_train_data_sample}\n\n#############\n# CLEANED TEST DATA WITH FEATURES #\n{cleaned_test_data_sample}"
+            result += f"\n#############\n# CLEANED TRAIN DATA WITH FEATURES #\n{cleaned_train_data_sample}\n#############\n# CLEANED TEST DATA WITH FEATURES #\n{cleaned_test_data_sample}"
         elif state.phase in ["Model Building, Validation, and Prediction"]:
             processed_train_data_sample = read_sample(f'{state.competition_dir}/processed_train.csv', num_lines)
             processed_test_data_sample = read_sample(f'{state.competition_dir}/processed_test.csv', num_lines)
-            result += f"\n#############\n# PROCESSED TRAIN DATA WITH FEATURES #\n{processed_train_data_sample}\n\n#############\n# PROCESSED TEST DATA WITH FEATURES #\n{processed_test_data_sample}"
+            result += f"\n#############\n# PROCESSED TRAIN DATA WITH FEATURES #\n{processed_train_data_sample}\n#############\n# PROCESSED TEST DATA WITH FEATURES #\n{processed_test_data_sample}"
 
         return result
 

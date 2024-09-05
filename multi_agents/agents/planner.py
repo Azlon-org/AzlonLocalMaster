@@ -39,12 +39,12 @@ class Planner(Agent):
                     previous_plan += f.read()
                     previous_plan += '\n'
             else:
-                previous_plan = "There is no plan in this step."
+                previous_plan = "There is no plan in this phase.\n"
         path_to_previous_report = f'{state.competition_dir}/{previous_dir_name}/report.txt'
         if os.path.exists(path_to_previous_report):
             previous_report = read_file(path_to_previous_report)
         else:
-            previous_report = "There is no report in the previous step."
+            previous_report = "There is no report in the previous phase.\n"
         return previous_plan, previous_report
 
     def _execute(self, state: State, role_prompt: str) -> Dict[str, Any]:
@@ -54,15 +54,15 @@ class Planner(Agent):
         with open(f'{state.competition_dir}/competition_info.txt', 'r') as f:
             competition_info = f.read()
         if len(state.memory) == 1: # 如果之前没有memory，说明是第一次执行
-            history.append({"role": "system", "content": f"{role_prompt} {self.description}"})
+            history.append({"role": "system", "content": f"{role_prompt}{self.description}"})
             # Round 0
-            task = PROMPT_PLANNER_TASK.format(step_name=state.phase)
+            task = PROMPT_PLANNER_TASK.format(phase_name=state.phase)
             user_rules = state.generate_rules()
-            input = PROMPT_PLANNER.format(steps_in_context=state.context, step_name=state.phase, user_rules=user_rules, competition_info=competition_info, task=task)
+            input = PROMPT_PLANNER.format(phases_in_context=state.context, phase_name=state.phase, user_rules=user_rules, competition_info=competition_info, task=task)
             _, history = self.llm.generate(input, history, max_tokens=4096)
 
             # Round 1
-            input = f"\n#############\n# PREVIOUS PLAN #\n{self._get_previous_plan_and_report(state)[0]}\n#############\n# PREVIOUS REPORT #\n{self._get_previous_plan_and_report(state)[1]}"
+            input = f"# PREVIOUS PLAN #\n{self._get_previous_plan_and_report(state)[0]}\n#############\n# PREVIOUS REPORT #\n{self._get_previous_plan_and_report(state)[1]}\n"
             input += self._read_data(state)
             raw_plan_reply, history = self.llm.generate(input, history, max_tokens=4096)
             with open(f'{state.restore_dir}/raw_plan_reply.txt', 'w') as f:
