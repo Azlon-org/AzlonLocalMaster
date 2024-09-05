@@ -44,48 +44,30 @@ class TestTool:
         return not_pass_tests
 
     def test_example(self, state: State):
-        return True, 1, "cool example"
+        return True, 1, "This is an example of unit test detection without focusing on the example"
     
     
     def test_document_exist(self, state: State):
         '''
-        Check if the required CSV documents exist in the data_dir.
+        check if the csv document exists in the data_dir
         '''
-        # Check in the state.competition_dir if the documents exist
-        # Read all the files in the directory
+        # check in the state.competition_dir, if the document exists
+        # read all the files in the directory
         files = os.listdir(state.competition_dir)
-        
         if state.phase == "Model Building, Validation, and Prediction":
-            # Check for the existence of submission.csv
-            required_file = "submission.csv"
-            if required_file in files:
-                return True, 2, f"{required_file} exists"
-            else:
-                return False, 2, f"{required_file} does not exist in {state.competition_dir}/"
-        
+            content = "submission"
         elif state.phase == "Data Cleaning":
-            # Check for the existence of cleaned_train and cleaned_test
-            required_files = ["cleaned_train.csv", "cleaned_test.csv"]
-            missing_files = [file for file in required_files if not any(file in f for f in files)]
-            
-            if not missing_files:
-                return True, 2, "cleaned_train.csv and cleaned_test.csv data exist"
-            else:
-                return False, 2, f"Missing files: {', '.join(missing_files)}, it should be saved in {state.competition_dir}/"
-        
+            content = "cleaned"
         elif state.phase == "Feature Engineering":
-            # Check for the existence of processed_train and processed_test
-            required_files = ["processed_train.csv", "processed_test.csv"]
-            missing_files = [file for file in required_files if not any(file in f for f in files)]
-            
-            if not missing_files:
-                return True, 2, "processed_train.csv and processed_test.csv data exist"
-            else:
-                return False, 2, f"Missing files: {', '.join(missing_files)}, it should be saved in {state.competition_dir}/"
-        
+            content = "processed"
         else:
             return True, 2, "Don't need to check the document in this phase"
 
+        for file in files:
+            if f"{content}" in file:
+                return True, 2, f"The {content} file has been processed, please continue to the next step of the process"
+        
+        return False, 2, f"The {content} file to be processed is lost and the process cannot be continued"
     
     def test_no_duplicate_cleaned_train(self, state: State):
         '''
@@ -97,7 +79,7 @@ class TestTool:
         if duplicates == 0:
             return True, 3, "No duplicate rows in cleaned_train.csv"
         else:
-            return False, 3, "There are duplicate rows in the cleaned_train.csv"
+            return False, 3, f"There are {duplicates} duplicate rows in the cleaned_train.csv"
 
     def test_no_duplicate_cleaned_test(self, state: State):
         '''
@@ -109,7 +91,7 @@ class TestTool:
         if duplicates == 0:
             return True, 4, "No duplicate rows in cleaned_test.csv"
         else:
-            return False, 4, "There are duplicate rows in the cleaned_test.csv"
+            return False, 4, f"There are {duplicates} duplicate rows in the cleaned_test.csv"
 
     def test_no_duplicate_submission(self, state: State):
         '''
@@ -124,7 +106,7 @@ class TestTool:
                 if duplicates == 0:
                     return True, 5, "No duplicate rows in submission.csv"
                 else:
-                    return False, 5, "There are duplicate rows in the submission.csv"
+                    return False, 5, f"There are {duplicates} duplicate rows in the submission.csv"
 
 #     def test_submission_columns(self, state: State):
 #         _, file = self.test_no_duplicate_submission(state)
@@ -160,17 +142,17 @@ class TestTool:
         path = f"{state.competition_dir}/cleaned_train.csv"
         with open(path, 'r') as file:
             if file.readable():
-                return True, 7, "cleaned_train.csv is readable"
+                return True, 7, "cleaned_train.csv is readable, please continue to the next step of the process"
             else:
-                return False, 7, "cleaned_train.csv is not readable"
+                return False, 7, "cleaned_train.csv could not be read, please try to reprocess it"
 
     def test_readable_cleaned_test(self, state: State):
         path = f"{state.competition_dir}/cleaned_test.csv"
         with open(path, 'r') as file:
             if file.readable():
-                return True, 8, "cleaned_test.csv is readable"
+                return True, 8, "cleaned_test.csv is readable, please continue to the next step of the process"
             else:
-                return False, 8, "cleaned_test.csv is not readable"
+                return False, 8, "cleaned_test.csv could not be read, please try to reprocess it"
 
     def test_readable_submission(self, state: State):
         files = os.listdir(state.competition_dir)
@@ -179,25 +161,27 @@ class TestTool:
                 path = f"{state.competition_dir}/{file}"
                 with open(path, 'r') as file:
                     if file.readable():
-                        return True, 9, "submission.csv is readable"
+                        return True, 9, "submission.csv is readable, please continue to the next step of the process"
                     else:
-                        return False, 9, "submission.csv is not readable"
+                        return False, 9, "submission.csv is not readable, please try to reprocess it"
 
     def test_cleaned_train_no_missing_values(self, state: State):
         path = f"{state.competition_dir}/cleaned_train.csv"
         df = pd.read_csv(path)
+        missing_columns = df.columns[df.isnull().any()].tolist()
         if df.isnull().sum().sum() == 0:
-            return True, 10, "The cleaned_train.csv file has no missing values"
+            return True, 10, "The cleaned_train.csv file has no missing values, please continue to the next step of the process"
         else:
-            return False, 10, "There are missing values in the cleaned_train.csv file"
+            return False, 10, f"There are missing values in the cleaned_train.csv file. The columns with missing values are: {', '.join(missing_columns)}"
 
     def test_cleaned_test_no_missing_values(self, state: State):
         path = f"{state.competition_dir}/cleaned_test.csv"
         df = pd.read_csv(path)
+        missing_columns = df.columns[df.isnull().any()].tolist()
         if df.isnull().sum().sum() == 0:
-            return True, 11, "The cleaned_test.csv file has no missing values"
+            return True, 11, "The cleaned_test.csv file has no missing values, please continue to the next step of the process"
         else:
-            return False, 11, "There are missing values in the cleaned_test.csv file"
+            return False, 11, f"There are missing values in the cleaned_test.csv file. The columns with missing values are: {', '.join(missing_columns)}"
 
     def test_submission_no_missing_values(self, state: State):
         files = os.listdir(state.competition_dir)
@@ -205,10 +189,11 @@ class TestTool:
             if "submission" in file and "sample" not in file:
                 path = f"{state.competition_dir}/{file}"
                 df = pd.read_csv(path)
+                missing_columns = df.columns[df.isnull().any()].tolist()
                 if df.isnull().sum().sum() == 0:
-                    return True, 12, "The submission.csv file has no missing values"
+                    return True, 12, "The submission.csv file has no missing values, please continue to the next step of the process"
                 else:
-                    return False, 12, "There are missing values in the submission.csv file"
+                    return False, 12, f"There are missing values in the submission.csv file. The columns with missing values are: {', '.join(missing_columns)}"
 
     def test_image_num(self, state: State):
         image_count = 0
@@ -217,17 +202,17 @@ class TestTool:
         elif "In-depth Exploratory Data Analysis" in state.phase:
             path = f"{state.competition_dir}/deep_eda/images"
         else:
-            return True, 13, "No need to check the number of images at this stage"
+            return True, 13, "No need to check the number of images at this stage, please continue to the next step of the process"
             # 遍历指定目录
         for entry in os.scandir(path):
             if entry.is_file() and entry.name.lower().endswith(('.png', '.jpg', '.jpeg', '.bmp', '.gif', '.tiff')):
                 image_count += 1
         if image_count > 10:
-            return False, 13, "Number of images is greater than 10"
+            return False, 13, f"The number of images in the path is {image_count}, greater than 10, please re-process to reduce the number of images to 10 or less."
         else:
-            return True, 13, "Number of images is less than or equal to 10"
+            return True, 13, "Number of images is less than or equal to 10, unit test passed, please continue to the next step of the process"
     
-    def test_file_num(self, state: State):
+    def test_file_num_submission(self, state: State):
         path = f"{state.competition_dir}/sample_submission.csv"
         df = pd.read_csv(path)
         files = os.listdir(state.competition_dir)
@@ -236,11 +221,11 @@ class TestTool:
                 path1 = f"{state.competition_dir}/{file}"
                 df1 = pd.read_csv(path1)
                 if len(df) == len(df1):
-                    return True, 14, "submission.csv and sample_submission.csv files have the same number of rows"
+                    return True, 14, "submission.csv and sample_submission.csv files have the same number of rows, unit test passed"
                 else:
-                    return False, 14, "submission.csv and sample_submission.csv files have different number of rows"
+                    return False, 14, f"submission.csv and sample_submission.csv files have different number of rows. submission.csv has {len(df1)} rows, while sample_submission.csv has {len(df)} rows."
     
-    def test_column_names(self, state: State):
+    def test_column_names_submission(self, state: State):
         path = f"{state.competition_dir}/sample_submission.csv"
         df = pd.read_csv(path)
         files = os.listdir(state.competition_dir)
@@ -249,10 +234,10 @@ class TestTool:
                 path1 = f"{state.competition_dir}/{file}"
                 df1 = pd.read_csv(path1)
                 # 比较两个 DataFrame 的列名集合是否相同
-                if set(df.columns) == set(df1.columns):
-                    return True, 15, "submission.csv and sample_submission.csv files have the same column names"
+                if list(df.columns) == list(df1.columns):
+                    return True, 15, "submission.csv and sample_submission.csv files have the same column names, unit test passed"
                 else:
-                    return False, 15, "submission.csv and sample_submission.csv files have different column names"
+                    return False, 15, f"submission.csv and sample_submission.csv files have different column names or different column order. submission.csv has columns: {set(df1.columns)}, while sample_submission.csv has columns: {set(df.columns)}."
 
     def test_submission_first_column(self, state: State):
         path = f"{state.competition_dir}/sample_submission.csv"
@@ -288,128 +273,143 @@ Id,SalePrice
 </example>
 '''
                     return False, 16, false_info
+    
+    def test_column_names_cleaned_train(self, state: State):
+        path = f"{state.competition_dir}/cleaned_train.csv"
+        path1 = f"{state.competition_dir}/train.csv"
+        df = pd.read_csv(path)
+        df1 = pd.read_csv(path1)
+        if list(df.columns) == list(df1.columns):
+            return True, 17, "cleaned_train.csv and train.csv files have the same column names, unit test passed"
+        else:
+            return False, 17, f"cleaned_train.csv and train.csv files should have same column names and same column order. cleaned_train.csv has columns: {set(df1.columns)}, while train.csv has columns: {set(df.columns)}."
+    
+    def test_column_names_cleaned_test(self, state: State):
+        path = f"{state.competition_dir}/cleaned_test.csv"
+        path1 = f"{state.competition_dir}/test.csv"
+        df = pd.read_csv(path)
+        df1 = pd.read_csv(path1)
+        if list(df.columns) == list(df1.columns):
+            return True, 18, "cleaned_test.csv and test.csv files have the same column names, unit test passed"
+        else:
+            return False, 18, f"cleaned_test.csv and test.csv files should have same column names and same column order. cleaned_test.csv has columns: {set(df1.columns)}, while test.csv has columns: {set(df.columns)}."
+
+    def test_column_names_processed_train(self, state: State):
+        path = f"{state.competition_dir}/processed_train.csv"
+        path1 = f"{state.competition_dir}/train.csv"
+        df = pd.read_csv(path)
+        df1 = pd.read_csv(path1)
+        if list(df.columns) == list(df1.columns):
+            return True, 19, "processed_train.csv and train.csv files have the same column names, unit test passed"
+        else:
+            return False, 19, f"processed_train.csv and train.csv files should have same column names and same column order. processed_train.csv has columns: {set(df1.columns)}, while train.csv has columns: {set(df.columns)}."
+    
+    def test_column_names_procesed_test(self, state: State):
+        path = f"{state.competition_dir}/processed_test.csv"
+        path1 = f"{state.competition_dir}/test.csv"
+        df = pd.read_csv(path)
+        df1 = pd.read_csv(path1)
+        if list(df.columns) == list(df1.columns):
+            return True, 20, "processed_test.csv and test.csv files have the same column names, unit test passed"
+        else:
+            return False, 20, f"processed_test.csv and test.csv files should have same column names and same column order. processed_test.csv has columns: {set(df1.columns)}, while test.csv has columns: {set(df.columns)}."
+    
+    def test_cleaned_train_first_column(self, state: State):
+        path = f"{state.competition_dir}/cleaned_train.csv"
+        df = pd.read_csv(path)
+        path1 = f"{state.competition_dir}/train.csv"
+        df1 = pd.read_csv(path1)
+        # 比较两个 DataFrame 的第一列值是否相同
+        if df.iloc[:, 0].equals(df1.iloc[:, 0]):
+            return True, 21, "train.csv and cleaned_train.csv files have the same first column values"
+        else:
+            false_info = "cleaned_train.csv should have the same first column values as train.csv file"
+            false_info += f'''
+This is the first 10 lines of train.csv:
+{df1.head(10)}
+This is the first 10 lines of cleaned_train.csv:
+{df.head(10)}
+If you use some transformation on the features in train.csv, please make sure you have reversed the transformation before submitting the file.
+Here is an example that specific transformation applied on features (ID, SalePrice) in cleaned_train.csv is **not reversed**, which is wrong:
+<example>
+- cleaned_train.csv:
+Id,SalePrice
+1.733237550296372,-0.7385090666351347
+1.7356102231920547,-0.2723912737214865
+...
+- train.csv:
+Id,SalePrice
+1461,169277.0524984
+1462,187758.393988768
+</example>
+'''
+            return False, 21, false_info
+        
+    def test_cleaned_test_first_column(self, state: State):
+        path = f"{state.competition_dir}/cleaned_test.csv"
+        df = pd.read_csv(path)
+        path1 = f"{state.competition_dir}/test.csv"
+        df1 = pd.read_csv(path1)
+        # 比较两个 DataFrame 的第一列值是否相同
+        if df.iloc[:, 0].equals(df1.iloc[:, 0]):
+            return True, 22, "test.csv and cleaned_test.csv files have the same first column values"
+        else:
+            false_info = "cleaned_test.csv should have the same first column values as test.csv file"
+            false_info += f'''
+This is the first 10 lines of test.csv:
+{df1.head(10)}
+This is the first 10 lines of cleaned_test.csv:
+{df.head(10)}
+If you use some transformation on the features in test.csv, please make sure you have reversed the transformation before submitting the file.
+Here is an example that specific transformation applied on features (ID, SalePrice) in cleaned_test.csv is **not reversed**, which is wrong:
+<example>
+- cleaned_test.csv:
+Id,SalePrice
+1.733237550296372,-0.7385090666351347
+1.7356102231920547,-0.2723912737214865
+...
+- test.csv:
+Id,SalePrice
+1461,169277.0524984
+1462,187758.393988768
+</example>
+'''
+            return False, 22, false_info
+        
+    def test_float_num_submission(self, state: State):
+        path = f"{state.competition_dir}/submission.csv"
+        path1 = f"{state.competition_dir}/sample_submission.csv"
+        df = pd.read_csv(path)
+        df1 = pd.read_csv(path1)
+        # 检查每个浮点列的精度是否相同
+        precision_issues = []
+        for column in df.columns:
+            if df[column].dtype in ['float64', 'float32'] and df1[column].dtype in ['float64', 'float32']:
+                # 获取两个文件中列的最大精度
+                precision1 = df[column].map(lambda x: len(str(x).split('.')[-1]) if '.' in str(x) else 0).max()
+                precision2 = df1[column].map(lambda x: len(str(x).split('.')[-1]) if '.' in str(x) else 0).max()
                 
-'''
-4. 测试ID的唯一性
-   - 确保 `id` 列中的值是唯一的，没有重复。
+                # 比较精度
+                if precision1 != precision2:
+                    precision_issues.append(f"Column '{column}' has different precisions: {precision1} vs {precision2}")
 
-    ```python
-    def test_submission_unique_ids():
-        df = pd.read_csv('submission.csv')
-        assert df['id'].is_unique, "id 列中有重复值"
-    ```
-
-5. 测试预测值的有效性
-   - 检查 `prediction` 列中的值是否在合理范围内（例如是否为数值类型或是否在特定范围内）。
-
-    ```python
-    def test_submission_predictions_validity():
-        df = pd.read_csv('submission.csv')
-        assert df['prediction'].dtype in [int, float], "prediction 列中的值不是数值类型"
-        assert df['prediction'].min() >= 0, "prediction 列中的值小于0"
-        assert df['prediction'].max() <= 1, "prediction 列中的值大于1"
-    ```
-
-7. 测试文件编码
-   - 确保 `submission.csv` 文件的编码格式正确（例如 UTF-8）。
-
-    ```python
-    def test_submission_encoding():
-        with open('submission.csv', 'r', encoding='utf-8') as file:
-            try:
-                file.read()
-            except UnicodeDecodeError:
-                assert False, "submission.csv 文件不是 UTF-8 编码"
-    ```
-
-8. 文件大小检查
-   - 确保 `submission.csv` 文件的大小在比赛允许的范围内。如果文件过大，可能会被拒绝上传或评分系统处理时出错。
-
-    ```python
-    def test_submission_file_size(max_size_mb):
-        file_size_mb = os.path.getsize('submission.csv') / (1024 * 1024)
-        assert file_size_mb <= max_size_mb, f"文件过大，最大允许大小为 {max_size_mb}MB，当前大小为 {file_size_mb:.2f}MB"
-    ```
-
-9. 预测结果格式一致性
-   - 确保 `prediction` 列中的所有值都具有相同的格式，例如所有预测值均为浮点数或整数，或者所有字符串具有相同的模式。
-
-    ```python
-    def test_submission_predictions_format():
-        df = pd.read_csv('submission.csv')
-        assert all(isinstance(x, float) for x in df['prediction']), "prediction 列中存在非浮点数的值"
-    ```
-
-10. ID顺序检查
-    - 在某些比赛中，`id` 列可能需要按特定顺序排列（例如按升序）。检查是否符合要求。
-
-    ```python
-    def test_submission_id_order():
-        df = pd.read_csv('submission.csv')
-        assert all(df['id'] == sorted(df['id'])), "id 列未按顺序排列"
-    ```
-
-11. 文件行尾换行符检查
-    - 确保 `submission.csv` 文件中每一行的末尾都包含换行符，特别是在某些严格要求格式的比赛中。
-
-    ```python
-    def test_submission_line_endings():
-        with open('submission.csv', 'rb') as file:
-            lines = file.readlines()
-            assert all(line.endswith(b'\n') for line in lines), "某些行未以换行符结束"
-    ```
-
-12. 列的顺序检查
-    - 确保文件中的列按照比赛要求的顺序排列，有些比赛会严格要求列的顺序。
-
-    ```python
-    def test_submission_column_order():
-        required_order = ['id', 'prediction']  # 根据具体比赛需求调整列顺序
-        df = pd.read_csv('submission.csv')
-        assert list(df.columns) == required_order, f"列顺序不正确，当前顺序为 {list(df.columns)}"
-    ```
-
-13. 文件的换行符格式
-    - 确保使用适当的换行符格式（例如 Windows 的 CRLF 或 Unix 的 LF），特别是在特定格式要求的比赛中。
-
-    ```python
-    def test_submission_line_ending_format():
-        with open('submission.csv', 'rb') as file:
-            content = file.read()
-            assert b'\r\n' in content or b'\n' in content, "文件中的换行符格式不正确"
-    ```
-
-14. 文件编码中的BOM
-    - 检查文件是否包含不需要的字节顺序标记 (BOM)，它可能会导致评分系统误判。
-
-    ```python
-    def test_submission_no_bom():
-        with open('submission.csv', 'rb') as file:
-            content = file.read()
-            assert not content.startswith(b'\xef\xbb\xbf'), "文件包含BOM (字节顺序标记)，可能导致问题"
-    ```
-
-15. 预测值精度
-    - 确保 `prediction` 列中的数值具有适当的精度。例如，可能需要确保小数点后不超过一定位数。
-
-    ```python
-    def test_submission_prediction_precision(max_decimal_places):
-        df = pd.read_csv('submission.csv')
-        for value in df['prediction']:
-            if isinstance(value, float):
-                assert len(str(value).split('.')[1]) <= max_decimal_places, f"预测值精度超过 {max_decimal_places} 位"
-    ```
-
-16. 预测值的重复性
-    - 确保预测值没有不合理的重复，这可能暗示模型出现了问题（如过度拟合或数据泄露）。
-
-    ```python
-    def test_submission_no_unreasonable_duplicates():
-        df = pd.read_csv('submission.csv')
-        duplicate_count = df['prediction'].duplicated().sum()
-        assert duplicate_count < len(df) * 0.1, "预测值中有大量重复，这可能不合理"
-    ```
-'''
+        if precision_issues:
+            return False, 23, "Precision mismatch found in columns: " + ", ".join(precision_issues)
+        else:
+            return True, 23, "All float columns have matching precision, unit test passed"
+    
+    def test_file_size(self, state: State):
+        max_size_mb = 100
+        path = f"{state.competition_dir}/train.csv"
+        file_size_mb = os.path.getsize(path) / (1024 * 1024)
+        path = f"{state.competition_dir}/test.csv"
+        file_size_mb += os.path.getsize(path) / (1024 * 1024)
+        path = f"{state.competition_dir}/sample_submission.csv"
+        file_size_mb += os.path.getsize(path) / (1024 * 1024)
+        if file_size_mb < max_size_mb:
+            return True, 24, "File size less than 100M, unit test passed"
+        else:
+            return False, 24, f"The three files are too large, the maximum allowed size is {max_size_mb}MB, the current size is {file_size_mb:.2f}MB."
 
 
 if __name__ == '__main__':
