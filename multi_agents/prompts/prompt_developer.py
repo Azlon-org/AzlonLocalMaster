@@ -49,7 +49,7 @@ PROMPT_DEVELOPER = '''
 # CONTEXT #
 {phases_in_context}
 Currently, I am at phase: {phase_name}.
-
+{state_info}
 #############
 # COMPETITION INFORMATION #
 {competition_info}
@@ -85,7 +85,7 @@ PROMPT_DEVELOPER_WITH_EXPERIENCE_ROUND0_0 = '''
 # CONTEXT #
 {phases_in_context}
 Currently, I am at phase:{phase_name}.
-
+{state_info}
 #############
 # COMPETITION INFORMATION #
 {competition_info}
@@ -276,6 +276,7 @@ Please replace the ERROR CODE SNIPPET in CODE CONTAINS ERROR with the CODE SNIPP
 PROMPT_DEVELOPER_TEST_LOCATE = '''
 # CONTEXT #
 Your code has some tests that don't pass.
+
 #############
 # TASK #
 For EACH test that does not pass, please analyze the code with problem, figure out which code snippet causes the test not pass, and output the problematic code snippet (5 to 10 lines in length). 
@@ -387,4 +388,7 @@ Please replace the CODE SNIPPETS WITH PROBLEM in CODE WITH PROBLEM with the CODE
 
 #############
 # RESPONSE: ALL CORRECT CODE #
+```python
+[all_correct_code]
+```
 '''

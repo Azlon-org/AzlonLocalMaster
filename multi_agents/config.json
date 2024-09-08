@@ -36,10 +36,10 @@
     "phase_to_unit_tests": {
         "Understand Background": [],
         "Preliminary Exploratory Data Analysis": [],
-        "Data Cleaning": ["test_document_exist"],
+        "Data Cleaning": ["test_document_exist", "test_cleaned_train_no_missing_values", "test_cleaned_test_no_missing_values"],
         "In-depth Exploratory Data Analysis": [],
-        "Feature Engineering": ["test_document_exist"],
-        "Model Building, Validation, and Prediction": ["test_document_exist", "test_submission_first_column"]
+        "Feature Engineering": ["test_document_exist", "test_processed_train_feature_number"],
+        "Model Building, Validation, and Prediction": ["test_document_exist", "test_submission_validity"]
     },
     "rulebook_parameters": {
         "Preliminary Exploratory Data Analysis": {

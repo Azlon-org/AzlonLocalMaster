@@ -172,6 +172,7 @@ class Developer(Agent):
                 f.write("")
             return True
 
+        result = {}
         # timeout
         if 'Analysis' in state.phase:
             timeout = 300
@@ -183,7 +184,9 @@ class Developer(Agent):
             timeout = 180
             timeout_info = "Your code is running out of time, please consider resource availability or other factors."
         try:
-            result = subprocess.run(['python3', '-W', 'ignore', path_to_run_code], capture_output=True, text=True, timeout=timeout)
+            result = subprocess.run(['python3', '-W', 'ignore', path_to_run_code], 
+                                    capture_output=True, text=True, timeout=timeout, 
+                                    preexec_fn=os.setsid)
         except subprocess.TimeoutExpired:
             print("Code execution timed out.")
             self.all_error_messages.append(timeout_info)
@@ -192,28 +195,43 @@ class Developer(Agent):
             with open(path_to_output, 'w') as f:
                 f.write("")
             error_flag = True
-            return error_flag
-        
-        # errors
-        if result.stderr:
-            print("Error encountered during code execution.")
+        except subprocess.CalledProcessError as e:
+            if e.returncode < 0:
+                # Negative return codes usually indicate termination by a signal
+                print(f"Process was killed by signal {-e.returncode}")
+                error_message = f"Process was terminated by the operating system (signal {-e.returncode})"
+            else:
+                print(f"Process exited with non-zero status: {e.returncode}")
+                error_message = f"Process exited with status {e.returncode}: {e.stderr}"
+            
+            self.all_error_messages.append(error_message)
             with open(path_to_error, 'w') as f:
-                f.write(result.stderr)
-            self.all_error_messages.append(result.stderr)
+                f.write(error_message+"\nI suggest you use logging module to record the information, which can help you find the reason why operation system terminated your process.\nOne possible reason is When working with dataframe-type data, you perform multiplication operations on different types of data.")
             error_flag = True
         else:
-            print("Code executed successfully without errors.")
-            self.all_error_messages = []
-            try:
-                # Delete error file.
-                os.remove(path_to_error)
-                print(f"File '{path_to_error}' has been deleted successfully.")
-            except FileNotFoundError:
-                print(f"File '{path_to_error}' doesn't exist, you don't need to delete it.")
+            if result.returncode != 0:
+                print(f"Process exited with non-zero status: {result.returncode}")
+                error_message = f"Process exited with status {result.returncode}: {result.stderr}"
+                self.all_error_messages.append(error_message)
+                with open(path_to_error, 'w') as f:
+                    f.write(error_message)
+                error_flag = True
+            else:
+                print("Code executed successfully without errors.")
+                self.all_error_messages = []
+                try:
+                    os.remove(path_to_error)
+                    print(f"File '{path_to_error}' has been deleted successfully.")
+                except FileNotFoundError:
+                    print(f"File '{path_to_error}' doesn't exist, you don't need to delete it.")
 
         # Write the output to a file
-        with open(path_to_output, 'w') as file:
-            file.write(result.stdout)
+        if result and hasattr(result, 'stdout'):
+            with open(path_to_output, 'w') as f:
+                f.write(result.stdout)
+        else:
+            with open(path_to_output, 'w') as f:
+                f.write("")
 
         return error_flag
 
@@ -338,13 +356,15 @@ class Developer(Agent):
         while round <= max_tries:
             if round == 0 or retry_flag or no_code_flag:
                 if len(state.memory) == 1:
-                    input = PROMPT_DEVELOPER.format(phases_in_context=state.context, phase_name=state.phase, competition_info=competition_info, plan=plan, task=task)
+                    input = PROMPT_DEVELOPER.format(phases_in_context=state.context, phase_name=state.phase, state_info=state.get_state_info(), competition_info=competition_info, plan=plan, task=task)
+                    if retry_flag or no_code_flag: # Reset history to initial system message if retrying or no code was generated
+                        history = history[:1]
                     raw_reply, history = self.llm.generate(input, history, max_tokens=4096)
                     prompt_round0 = self._generate_prompt_round0(state)
                     input = prompt_round0
                     raw_reply, history = self.llm.generate(input, history, max_tokens=4096)
                 else:
-                    input = PROMPT_DEVELOPER_WITH_EXPERIENCE_ROUND0_0.format(phases_in_context=state.context, phase_name=state.phase, competition_info=competition_info, plan=plan, task=task, experience_with_suggestion=experience_with_suggestion)
+                    input = PROMPT_DEVELOPER_WITH_EXPERIENCE_ROUND0_0.format(phases_in_context=state.context, phase_name=state.phase, state_info=state.get_state_info(), competition_info=competition_info, plan=plan, task=task, experience_with_suggestion=experience_with_suggestion)
                     raw_reply, history = self.llm.generate(input, history, max_tokens=4096)
                     prompt_round0 = self._generate_prompt_round0(state)
                     input = prompt_round0

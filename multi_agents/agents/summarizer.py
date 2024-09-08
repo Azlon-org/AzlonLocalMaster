@@ -43,7 +43,11 @@ class Summarizer(Agent):
             return "There is no image in this phase."
         else:
             images = os.listdir(images_dir)
-        if len(images) == 0:
+        count_of_image = 0
+        for image in images:
+            if image.endswith('png'):
+                count_of_image += 1
+        if len(images) == 0 or count_of_image == 0:
             return "There is no image in this phase."
         images_str = "\n".join(images)
         num_of_chosen_images = min(5, len(images))

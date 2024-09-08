@@ -15,7 +15,12 @@ from utils import load_config, read_image
 from typing import List
 
 class ImageToTextTool:
-    def __init__(self, memory: Memory = None, model: str = 'gpt-4o', type: str = 'api'):
+    def __init__(
+        self, 
+        memory: Memory = None,
+        model: str = 'gpt-4o-mini',
+        type: str = 'api'
+    ):
         self.llm = LLM(model, type)
         self.memory = memory
 

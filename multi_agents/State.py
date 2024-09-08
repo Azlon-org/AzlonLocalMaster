@@ -38,6 +38,12 @@ class State:
             self.context += f"{i+1}. {phase}\n"
     
     def get_state_info(self):
+        # if self.phase == 'Feature Engineering':
+        #     state_info = f"After Data Cleaning, you already have file `cleaned_train.csv' and `cleaned_test.csv`. Do feature engineering to them to get `processed_train.csv` and `processed_test.csv`"
+        # elif self.phase == 'Model Building, Validation, and Prediction':
+        #     state_info = f"After Feature Engineering, you already have file `processed_train.csv` and `processed_test`.csv. Use `processed_train.csv` to train your model and predict on `processed_test.csv`."
+        # else:
+        #     state_info = ""
         state_info = ""
         return state_info
 
@@ -79,6 +85,8 @@ class State:
                 previous_phase = 'Understand Background'
             elif self.phase == 'Feature Engineering':
                 previous_phase = 'Data Cleaning'
+            # elif self.phase == 'Model Building, Validation, and Prediction':
+            #     previous_phase = 'Understand Background'
             else:
                 previous_phase = phases[current_phase_index - 1]
         elif type == 'plan':

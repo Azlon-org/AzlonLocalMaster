@@ -4,7 +4,7 @@ import sys
 sys.path.append('..')
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
-from typing import List
+from typing import List, Tuple
 from api_handler import APIHandler
 from utils import multi_chat
 from openai import OpenAI
@@ -17,7 +17,7 @@ class LLM:
         elif type == 'local':
             pass
 
-    def generate(self, prompt: str, history: list, max_tokens=4096) -> str:
+    def generate(self, prompt: str, history: list, max_tokens=4096) -> Tuple[str, list]:
         # Generate text based on prompt
         return multi_chat(self.model, prompt, history, max_tokens)
     

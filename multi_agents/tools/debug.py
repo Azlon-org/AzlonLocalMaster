@@ -106,6 +106,8 @@ class DebugTool:
             not_pass_information=not_pass_information
         )
         raw_reply, test_fix_history = self.llm.generate(input, [], max_tokens=4096)
+        with open(f'{state.restore_dir}/thought_to_test_fix_problem.txt', 'w') as f:
+            f.write(raw_reply)
         single_round_test_history.append(test_fix_history)
         input = PROMPT_DEVELOPER_TEST_REORGANIZE_FIX_ANSWER
         code_snippets_after_correction, test_fix_history = self.llm.generate(input, test_fix_history, max_tokens=4096)
