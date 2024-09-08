@@ -60,12 +60,12 @@ class TestTool:
         files = os.listdir(state.competition_dir)
         
         if state.phase == "Model Building, Validation, and Prediction":
-            # Check for the existence of submission.csv
-            required_file = "submission.csv"
-            if required_file in files:
-                return True, 2, f"{required_file} exists"
-            else:
-                return False, 2, f"{required_file} does not exist in {state.competition_dir}/"
+            # Check for the existence of submission.csv, the name of the submission file may be different from the submission.csv
+            for required_file in files:
+                if f"submission" in required_file and required_file.endswith(".csv") and required_file != "sample_submission.csv" :
+                    return True, 2, f"{required_file} exists"
+                else:
+                    return False, 2, f"{required_file} does not exist in {state.competition_dir}/"
         
         elif state.phase == "Data Cleaning":
             # Check for the existence of cleaned_train and cleaned_test
