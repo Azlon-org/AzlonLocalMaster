@@ -98,11 +98,13 @@ class TestTool:
         '''
         df = pd.read_csv(f"{state.competition_dir}/cleaned_train.csv")
         duplicates = df.duplicated().sum()
+        # the details of the duplicated rows
+        duplicated_rows = df[df.duplicated(keep=False)]
 
         if duplicates == 0:
             return True, 3, "No duplicate rows in cleaned_train.csv"
         else:
-            return False, 3, f"There are {duplicates} duplicate rows in the cleaned_train.csv"
+            return False, 3, f"There are {duplicates} duplicate rows in the cleaned_train.csv. Rows with duplicated values are: {duplicated_rows.index}"
 
     def test_no_duplicate_cleaned_test(self, state: State):
         '''
@@ -110,26 +112,31 @@ class TestTool:
         '''
         df = pd.read_csv(f"{state.competition_dir}/cleaned_test.csv")
         duplicates = df.duplicated().sum()
+        # id of the duplicated rows
+        duplicates_rows = df[df.duplicated(keep=False)]
 
         if duplicates == 0:
             return True, 4, "No duplicate rows in cleaned_test.csv"
         else:
-            return False, 4, f"There are {duplicates} duplicate rows in the cleaned_test.csv"
+            return False, 4, f"There are {duplicates} duplicate rows in the cleaned_test.csv, Rows with duplicated values are: {duplicates_rows.index}"
 
     def test_no_duplicate_submission(self, state: State):
         '''
         Check if there are any duplicate rows in the csv
         '''
+         
         files = os.listdir(state.competition_dir)
         for file in files:
-            if f"submission" in file:
+            if f"submission" in file and file.endswith(".csv") and file != "sample_submission.csv" :
+                # the sample_submission.csv file is also checked, which is not necessary
                 df = pd.read_csv(f"{state.competition_dir}/{file}")
                 duplicates = df.duplicated().sum()
+                duplicates_rows = df[df.duplicated(keep=False)]
 
                 if duplicates == 0:
                     return True, 5, "No duplicate rows in submission.csv"
                 else:
-                    return False, 5, f"There are {duplicates} duplicate rows in the submission.csv"
+                    return False, 5, f"There are {duplicates} duplicate rows in the submission.csv, Rows with duplicated values are: {duplicates_rows.index}"
 
     def test_readable_cleaned_train(self, state: State):
         path = f"{state.competition_dir}/cleaned_train.csv"
@@ -269,7 +276,8 @@ Here is the information about the features of processed_test.csv:
     def test_submission_no_missing_values(self, state: State):
         files = os.listdir(state.competition_dir)
         for file in files:
-            if file == "submission.csv":
+            # submission file may have different names
+            if f"submission" in file and file.endswith(".csv") and file != "sample_submission.csv" :
                 path = f"{state.competition_dir}/{file}"
                 df = pd.read_csv(path)
                 missing_columns = df.columns[df.isnull().any()].tolist()
@@ -300,20 +308,26 @@ Here is the information about the features of processed_test.csv:
         df = pd.read_csv(path)
         files = os.listdir(state.competition_dir)
         for file in files:
-            if file == "submission.csv":
+            # submission file may have different names
+            if f"submission" in file and file.endswith(".csv") and file != "sample_submission.csv" :
                 path1 = f"{state.competition_dir}/{file}"
                 df1 = pd.read_csv(path1)
                 if len(df) == len(df1):
                     return True, 14, "submission.csv and sample_submission.csv files have the same number of rows, unit test passed"
                 else:
-                    return False, 14, f"submission.csv and sample_submission.csv files have different number of rows. submission.csv has {len(df1)} rows, while sample_submission.csv has {len(df)} rows."
+                    # aslo report missing rows number
+                    row_inx_sample = set(df.index)
+                    row_inx_submission = set(df1.index)
+                    missing_rows = row_inx_sample - row_inx_submission
+                    return False, 14, f"submission.csv and sample_submission.csv files have different number of rows. submission.csv has {len(df1)} rows, while sample_submission.csv has {len(df)} rows. Missing rows are: {missing_rows}."
     
     def test_column_names_submission(self, state: State):
         path = f"{state.competition_dir}/sample_submission.csv"
         df = pd.read_csv(path)
         files = os.listdir(state.competition_dir)
         for file in files:
-            if file == "submission.csv":
+            # submission file may have different names
+            if f"submission" in file and file.endswith(".csv") and file != "sample_submission.csv" :
                 path1 = f"{state.competition_dir}/{file}"
                 df1 = pd.read_csv(path1)
                 # 比较两个 DataFrame 的列名集合是否相同
@@ -322,6 +336,7 @@ Here is the information about the features of processed_test.csv:
                 else:
                     return False, 15, f"submission.csv and sample_submission.csv files have different column names or different column order. submission.csv has columns: {set(df1.columns)}, while sample_submission.csv has columns: {set(df.columns)}."
 
+    
     def test_submission_validity(self, state: State):
         # 检查submission.csv和sample_submission.csv的第一个列是否相同
         # 检查submission.csv的数值是否在sample_submission.csv的数值范围内
