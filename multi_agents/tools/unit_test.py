@@ -217,6 +217,27 @@ class TestTool:
         else:
             return False, 18, f"The cleaned_test.csv file has repeated features: {', '.join(duplicated_features)}"
 
+    def test_processed_train_no_duplicated_features(self, state: State):
+        # but I don't think this is a good test, because the "df = pd.read_csv(path)" directly deletes the duplicated columns
+        path = f"{state.competition_dir}/processed_train.csv"
+        df = pd.read_csv(path)
+        duplicated_features = df.columns[df.columns.duplicated()]
+        if duplicated_features.empty:
+            return True, 25, "The processed_train.csv file has no repeated features, please continue to the next step of the process"
+        else:
+            return False, 25, f"The processed_train.csv file has repeated features: {', '.join(duplicated_features)}"
+        
+    def test_processed_test_no_duplicated_features(self, state: State):
+        # but I don't think this is a good test, because the "df = pd.read_csv(path)" directly deletes the duplicated columns
+        path = f"{state.competition_dir}/processed_test.csv"
+        df = pd.read_csv(path)
+        duplicated_features = df.columns[df.columns.duplicated()]
+        if duplicated_features.empty:
+            return True, 26, "The processed_test.csv file has no repeated features, please continue to the next step of the process"
+        else:
+            return False, 26, f"The processed_test.csv file has repeated features: {', '.join(duplicated_features)}"
+        
+
     def test_processed_train_feature_number(self, state: State):
         def get_categorical_nunique_formatted(dataframe):
             categorical_columns = dataframe.select_dtypes(include=['object', 'category', 'bool']).columns
