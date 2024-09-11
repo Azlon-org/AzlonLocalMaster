@@ -25,6 +25,7 @@ Data visualization: When using libraries such as seaborn or matplotlib to create
 - Always use `print()` function if you need to print a value. 
 - Always use `plt.close()` to close the figure after saving the image.
 - Always make sure that the data types of each column in the dataset are correct before performing any data computation, analysis, or other operations.
+- Do NOT write any `assert` statements.
 <example>
 - Before calculating a correlation matrix, confirm that the dataset only contains numerical data. If there is non-numerical data, handle it appropriately, such as by removing or converting it to numerical data.
 - Before performing data merging or joining operations, ensure that the data types of all relevant columns are consistent to avoid errors caused by type mismatches.

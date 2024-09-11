@@ -96,7 +96,7 @@ class APIHandler:
 
 
 if __name__ == '__main__':
-    handler = APIHandler('gpt-3.5-turbo')
+    handler = APIHandler('gpt-4o')
     messages=[
         {"role": "system", "content": "You are a helpful assistant."},
         {"role": "user", "content": "How are you today?"}

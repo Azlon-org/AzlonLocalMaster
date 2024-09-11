@@ -25,21 +25,17 @@
         "Feature Engineering": "feature_engineering",
         "Model Building, Validation, and Prediction": "model_build_predict"
     },
-    "_phase_to_unit_tests": {
-        "Understand Background": ["test_file_size"],
-        "Preliminary Exploratory Data Analysis": ["test_example", ""],
-        "Data Cleaning": ["test_column_names_cleaned_train","test_column_names_cleaned_test","test_cleaned_train_first_column", "test_cleaned_test_first_column", "test_readable_cleaned_train", "test_readable_cleaned_test", "test_document_exist", "test_no_duplicate_cleaned_test", "test_no_duplicate_cleaned_train", "test_cleaned_train_no_missing_values", "test_cleaned_test_no_missing_values"],
-        "In-depth Exploratory Data Analysis": ["test_image_num"],
-        "Feature Engineering": ["test_column_names_procesed_test", "test_column_names_processed_train", "test_document_exist"],
-        "Model Building, Validation, and Prediction": ["test_file_num_submission", "test_readable_submission", "test_document_exist", "test_no_duplicate_submission", "test_submission_no_missing_values", "test_file_num", "test_column_names", "test_submission_first_column", "test_float_num_submission"]
-    },
     "phase_to_unit_tests": {
         "Understand Background": [],
         "Preliminary Exploratory Data Analysis": [],
-        "Data Cleaning": ["test_document_exist", "test_cleaned_train_no_missing_values", "test_cleaned_test_no_missing_values"],
+        "Data Cleaning": ["test_document_exist", "test_cleaned_train_no_missing_values", "test_cleaned_test_no_missing_values",
+                            "test_cleaned_train_no_duplicated_features", "test_cleaned_test_no_duplicated_features",
+                            "test_cleaned_difference_train_test_columns", "test_cleaned_train_no_missing_target"],
         "In-depth Exploratory Data Analysis": [],
-        "Feature Engineering": ["test_document_exist", "test_processed_train_feature_number"],
-        "Model Building, Validation, and Prediction": ["test_document_exist", "test_submission_validity"]
+        "Feature Engineering": ["test_document_exist", "test_processed_train_feature_number", "test_processed_train_no_duplicated_features",
+                                "test_processed_test_no_duplicated_features", "test_processed_difference_train_test_columns", 
+                                "test_processed_train_no_missing_target"],
+        "Model Building, Validation, and Prediction": ["test_document_exist", "test_column_names_submission", "test_submission_validity"]
     },
     "rulebook_parameters": {
         "Preliminary Exploratory Data Analysis": {
