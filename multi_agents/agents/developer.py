@@ -291,14 +291,17 @@ class Developer(Agent):
             error_messages = read_file(path_to_error)
         else:
             error_messages = "There is no error message in the previous phase."
-        output_messages = read_file(path_to_output)
+        if state.phase in ['Feature Engineering', 'Model Building, Validation, and Prediction']:
+            output_messages = read_file(path_to_output)
+        else:
+            output_messages = ""
 
         logging.info("Start debugging the code.")
         debug_tool = DebugTool(model='gpt-4o', type='api')
         if error_flag:
-            reply, single_round_debug_history = debug_tool.debug_code_with_error(state, copy.deepcopy(self.all_error_messages), previous_code, wrong_code, error_messages)
+            reply, single_round_debug_history = debug_tool.debug_code_with_error(state, copy.deepcopy(self.all_error_messages), output_messages, previous_code, wrong_code, error_messages)
         elif not_pass_flag:
-            reply, single_round_debug_history = debug_tool.debug_code_with_no_pass_test(state, previous_code, wrong_code, not_pass_information)
+            reply, single_round_debug_history = debug_tool.debug_code_with_no_pass_test(state, output_messages, previous_code, wrong_code, not_pass_information)
 
         return reply, single_round_debug_history
 

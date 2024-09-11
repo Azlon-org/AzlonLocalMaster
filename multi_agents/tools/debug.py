@@ -25,7 +25,7 @@ class DebugTool:
     ):
         self.llm = LLM(model, type)
 
-    def debug_code_with_error(self, state: State, all_error_messages: list, previous_code: str, wrong_code: str, error_messages: str) -> str:
+    def debug_code_with_error(self, state: State, output_messages: str, all_error_messages: list, previous_code: str, wrong_code: str, error_messages: str) -> str:
         debug_times = len(all_error_messages)
         print(f"Debug times: {debug_times}")
 
@@ -34,7 +34,8 @@ class DebugTool:
         input = PROMPT_DEVELOPER_DEBUG_LOCATE.format(
             previous_code=previous_code,
             wrong_code=wrong_code,
-            error_messages=error_messages
+            error_messages=error_messages,
+            output_messages=output_messages
         )
         locate_reply, locate_history = self.llm.generate(input, [], max_tokens=4096)
         single_round_debug_history.append(locate_history)
@@ -58,7 +59,8 @@ class DebugTool:
         # fix bug
         input = PROMPT_DEVELOPER_DEBUG_FIX.format(
             most_relevant_code_snippet=most_relevant_code_snippet,
-            error_messages=error_messages
+            error_messages=error_messages,
+            output_messages=output_messages
         )
         fix_reply, fix_bug_history = self.llm.generate(input, [], max_tokens=4096)
         single_round_debug_history.append(fix_bug_history)
@@ -85,13 +87,14 @@ class DebugTool:
 
         return merge_reply, single_round_debug_history
 
-    def debug_code_with_no_pass_test(self, state: State, previous_code: str, code_with_problem: str, not_pass_information: str) -> str:
+    def debug_code_with_no_pass_test(self, state: State, output_messages: str, previous_code: str, code_with_problem: str, not_pass_information: str) -> str:
         single_round_test_history = []
         # locate error
         input = PROMPT_DEVELOPER_TEST_LOCATE.format(
             previous_code=previous_code,
             code_with_problem=code_with_problem,
-            not_pass_information=not_pass_information
+            not_pass_information=not_pass_information,
+            output_messages=output_messages
         )
         raw_reply, test_locate_history = self.llm.generate(input, [], max_tokens=4096)
         input = PROMPT_DEVELOPER_TEST_REORGANIZE_LOCATE_ANSWER
@@ -103,6 +106,7 @@ class DebugTool:
         # fix bug
         input = PROMPT_DEVELOPER_TEST_FIX.format(
             code_snippets_with_problem=code_snippets_with_problem,
+            output_messages=output_messages,
             not_pass_information=not_pass_information
         )
         raw_reply, test_fix_history = self.llm.generate(input, [], max_tokens=4096)

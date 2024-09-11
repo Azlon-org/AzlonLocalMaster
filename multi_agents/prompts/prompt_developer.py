@@ -136,32 +136,7 @@ EXPLANATION
 '''
 
 
-# PROMPT_DEVELOPER_DEBUG = '''
-# # CONTEXT #
-# I'm getting an error executing the code you generated.
-# #############
-# # TASK #
-# Please modify the code according to the error messages ([ERROR MESSAGES]). You must follow these steps:
-# 1. Analyze and find out which code block causes the error.
-# 2. Think about how to correct the code block.
-# 3. Correct the wrong code block.
-# 4. Output the all the code blocks after correction.
-# Note that you are not allowed to output PREVIOUS CODE repeatedly.
-# #############
-# # PREVIOUS CODE #
-# {previous_code}
-# #############
-# # WRONG CODE #
-# {wrong_code}
-# #############
-# # ERROR MESSAGES #
-# {error_messages}
-# #############
-# # NOT PASS TEST CASE #
-# {not_pass_information}
-# #############
-# # CODE AFTER CORRECTION #
-# '''
+
 
 PROMPT_DEVELOPER_DEBUG_LOCATE = '''
 # CONTEXT #
@@ -170,7 +145,7 @@ I'm getting an error executing the code you generated.
 #############
 # TASK #
 Please locate the error in the code and output the most relevant code snippet causes error (5 to 10 lines in length). 
-I will provide you with the previous code, code contains error and error messages.
+I will provide you with the previous code, code contains error, error messages and output messages of code.
 NOTE that if assert statements just reports the error, you must find out the most relevant code snippet which makes the assert statement fail, not output the assert statement itself.
     - However, if you believe the assert statement is redundant, you can output it.
     - This rule can be apply to raise error statement or other statements that only used to give information without performing any calculations, drawing graphs, or making changes to the dataset.
@@ -188,6 +163,10 @@ DO NOT correct the error in this step. Just analyze and locate the error.
 #############
 # ERROR MESSAGES #
 {error_messages}
+
+#############
+# OUTPUT MESSAGES #
+{output_messages}
 
 #############
 # RESPONSE: MOST RELEVANT CODE SNIPPET CAUSES ERROR #
@@ -215,6 +194,7 @@ If you don't need help, DO NOT output the above message.
 #############
 # ALL ERROR MESSAGES #
 {all_error_messages}
+
 #############
 # RESPONSE #
 Please respond according to the instructions above.
@@ -226,9 +206,10 @@ I have an error code snippet with error messages.
 
 #############
 # TASK #
-Please correct the error code snippet according to the error messages. You must follow these steps:
-1. Think about how to correct the error code snippet.
-2. Correct the error code snippet.
+Please correct the error code snippet according to the error messages and output messages of code. You must follow these steps:
+1. Analyze why the error code snippet causes the error according to the error messages and output messages of code.
+2. Think about how to correct the error code snippet.
+3. Correct the error code snippet.
 NOTE that the **last** code snippet in your response should be the **code snippet after correction** that I ask you to output.
 
 #############
@@ -240,8 +221,12 @@ NOTE that the **last** code snippet in your response should be the **code snippe
 {error_messages}
 
 #############
+# OUTPUT MESSAGES #
+{output_messages}
+
+#############
 # RESPONSE: CODE SNIPPET AFTER CORRECTION #
-Let's work this out in a step by step way.
+Let's work this out in a step by step way. (Output all steps in ONE response.)
 '''
 
 PROMPT_DEVELOPER_DEBUG_MERGE = '''
@@ -273,6 +258,8 @@ Please replace the ERROR CODE SNIPPET in CODE CONTAINS ERROR with the CODE SNIPP
 
 
 
+
+
 PROMPT_DEVELOPER_TEST_LOCATE = '''
 # CONTEXT #
 Your code has some tests that don't pass.
@@ -280,7 +267,7 @@ Your code has some tests that don't pass.
 #############
 # TASK #
 For EACH test that does not pass, please analyze the code with problem, figure out which code snippet causes the test not pass, and output the problematic code snippet (5 to 10 lines in length). 
-I will provide you with the previous code, code with problem and not pass tests' information.
+I will provide you with the previous code, code with problem, output messages of code and not pass tests' information.
 NOTE that in your each analysis for each test, the **last** code snippet in your response should be the **problematic code snippet** that I ask you to output.
 
 #############
@@ -290,6 +277,10 @@ NOTE that in your each analysis for each test, the **last** code snippet in your
 #############
 # CODE WITH PROBLEM #
 {code_with_problem}
+
+#############
+# OUTPUT MESSAGES #
+{output_messages}
 
 #############
 # NOT PASS TEST CASES #
@@ -325,14 +316,19 @@ Your code has a couple tests that don't pass.
 
 #############
 # TASK #
-Please correct the some code snippets with problem according to the not pass tests' information.
+Please correct the some code snippets with problem according to output messages of code and the not pass tests' information.
 You must follow these steps:
-1. Think about how to correct the code snippets with problem.
-2. Correct the code snippets with problem.
+1. Analyze why the code snippets with problem cause the test not pass according to output messages of code and the not pass tests' information.
+2. Think about how to correct the code snippets with problem.
+3. Correct the code snippets with problem.
 
 #############
 # CODE SNIPPETS WITH PROBLEM #
 {code_snippets_with_problem}
+
+#############
+# OUTPUT MESSAGES #
+{output_messages}
 
 #############
 # NOT PASS TEST CASES #
@@ -340,7 +336,7 @@ You must follow these steps:
 
 #############
 # RESPONSE #
-Let's work this out in a step by step way.
+Let's work this out in a step by step way. (Output all steps in ONE response.)
 '''
 
 PROMPT_DEVELOPER_TEST_REORGANIZE_FIX_ANSWER = '''
