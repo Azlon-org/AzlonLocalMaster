@@ -196,7 +196,48 @@ class TestTool:
                 missing_details.append(f"{col}: {count} ({percentage:.2f}%)")
             
             return False, 11, f"There are missing values in the cleaned_test.csv file. Detailed missing value information:\n" + "\n".join(missing_details) + "\nNOTE that apply the same methods as applied in cleaned_train.csv to deal with missing values."
-    
+
+    def test_cleaned_train_no_duplicated_features(self, state: State):
+        # but I don't think this is a good test, because the "df = pd.read_csv(path)" directly deletes the duplicated columns
+        path = f"{state.competition_dir}/cleaned_train.csv"
+        df = pd.read_csv(path)
+        duplicated_features = df.columns[df.columns.duplicated()]
+        if duplicated_features.empty:
+            return True, 17, "The cleaned_train.csv file has no repeated features, please continue to the next step of the process"
+        else:
+            return False, 17, f"The cleaned_train.csv file has repeated features: {', '.join(duplicated_features)}"
+        
+    def test_cleaned_test_no_duplicated_features(self, state: State):
+        # but I don't think this is a good test, because the "df = pd.read_csv(path)" directly deletes the duplicated columns
+        path = f"{state.competition_dir}/cleaned_test.csv"
+        df = pd.read_csv(path)
+        duplicated_features = df.columns[df.columns.duplicated()]
+        if duplicated_features.empty:
+            return True, 18, "The cleaned_test.csv file has no repeated features, please continue to the next step of the process"
+        else:
+            return False, 18, f"The cleaned_test.csv file has repeated features: {', '.join(duplicated_features)}"
+
+    def test_processed_train_no_duplicated_features(self, state: State):
+        # but I don't think this is a good test, because the "df = pd.read_csv(path)" directly deletes the duplicated columns
+        path = f"{state.competition_dir}/processed_train.csv"
+        df = pd.read_csv(path)
+        duplicated_features = df.columns[df.columns.duplicated()]
+        if duplicated_features.empty:
+            return True, 25, "The processed_train.csv file has no repeated features, please continue to the next step of the process"
+        else:
+            return False, 25, f"The processed_train.csv file has repeated features: {', '.join(duplicated_features)}"
+        
+    def test_processed_test_no_duplicated_features(self, state: State):
+        # but I don't think this is a good test, because the "df = pd.read_csv(path)" directly deletes the duplicated columns
+        path = f"{state.competition_dir}/processed_test.csv"
+        df = pd.read_csv(path)
+        duplicated_features = df.columns[df.columns.duplicated()]
+        if duplicated_features.empty:
+            return True, 26, "The processed_test.csv file has no repeated features, please continue to the next step of the process"
+        else:
+            return False, 26, f"The processed_test.csv file has repeated features: {', '.join(duplicated_features)}"
+        
+
     def test_processed_train_feature_number(self, state: State):
         def get_categorical_nunique_formatted(dataframe):
             categorical_columns = dataframe.select_dtypes(include=['object', 'category', 'bool']).columns
@@ -273,6 +314,75 @@ Here is the information about the features of processed_test.csv:
 '''
             return False, 13, false_info
 
+    def test_processed_train_no_missing_target(self, state: State):
+        # read train.csv and test.csv
+        path_train = f"{state.competition_dir}/train.csv"
+        path_test = f"{state.competition_dir}/test.csv"
+        path_processed_train = f"{state.competition_dir}/processed_train.csv"
+        
+        train_columns = pd.read_csv(path_train).columns
+        test_columns = pd.read_csv(path_test).columns
+        target_column = [col for col in train_columns if col not in test_columns]
+
+        # check if the target column is in the processed_train.csv
+        df = pd.read_csv(path_processed_train)
+        if target_column[0] in df.columns:
+            return True, 19, "The target column is in the processed_train.csv file, please continue to the next step of the process"
+        else:
+            return False, 19, f"The target column is not in the processed_train.csv file, please reprocess it"
+
+    def test_cleaned_train_no_missing_target(self, state: State):
+        # read train.csv and test.csv
+        path_train = f"{state.competition_dir}/train.csv"
+        path_test = f"{state.competition_dir}/test.csv"
+        path_cleaned_train = f"{state.competition_dir}/cleaned_train.csv"
+        
+        train_columns = pd.read_csv(path_train).columns
+        test_columns = pd.read_csv(path_test).columns
+        target_column = [col for col in train_columns if col not in test_columns]
+
+        # check if the target column is in the cleaned_train.csv
+        df = pd.read_csv(path_cleaned_train)
+        if target_column[0] in df.columns:
+            return True, 20, "The target column is in the cleaned_train.csv file, please continue to the next step of the process"
+        else:
+            return False, 20, f"The target column is not in the cleaned_train.csv file, please reprocess it"
+        
+    def test_cleaned_difference_train_test_columns(self, state: State):
+        # test if the columns in cleaned_train.csv only has one more column than cleaned_test.csv, which is the target column
+        path_train = f"{state.competition_dir}/train.csv"
+        path_test = f"{state.competition_dir}/test.csv"
+        path_cleaned_train = f"{state.competition_dir}/cleaned_train.csv"
+        path_cleaned_test = f"{state.competition_dir}/cleaned_test.csv"
+
+        train_columns = pd.read_csv(path_train).columns
+        test_columns = pd.read_csv(path_test).columns
+        target_column = [col for col in train_columns if col not in test_columns]
+
+        df_train = pd.read_csv(path_cleaned_train)
+        df_test = pd.read_csv(path_cleaned_test)
+        if len(df_train.columns) == len(df_test.columns) + 1 and target_column[0] in df_train.columns:
+            return True, 21, "The cleaned_train.csv file has one more column than cleaned_test.csv, which is the target column, please continue to the next step of the process"
+        else:
+            return False, 21, "The cleaned_train.csv file has different columns from cleaned_test.csv, please reprocess it"
+    
+    def test_processed_difference_train_test_columns(self, state: State):
+        path_train = f"{state.competition_dir}/train.csv"
+        path_test = f"{state.competition_dir}/test.csv"
+        path_processed_train = f"{state.competition_dir}/processed_train.csv"
+        path_processed_test = f"{state.competition_dir}/processed_test.csv"
+
+        train_columns = pd.read_csv(path_train).columns
+        test_columns = pd.read_csv(path_test).columns
+        target_column = [col for col in train_columns if col not in test_columns]
+
+        df_train = pd.read_csv(path_processed_train)
+        df_test = pd.read_csv(path_processed_test)
+        if len(df_train.columns) == len(df_test.columns) + 1 and target_column[0] in df_train.columns:
+            return True, 22, "The processed_train.csv file has one more column than processed_test.csv, which is the target column, please continue to the next step of the process"
+        else:
+            return False, 22, "The processed_train.csv file has different columns from processed_test.csv, please reprocess it"
+
     def test_submission_no_missing_values(self, state: State):
         files = os.listdir(state.competition_dir)
         for file in files:
@@ -285,6 +395,38 @@ Here is the information about the features of processed_test.csv:
                     return True, 12, "The submission.csv file has no missing values, please continue to the next step of the process"
                 else:
                     return False, 12, f"There are missing values in the submission.csv file. The columns with missing values are: {', '.join(missing_columns)}"
+
+    def test_processed_train_no_missing_values(self, state: State):
+        path = f"{state.competition_dir}/processed_train.csv"
+        df = pd.read_csv(path)
+        missing_info = df.isnull().sum()
+        missing_columns = missing_info[missing_info > 0]
+
+        if missing_columns.empty:
+            return True, 23, "The processed_train.csv file has no missing values, please continue to the next step of the process"
+        else:
+            missing_details = []
+            for col, count in missing_columns.items():
+                percentage = (count / len(df)) * 100
+                missing_details.append(f"{col}: {count} ({percentage:.2f}%)")
+            
+            return False, 23, f"There are missing values in the processed_train.csv file. Detailed missing value information:\n" + "\n".join(missing_details) + "\nDo NOT fill the missing values with another NaN-type value, such as 'None', 'NaN', or 'nan'."
+
+    def test_processed_test_no_missing_values(self, state: State):
+        path = f"{state.competition_dir}/processed_test.csv"
+        df = pd.read_csv(path)
+        missing_info = df.isnull().sum()
+        missing_columns = missing_info[missing_info > 0]
+
+        if missing_columns.empty:
+            return True, 24, "The processed_test.csv file has no missing values, please continue to the next step of the process"
+        else:
+            missing_details = []
+            for col, count in missing_columns.items():
+                percentage = (count / len(df)) * 100
+                missing_details.append(f"{col}: {count} ({percentage:.2f}%)")
+            
+            return False, 24, f"There are missing values in the processed_test.csv file. Detailed missing value information:\n" + "\n".join(missing_details) + "\nDo NOT fill the missing values with another NaN-type value, such as 'None', 'NaN', or 'nan'."
 
     def test_image_num(self, state: State):
         image_count = 0
