@@ -4,10 +4,12 @@ Please conduct a comprehensive analysis of the competition, focusing on the foll
 2. Files: Analyze each provided file, detailing its purpose and how it should be used in the competition.
 3. Problem Definition: Clarify the problem's definition and requirements.
 4. Data Information: Gather detailed information about the data, including its structure and contents.
-    1. ID type: features that are unique identifiers for each data point, which will NOT be used in the model training.
-    2. Numerical type: features that are numerical values.
-    3. Categorical type: features that are categorical values.
-    4. Datetime type: features that are datetime values.
+    4.1 Data type:
+        4.1.1. ID type: features that are unique identifiers for each data point, which will NOT be used in the model training.
+        4.1.2. Numerical type: features that are numerical values.
+        4.1.3. Categorical type: features that are categorical values.
+        4.1.4 Datetime type: features that are datetime values.
+    4.2 Detailed data description
 5. Target Variable: Identify the target variable that needs to be predicted or optimized, which is provided in the training set but not in the test set.
 6. Evaluation Metrics: Determine the evaluation metrics that will be used to assess the submissions.
 7. Submission Format: Understand the required format for the final submission.
@@ -47,36 +49,40 @@ You must ensure that the essential information is complete and accurate.
 # RESPONSE: MARKDOWN FORMAT #
 Here is the MARKDOWN format you should follow:
 ```markdown
-## Competition Information
-### 1. Competition Overview
+# Competition Information
+## 1. Competition Overview
 [Brief description of the competition]
 
-### 2. Files
+## 2. Files
 [List and description of provided files]
 
-### 3. Problem Definition
+## 3. Problem Definition
 [Clear statement of the problem to be solved]
 
-### 4. Data Information
-#### 4.1 ID type
+## 4. Data Information
+### 4.1 Data type
+#### 4.1.1 ID type
 [List of ID features]
-#### 4.2 Numerical type
+#### 4.1.2 Numerical type
 [List of numerical features]
-#### 4.3 Categorical type
+#### 4.1.3 Categorical type
 [List of categorical features]
-#### 4.4 Datetime type
+#### 4.1.4 Datetime type
 [List of datetime features]
 
-### 5. Target Variable
+### 4.2 Detailed data description
+[Detailed description of data]
+
+## 5. Target Variable
 [Description of the target variable]
 
-### 6. Evaluation Metrics
+## 6. Evaluation Metrics
 [Explanation of evaluation criteria]
 
-### 7. Submission Format
+## 7. Submission Format
 [Details on required submission format]
 
-### 8. Other Key Aspects
+## 8. Other Key Aspects
 [Additional important information]
 ```
 
@@ -116,51 +122,40 @@ PROMPT_READER_WITH_EXPERIENCE_ROUND2 = '''
 Subtask2: Develop a new solution based on the previous experience and suggestions.
 Here is the MARKDOWN format you should follow:
 ```markdown
-## Competition Information
-### 1. Competition Overview
+# Competition Information
+## 1. Competition Overview
 [Brief description of the competition]
 
-### 2. Files
+## 2. Files
 [List and description of provided files]
 
-### 3. Problem Definition
+## 3. Problem Definition
 [Clear statement of the problem to be solved]
 
-### 4. Data Information
-#### 4.1 ID type
+## 4. Data Information
+### 4.1 Data type
+#### 4.1.1 ID type
 [List of ID features]
-#### 4.2 Numerical type
+#### 4.1.2 Numerical type
 [List of numerical features]
-#### 4.3 Categorical type
+#### 4.1.3 Categorical type
 [List of categorical features]
-#### 4.4 Datetime type
+#### 4.1.4 Datetime type
 [List of datetime features]
 
-### 5. Target Variable
+### 4.2 Detailed data description
+[Detailed description of data]
+
+## 5. Target Variable
 [Description of the target variable]
 
-### 6. Evaluation Metrics
+## 6. Evaluation Metrics
 [Explanation of evaluation criteria]
 
-### 7. Submission Format
+## 7. Submission Format
 [Details on required submission format]
 
-### 8. Other Key Aspects
+## 8. Other Key Aspects
 [Additional important information]
 ```
 '''
-
-# You must think carefully first and then provide a detailed response in JSON format. Your response should include the following key elements:
-# ```json
-# {{
-#     "thought_process": list=[
-#         {{
-#             "thought": str="Reflect on the current situation and consider how to proceed in fulfilling the user's requirements.",
-#             "action": str="Describe the action you plan to take to meet the user's needs.",
-#             "observation": str="Note the expected or actual results of the action."
-#         }}
-#     ],
-#     "final_thought": str="Summarize your understanding and confirm that you now have the final answer.",
-#     "final_answer": str="Provide the final answer to the original task."
-# }}
-# ```

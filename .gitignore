@@ -18,6 +18,10 @@
 
 **/regression_of_used_car_prices/
 
+**/classification_with_an_academic_success_dataset/
+
+**/santander_value_prediction_challenge/
+
 **/experiments_history/
 
 **/strong_baseline/
@@ -27,3 +31,4 @@
 test.py
 test.txt
 api_key.txt
+long_message_**.txt

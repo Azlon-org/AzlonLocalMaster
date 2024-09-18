@@ -8,6 +8,7 @@ import sys
 import os
 import pdb
 import glob
+import pandas as pd
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
@@ -15,10 +16,11 @@ sys.path.append('..')
 sys.path.append('../..')
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
-from utils import read_file
+from utils import read_file, PREFIX_MULTI_AGENTS
 from llm import LLM
 from state import State
 from prompts.prompt_base import *
+from typing import Tuple, List
 
 class Agent:
     def __init__(self, role: str, description: str, model: str, type: str):
@@ -137,6 +139,106 @@ class Agent:
             logging.error("Failed to parse markdown from raw reply.")
             pdb.set_trace()
             return raw_reply
+
+    def _json_to_markdown(self, json_data):
+        md_output = f"## {json_data['name']}\n\n"
+        md_output += f"**Name:** {json_data['name']}  \n"
+        md_output += f"**Description:** {json_data['description']}  \n"
+        md_output += f"**Applicable Situations:** {json_data['applicable_situations']}\n\n"
+
+        md_output += "**Parameters:**\n"
+        for param, details in json_data['parameters'].items():
+            md_output += f"- `{param}`:\n"
+            md_output += f"  - **Type:** `{details['type'] if isinstance(details['type'], str) else ' | '.join(f'`{t}`' for t in details['type'])}`\n"
+            md_output += f"  - **Description:** {details['description']}\n"
+            if 'enum' in details:
+                md_output += f"  - **Enum:** {' | '.join(f'`{e}`' for e in details['enum'])}\n"
+            if 'default' in details:
+                md_output += f"  - **Default:** `{details['default']}`\n"
+
+        md_output += f"\n**Required:** {', '.join(f'`{r}`' for r in json_data['required'])}  \n"
+        md_output += f"**Result:** {json_data['result']}  \n"
+        
+        md_output += "**Notes:**\n"
+        for note in json_data['notes']:
+            md_output += f"- {note}\n"
+
+        if 'example' in json_data:
+            md_output += "**Example:**\n"
+            md_output += f"  - **Input:**\n"
+            for key, value in json_data['example']['input'].items():
+                md_output += f"    - `{key}`: {value}\n"
+            md_output += f"  - **Output:**\n"
+            for key, value in json_data['example']['output'].items():
+                md_output += f"    - `{key}`: {value}\n"
+
+        md_output += "\n---\n"
+        return md_output
+
+    def _get_tools(self, state: State) -> Tuple[str, List[str]]:
+        tools = ""
+        tool_names = state.ml_tools
+        path_to_tools_doc = f'{PREFIX_MULTI_AGENTS}/tools/ml_tools_doc/{state.dir_name}_tools.md'
+        if len(tool_names) > 0:
+            if os.path.exists(path_to_tools_doc):
+                with open(path_to_tools_doc, 'r') as file:
+                    tools = file.read()
+            else:
+                # Read the JSON file
+                with open('multi_agents/function_to_schema.json', 'r') as file:
+                    schema_data = json.load(file)
+                for tool_name in tool_names:
+                    tools += self._json_to_markdown(schema_data[tool_name])
+                with open(f'{PREFIX_MULTI_AGENTS}/tools/ml_tools_doc/{state.dir_name}_tools.md', 'w') as file:
+                    file.write(tools)
+        else:
+            tools = "There is no pre-defined tools used in this phase."
+        return tools, tool_names
+
+    def _get_feature_info(self, state: State) -> str:
+        # Define file names for before and after the current phase
+        phase_files = {
+            "Preliminary Exploratory Data Analysis": ("train.csv", "test.csv", "train.csv", "test.csv"),
+            "Data Cleaning": ("train.csv", "test.csv", "cleaned_train.csv", "cleaned_test.csv"),
+            "In-depth Exploratory Data Analysis": ("cleaned_train.csv", "cleaned_test.csv", "cleaned_train.csv", "cleaned_test.csv"),
+            "Feature Engineering": ("cleaned_train.csv", "cleaned_test.csv", "processed_train.csv", "processed_test.csv"),
+            "Model Building, Validation, and Prediction": ("processed_train.csv", "processed_test.csv", "processed_train.csv", "processed_test.csv")
+        }
+
+        before_train, before_test, after_train, after_test = phase_files.get(state.phase, (None, None, None, None))
+
+        if before_train is None:
+            raise ValueError(f"Unknown phase: {state.phase}")
+
+        # Read the datasets
+        before_train_df = pd.read_csv(f'{state.competition_dir}/{before_train}')
+        before_test_df = pd.read_csv(f'{state.competition_dir}/{before_test}')
+        after_train_df = pd.read_csv(f'{state.competition_dir}/{after_train}')
+        after_test_df = pd.read_csv(f'{state.competition_dir}/{after_test}')
+        
+        # Get features before and after
+        features_before = list(before_train_df.columns)
+        features_after = list(after_train_df.columns)
+        
+        # Identify target variable
+        target_variable = list(set(features_after) - set(after_test_df.columns))
+        
+        if len(target_variable) == 1:
+            target_variable = target_variable[0]
+        elif len(target_variable) > 1:
+            logging.warning(f"Multiple potential target variables found: {target_variable}")
+            target_variable = ', '.join(target_variable)
+        else:
+            logging.warning("No target variable found by comparing train and test columns")
+            target_variable = "Unknown"
+
+        feature_info = PROMPT_FEATURE_INFO.format(
+            target_variable=target_variable, 
+            features_before=features_before, 
+            features_after=features_after
+        )
+        return feature_info
+
 
     def action(self, state: State) -> Dict[str, Any]:
         # pdb.set_trace()

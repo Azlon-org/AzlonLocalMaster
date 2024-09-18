@@ -1,6 +1,8 @@
-{
+{   
+    "user_interaction": {
+        "plan": "False"
+    },
     "phases": ["Understand Background", "Preliminary Exploratory Data Analysis", "Data Cleaning", "In-depth Exploratory Data Analysis", "Feature Engineering", "Model Building, Validation, and Prediction"],
-    "_phases": ["Understand Background", "Data Cleaning", "Feature Engineering", "Model Building, Validation, and Prediction"],
     "phase_to_agents": {
         "Understand Background": ["Reader", "Reviewer"],
         "Preliminary Exploratory Data Analysis": ["Planner", "Developer", "Reviewer", "Summarizer"],
@@ -30,12 +32,32 @@
         "Preliminary Exploratory Data Analysis": [],
         "Data Cleaning": ["test_document_exist", "test_cleaned_train_no_missing_values", "test_cleaned_test_no_missing_values",
                             "test_cleaned_train_no_duplicated_features", "test_cleaned_test_no_duplicated_features",
-                            "test_cleaned_difference_train_test_columns", "test_cleaned_train_no_missing_target"],
+                            "test_cleaned_difference_train_test_columns", "test_cleaned_train_no_missing_target", 
+                            "test_cleaned_train_id_column", "test_cleaned_test_id_column"],
         "In-depth Exploratory Data Analysis": [],
         "Feature Engineering": ["test_document_exist", "test_processed_train_feature_number", "test_processed_train_no_duplicated_features",
                                 "test_processed_test_no_duplicated_features", "test_processed_difference_train_test_columns", 
-                                "test_processed_train_no_missing_target"],
+                                "test_processed_train_no_missing_target", "test_processed_train_id_column", "test_processed_test_id_column"],
         "Model Building, Validation, and Prediction": ["test_document_exist", "test_column_names_submission", "test_submission_validity"]
+    },
+    "phase_to_ml_tools": {
+        "Understand Background": [],
+        "Preliminary Exploratory Data Analysis": [],
+        "Data Cleaning": [],
+        "In-depth Exploratory Data Analysis": [],
+        "Feature Engineering": [],
+        "Model Building, Validation, and Prediction": []
+    },
+    "_phase_to_ml_tools": {
+        "Understand Background": [],
+        "Preliminary Exploratory Data Analysis": [],
+        "Data Cleaning": ["fill_missing_values", "remove_columns_with_missing_data", "detect_and_handle_outliers_zscore", 
+                            "detect_and_handle_outliers_iqr", "convert_data_types", "remove_duplicates", "format_datetime"],
+        "In-depth Exploratory Data Analysis": [],
+        "Feature Engineering": ["one_hot_encode", "label_encode", "frequency_encode", "target_encode", "correlation_feature_selection", 
+                                "variance_feature_selection", "scale_features", "perform_pca", "perform_rfe", "create_polynomial_features", 
+                                "create_feature_combinations", "extract_time_series_features"],
+        "Model Building, Validation, and Prediction": []
     },
     "rulebook_parameters": {
         "Preliminary Exploratory Data Analysis": {

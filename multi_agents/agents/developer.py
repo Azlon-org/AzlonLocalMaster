@@ -101,7 +101,7 @@ class Developer(Agent):
             with open(path_to_previous_code, 'r', encoding='utf-8') as f_1:
                 previous_code = f_1.readlines()
                 previous_code = previous_code[:-2] # 删除最后两行
-                previous_code = previous_code[1:] # 删除第一行
+                previous_code = previous_code[9:] # 删除前9行
             previous_run_code = self._delete_output_in_code(state, previous_code) # 删除output
         else:
             previous_code = []
@@ -130,8 +130,9 @@ class Developer(Agent):
         with open(f'{state.restore_dir}/single_phase_code.txt', 'w') as f: # 保存单步的code
             f.write("\n".join(matches))
 
-        code_with_output_lines = ["def generated_code_function():\n"] + previous_code + code_lines
-        run_code_lines = ["def generated_code_function():\n"] + previous_run_code + code_lines
+        prefix_in_code_file = [line + '\n' for line in PREFIX_IN_CODE_FILE.split('\n')]        
+        code_with_output_lines = prefix_in_code_file + previous_code + code_lines
+        run_code_lines = prefix_in_code_file + previous_run_code + code_lines
 
         # Write the code to a python file
         with open(path_to_code, 'w', encoding='utf-8') as f_w:
@@ -203,7 +204,6 @@ class Developer(Agent):
             else:
                 print(f"Process exited with non-zero status: {e.returncode}")
                 error_message = f"Process exited with status {e.returncode}: {e.stderr}"
-            
             self.all_error_messages.append(error_message)
             with open(path_to_error, 'w') as f:
                 f.write(error_message+"\nI suggest you use logging module to record the information, which can help you find the reason why operation system terminated your process.\nOne possible reason is When working with dataframe-type data, you perform multiplication operations on different types of data.")
@@ -263,18 +263,7 @@ class Developer(Agent):
         # prepare debug information, and then debug
         is_previous_code, path_to_previous_code, _, path_to_last_phase_code = self._is_previous_code(state)
         if is_previous_code:
-            with open(path_to_previous_code, 'r', encoding='utf-8') as f_1:
-                previous_code = f_1.readlines()
-            # 放在prompt里的previous code要做处理
-            previous_code = previous_code[:-2] # 删除最后两行
-            previous_code = previous_code[1:] # 删除第一行
-            for i, line in enumerate(previous_code):
-                # 删除每行第一个'\t'或者是连续的四个空格
-                if line.startswith('\t'):
-                    previous_code[i] = line[1:]
-                elif line.startswith('    '):
-                    previous_code[i] = line[4:]
-            previous_code = "".join(previous_code)
+            previous_code = read_file(path_to_last_phase_code)
         else:
             previous_code = "There is no code file in the previous phase."
         # Extract code from the file
@@ -299,7 +288,8 @@ class Developer(Agent):
         logging.info("Start debugging the code.")
         debug_tool = DebugTool(model='gpt-4o', type='api')
         if error_flag:
-            reply, single_round_debug_history = debug_tool.debug_code_with_error(state, copy.deepcopy(self.all_error_messages), output_messages, previous_code, wrong_code, error_messages)
+            tools, tool_names = self._get_tools(state)
+            reply, single_round_debug_history = debug_tool.debug_code_with_error(state, copy.deepcopy(self.all_error_messages), output_messages, previous_code, wrong_code, error_messages, tools, tool_names)
         elif not_pass_flag:
             reply, single_round_debug_history = debug_tool.debug_code_with_no_pass_test(state, output_messages, previous_code, wrong_code, not_pass_information)
 
@@ -310,20 +300,16 @@ class Developer(Agent):
         # 读取上一个阶段的code
         is_previous_code, path_to_previous_code, _, path_to_last_phase_code = self._is_previous_code(state)
         if is_previous_code:
-            with open(path_to_previous_code, 'r', encoding='utf-8') as f_1:
-                previous_code = f_1.readlines()
-            # 放在prompt里的previous code要做处理
-            previous_code = previous_code[:-2] # 删除最后两行
-            previous_code = previous_code[1:] # 删除第一行
-            for i, line in enumerate(previous_code):
-                # 删除每行第一个'\t'
-                if line.startswith('\t'):
-                    previous_code[i] = line[1:]
-            previous_code = "\n".join(previous_code)
+            previous_code = read_file(path_to_last_phase_code)
         else:
             previous_code = "There is no code file in the previous phase."
         prompt_round1 += f"\n#############\n# CODE FROM PREVIOUS PHASE #\n{previous_code}"
-        prompt_round1 += self._read_data(state)
+        prompt_round1 += self._read_data(state, num_lines=1)
+        tools, tool_names = self._get_tools(state)
+        if len(tool_names) > 0:
+            prompt_round1 += PROMPT_AVAILABLE_TOOLS.format(tools=tools, tool_names=tool_names)
+        else:
+            prompt_round1 += "# AVAILABLE TOOLS #\nThere is no pre-defined tools in this phase. You can use the functions from public libraries such as Pandas, NumPy, Scikit-learn, etc.\n"
 
         return prompt_round1
 
@@ -332,6 +318,7 @@ class Developer(Agent):
         history = []
         debug_history = []
         test_history = []
+        self.all_error_messages = []
         round = 0
         test_round = 0
         max_tries = 5
@@ -359,7 +346,7 @@ class Developer(Agent):
         while round <= max_tries:
             if round == 0 or retry_flag or no_code_flag:
                 if len(state.memory) == 1:
-                    input = PROMPT_DEVELOPER.format(phases_in_context=state.context, phase_name=state.phase, state_info=state.get_state_info(), competition_info=competition_info, plan=plan, task=task)
+                    input = PROMPT_DEVELOPER.format(phases_in_context=state.context, phase_name=state.phase, state_info=state.get_state_info(), competition_info=competition_info, plan=plan,task=task)
                     if retry_flag or no_code_flag: # Reset history to initial system message if retrying or no code was generated
                         history = history[:1]
                     raw_reply, history = self.llm.generate(input, history, max_tokens=4096)
@@ -382,6 +369,7 @@ class Developer(Agent):
                     with open(f'{state.restore_dir}/{self.role}_retry_reply.txt', 'w') as f:
                         f.write(raw_reply)
                 elif no_code_flag:
+                    self.all_error_messages = [] # 清空error messages
                     logging.info("Last reply has no code. Regenerating the code.")
                     with open(f'{state.restore_dir}/{self.role}_no_code_reply.txt', 'w') as f:
                         f.write(raw_reply)
@@ -444,5 +432,15 @@ class Developer(Agent):
                 print(f"State {state.phase} - Agent {self.role} finishes working.")
 
         input_used_in_review = f"   <competition_info>\n{competition_info}\n    </competition_info>\n   <plan>\n{plan}\n    </plan>"
-        return {self.role: {"history": history, "role": self.role, "description": self.description, "task": task, "input": input_used_in_review, "result": raw_reply, "status": execution_flag}}
+        return {
+            self.role: {
+                "history": history,
+                "role": self.role,
+                "description": self.description,
+                "task": task,
+                "input": input_used_in_review,
+                "result": raw_reply,
+                "status": execution_flag
+            }
+        }
     

@@ -44,7 +44,7 @@ The next phase is: {next_phase_name}
 
 I will provide the competition information (COMPETITION INFO), the plan given by the planner for this phase (PLAN).
 
-Based on this information, design 5 key questions that are most worth focusing on and will be most helpful for the next phase. These questions should:
+Based on this information, design 6 key questions that are most worth focusing on and will be most helpful for the next phase. These questions should:
 1. Be targeted, specifically designed for the transition from {phase_name} to {next_phase_name}.
 2. Summarize the key findings of the current phase ({phase_name}).
 3. Provide guidance for the planner in formulating the execution plan in the next phase ({next_phase_name}).
@@ -52,9 +52,10 @@ Based on this information, design 5 key questions that are most worth focusing o
 <sample questions>  
 (Assuming the phase is Preliminary EDA and the next phase is Data Cleaning)  
 1. What files did you process? Which files were generated? Answer with detailed file path. (This is a FIXED question for each phase.)
-2. Which features have missing values, and what is the proportion of missing values?  
-3. Are there any obvious outliers in the data? If so, which features do they mainly affect?  
-4. What interesting findings did you have in this phase? What do you think should be done in the next phase to better complete this competition?  
+2. Which features were involved in this phase? What changes did they undergo? If any feature types were modified, answer which features are modified and how they are modified. If any features were deleted or created, answer which features are deleted or created and provide detailed explanations. (This is a FIXED question for each phase.)
+3. Which features have missing values, and what is the proportion of missing values?  
+4. Are there any obvious outliers in the data? If so, which features do they mainly affect?  
+5. What interesting findings did you have in this phase? What do you think should be done in the next phase to better complete this competition?  
 ...
 </sample questions>
 
@@ -82,7 +83,7 @@ Please reorganize the questions that you have designed in the previous reply.
 What files did you process? Which files were generated? Answer with detailed file path.
 
 ### Question 2
-[content of question 2]
+Which features were involved in this phase? What changes did they undergo? If any feature types were modified, answer which features are modified and how they are modified. If any features were deleted or created, answer which features are deleted or created and provide detailed explanations. (This is a FIXED question for each phase.)
 
 ### Question 3
 [content of question 3]
@@ -92,6 +93,9 @@ What files did you process? Which files were generated? Answer with detailed fil
 
 ### Question 5
 [content of question 5]
+
+### Question 6
+[content of question 6]
 ```
 
 #############
@@ -163,8 +167,9 @@ What files did you process? Which files were generated? Answer with detailed fil
 [answer to question 1]
 
 ### Question 2
-[repeat question 2]
+Which features were involved in this phase? What changes did they undergo? If any feature types were modified, answer which features are modified and how they are modified. If any features were deleted or created, answer which features are deleted or created and provide detailed explanations. (This is a FIXED question for each phase.)
 ### Answer 2
+[answer to question 2]
 
 ### Question 3
 [repeat question 3]
@@ -180,6 +185,11 @@ What files did you process? Which files were generated? Answer with detailed fil
 [repeat question 5]
 ### Answer 5
 [answer to question 5]
+
+### Question 6
+[repeat question 6]
+### Answer 6
+[answer to question 6]
 </Markdown>
 
 #############

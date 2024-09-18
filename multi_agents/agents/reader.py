@@ -42,6 +42,7 @@ class Reader(Agent):
                     input = PROMPT_READER.format(phases_in_context=state.context, task=task)
                 elif round == 1: 
                     input = f"\n#############\n# OVERVIEW #\n{overview}"
+                    # input += self._read_data(state, num_lines=1)
                 elif round == 2: 
                     reader_mid_reply = raw_reply
                     input = PROMPT_READER_ROUND2
@@ -60,7 +61,7 @@ class Reader(Agent):
                     input = PROMPT_READER_WITH_EXPERIENCE_ROUND0.format(phases_in_context=state.context, task=task, experience_with_suggestion=experience_with_suggestion)
                 elif round == 1: 
                     input = f"# OVERVIEW #\n{overview}\n############# "
-                    input += self._read_data(state)
+                    # input += self._read_data(state, num_lines=1)
                 elif round == 2:
                     reader_mid_reply = raw_reply
                     input = PROMPT_READER_WITH_EXPERIENCE_ROUND2
@@ -85,4 +86,14 @@ class Reader(Agent):
         input_used_in_review = f"   <overview>\n{overview}\n    </overview>"
 
         print(f"State {state.phase} - Agent {self.role} finishes working.")
-        return {self.role: {"history": history, "role": self.role, "description": self.description, "task": task, "input": input_used_in_review, "summary": summary, "result": result}}
+        return {
+            self.role: {
+                "history": history,
+                "role": self.role,
+                "description": self.description,
+                "task": PROMPT_READER_TASK,
+                "input": input_used_in_review,
+                "summary": summary,
+                "result": result
+            }
+        }

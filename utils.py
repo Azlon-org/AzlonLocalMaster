@@ -1,5 +1,5 @@
 import os
-from api_handler import APIHandler
+from api_handler import APIHandler, APISettings
 import base64
 import subprocess
 import pdb
@@ -39,7 +39,8 @@ def multi_chat(model: APIHandler, prompt, history=None, max_tokens=4096):
 
     messages = history + [{'role': 'user', 'content': prompt}]
 
-    reply = model.get_output(messages, max_tokens=max_tokens)
+    settings = APISettings(max_tokens=max_tokens)
+    reply = model.get_output(messages=messages, settings=settings)
     history.append({'role': 'user', 'content': prompt})
     history.append({'role': 'assistant', 'content': reply})
     
@@ -67,7 +68,8 @@ def read_image(prompt, image_path):
             ]
         }
     ]
-    reply = api_handler.get_output(messages, type='image', max_tokens=4096)
+    settings = APISettings(max_tokens=4096)
+    reply = api_handler.get_output(messages=messages, settings=settings, response_type='image')
     return reply
 
 def extract_and_run_code(competition, path_to_competition_step):

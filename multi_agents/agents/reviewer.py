@@ -107,6 +107,7 @@ class Reviewer(Agent):
                 all_reply.append(reply['final_answer'])
             except KeyError:
                 pdb.set_trace()
+                all_reply.append(reply)
 
         # 保存history
         with open(f'{state.restore_dir}/{self.role}_history.json', 'w') as f:
@@ -126,5 +127,12 @@ class Reviewer(Agent):
             json.dump(review, f, indent=4)
 
         print(f"State {state.phase} - Agent {self.role} finishes working.")
-        return {self.role: {"history": history, "score": final_score, "suggestion": final_suggestion, "result": review}}
+        return {
+            self.role: {
+                "history": history, 
+                "score": final_score, 
+                "suggestion": final_suggestion, 
+                "result": review
+            }
+        }
 

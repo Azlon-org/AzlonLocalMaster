@@ -4,6 +4,7 @@ import re
 import logging
 import sys 
 import os
+from builtins import input as builtin_input
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
@@ -59,12 +60,18 @@ class Planner(Agent):
             # Round 0
             task = PROMPT_PLANNER_TASK.format(phase_name=state.phase)
             user_rules = state.generate_rules()
-            input = PROMPT_PLANNER.format(phases_in_context=state.context, phase_name=state.phase, state_info=state_info, user_rules=user_rules, competition_info=competition_info, task=task)
+            input = PROMPT_PLANNER.format(phases_in_context=state.context, phase_name=state.phase, state_info=state_info, 
+                                          user_rules=user_rules, competition_info=competition_info, task=task)
             _, history = self.llm.generate(input, history, max_tokens=4096)
 
             # Round 1
             input = f"# PREVIOUS PLAN #\n{self._get_previous_plan_and_report(state)[0]}\n#############\n# PREVIOUS REPORT #\n{self._get_previous_plan_and_report(state)[1]}\n"
-            input += self._read_data(state)
+            input += self._read_data(state, num_lines=1)
+            tools, tool_names = self._get_tools(state)
+            if len(tool_names) > 0:
+                input += PROMPT_PLANNER_TOOLS.format(tools=tools, tool_names=tool_names)
+            else:
+                input += "# AVAILABLE TOOLS #\nThere is no pre-defined tools in this phase. You can use the functions from public libraries such as Pandas, NumPy, Scikit-learn, etc.\n"
             raw_plan_reply, history = self.llm.generate(input, history, max_tokens=4096)
             with open(f'{state.restore_dir}/raw_plan_reply.txt', 'w') as f:
                 f.write(raw_plan_reply)
@@ -93,10 +100,6 @@ class Planner(Agent):
                 return {"planner": state.memory[-2]["planner"]}
             else:
                 return {"planner": state.memory[-2]["planner"]}
-            
-        # 保存plan和result
-        plan = markdown_plan
-        result = markdown_plan
 
         # 保存history
         with open(f'{state.restore_dir}/{self.role}_history.json', 'w') as f:
@@ -105,4 +108,44 @@ class Planner(Agent):
         input_used_in_review = f"   <competition_info>\n{competition_info}\n    </competition_info>"
 
         print(f"State {state.phase} - Agent {self.role} finishes working.")
-        return {self.role: {"history": history, "role": self.role, "description": self.description, "task": task, "input": input_used_in_review, "plan": plan, "result": result}}
+
+        with open(f'{PREFIX_MULTI_AGENTS}/config.json', 'r') as f:
+            config = json.load(f)
+        user_interaction = config['user_interaction']['plan']
+        if user_interaction == "True":
+            # user interaction here
+            print("A plan has been generated and saved to 'markdown_plan.txt'.")
+            print("You can now review and modify the plan if needed.")
+            print("If you want to get some suggestions for modifying the plan, please type 'suggestion'.")
+            user_input = builtin_input("Press Enter to continue with the current plan, or type 'edit' to modify: ")
+            user_input = user_input.strip().lower()
+
+            if user_input == 'edit':
+                print(f"\nPlease edit the file: {state.restore_dir}/markdown_plan.txt")
+                print("Save your changes and press Enter when you're done.")
+                builtin_input("Press Enter to continue...")
+                # Re-read the potentially modified plan
+                with open(f'{state.restore_dir}/markdown_plan.txt', 'r') as f:
+                    markdown_plan = f.read()
+            elif user_input == 'suggest':
+                print(f"\nPlease refer to note section for each function in the file `ml_tools_doc/{state.restore_dir}_tools.md`.")
+            elif user_input:
+                print("Invalid input. Continuing with the current plan.")
+            else:
+                print("Continuing with the current plan.")
+
+        # 保存plan和result
+        plan = markdown_plan
+        result = markdown_plan
+
+        return {
+            self.role: {
+                "history": history,
+                "role": self.role,
+                "description": self.description,
+                "task": task,
+                "input": input_used_in_review,
+                "plan": plan,
+                "result": result
+            }
+        }

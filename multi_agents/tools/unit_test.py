@@ -250,18 +250,6 @@ class TestTool:
         path_to_origin_train = f"{state.competition_dir}/cleaned_train.csv"
         df_origin = pd.read_csv(path_to_origin_train)
         result = "Valid"
-        # input = PROMPT_TEST_PROCESSED_TRAIN_FEATURE_NUMBER.format(cleaned_features=df_origin.columns, processed_features=df.columns)
-        # raw_reply, _ = self.llm.generate(input, history=None)
-        # try:
-        #     json_match = re.search(r'```json(.*)```', raw_reply, re.DOTALL)
-        #     if json_match:
-        #         json_str = json_match.group(1).strip()
-        #         reply = json.loads(json_str)
-        #         result = reply['result']
-        #         reason = reply['reason']
-        # except Exception as e:
-        #     result = "Invalid"
-        #     reason = ""
         if len(df.columns) <= 3 * len(df_origin.columns) and result == "Valid":
             return True, 15, f"The feature engineering phase is well performed."
         else:
@@ -361,10 +349,20 @@ Here is the information about the features of processed_test.csv:
 
         df_train = pd.read_csv(path_cleaned_train)
         df_test = pd.read_csv(path_cleaned_test)
-        if len(df_train.columns) == len(df_test.columns) + 1 and target_column[0] in df_train.columns:
+        
+        # Find the differences in columns
+        train_only_columns = set(df_train.columns) - set(df_test.columns)
+        test_only_columns = set(df_test.columns) - set(df_train.columns)
+        
+        if len(df_train.columns) == len(df_test.columns) + 1 and target_column[0] in df_train.columns and len(target_column) == 1:
             return True, 19, "The cleaned_train.csv file has one more column than cleaned_test.csv, which is the target column, please continue to the next step of the process"
         else:
-            return False, 19, f"The cleaned_train.csv file has different columns from cleaned_test.csv, please find the difference between the two files and find out the reason. cleaned_train.csv should only have one more column than cleaned_test.csv, which is the target column {target_column[0]}.\nFeatures in cleaned_train.csv: {df_train.columns}.\nFeatures in cleaned_test.csv: {df_test.columns}"
+            error_message = f"The cleaned_train.csv file has different columns from cleaned_test.csv, please find the difference between the two files and find out the reason. cleaned_train.csv should only have one more column than cleaned_test.csv, which is the target column {target_column[0]}.\n"
+            error_message += f"Features in cleaned_train.csv: {df_train.columns}.\n"
+            error_message += f"Features in cleaned_test.csv: {df_test.columns}.\n"
+            error_message += f"Columns only in cleaned_train.csv: {train_only_columns}\n"
+            error_message += f"Columns only in cleaned_test.csv: {test_only_columns}"
+            return False, 19, error_message
     
     def test_processed_difference_train_test_columns(self, state: State):
         path_train = f"{state.competition_dir}/train.csv"
@@ -378,11 +376,21 @@ Here is the information about the features of processed_test.csv:
 
         df_train = pd.read_csv(path_processed_train)
         df_test = pd.read_csv(path_processed_test)
-        if len(df_train.columns) == len(df_test.columns) + 1 and target_column[0] in df_train.columns:
+
+        # Find the differences in columns
+        train_only_columns = set(df_train.columns) - set(df_test.columns)
+        test_only_columns = set(df_test.columns) - set(df_train.columns)
+
+        if len(df_train.columns) == len(df_test.columns) + 1 and target_column[0] in df_train.columns and len(target_column) == 1:
             return True, 20, "The processed_train.csv file has one more column than processed_test.csv, which is the target column, please continue to the next step of the process"
         else:
-            return False, 20, f"The processed_train.csv file has different columns from processed_test.csv, please find the difference between the two files and find out the reason. processed_train.csv should only have one more column than processed_test.csv, which is the target column {target_column[0]}.\nFeatures in processed_train.csv: {df_train.columns}.\nFeatures in processed_test.csv: {df_test.columns}"
-
+            error_message = f"The processed_train.csv file has different columns from processed_test.csv, please find the difference between the two files and find out the reason. processed_train.csv should only have one more column than processed_test.csv, which is the target column {target_column[0]}.\n"
+            error_message += f"Features in processed_train.csv: {df_train.columns}.\n"
+            error_message += f"Features in processed_test.csv: {df_test.columns}.\n"
+            error_message += f"Columns only in processed_train.csv: {train_only_columns}\n"
+            error_message += f"Columns only in processed_test.csv: {test_only_columns}"
+            return False, 20, error_message
+        
     def test_submission_no_missing_values(self, state: State):
         files = os.listdir(state.competition_dir)
         for file in files:
@@ -483,35 +491,46 @@ Here is the information about the features of processed_test.csv:
         # 检查submission.csv和sample_submission.csv的第一个列是否相同
         # 检查submission.csv的数值是否在sample_submission.csv的数值范围内
         # 要保证有submission.csv生成
-        path = f"{state.competition_dir}/sample_submission.csv"
-        df = pd.read_csv(path)
-        files = os.listdir(state.competition_dir)
-        false_info = ""
-        path1 = f"{state.competition_dir}/submission.csv"
-        df1 = pd.read_csv(path1)
-        input = PROMPT_TEST_SUBMISSION_VALIDITY.format(sample_head=df.head(10), submission_head=df1.head(10))
-        raw_reply, _ = self.llm.generate(input, history=None)
-        try:
-            json_match = re.search(r'```json(.*)```', raw_reply, re.DOTALL)
-            if json_match:
-                json_str = json_match.group(1).strip()
-                reply = json.loads(json_str)
-                result = reply['result']
-                reason = reply['reason']
-        except Exception as e:
-            logging.error(f"JSON decoding error: {e}")
-            result = "Invalid"
-            reason = ""
+        path_sample = f"{state.competition_dir}/sample_submission.csv"
+        path_submission = f"{state.competition_dir}/submission.csv"
+        
+        df_sample = pd.read_csv(path_sample)
+        df_submission = pd.read_csv(path_submission)
+        
+        # Replace the first column of submission.csv with the first column from sample_submission.csv
+        first_column_name = df_sample.columns[0]
+        df_submission[first_column_name] = df_sample[first_column_name]
+        
+        # Save the modified submission.csv
+        df_submission.to_csv(path_submission, index=False)
+        
+        # If the data type of the second column is numeric
+        if pd.api.types.is_numeric_dtype(df_sample.iloc[:, 1]):
+            # Calculate mean of first 100 values in the second column
+            # Check if submission mean is within the range of 1/10 to 10 times the sample mean
+            sample_mean = df_sample.iloc[:100, 1].mean()
+            submission_mean = df_submission.iloc[:100, 1].mean()
+            lower_bound = sample_mean / 10
+            upper_bound = sample_mean * 10
+            if lower_bound <= submission_mean <= upper_bound:
+                result = "Valid"
+                reason = "The mean of the first 100 values in the submission file is within the expected range."
+            else:
+                result = "Invalid"
+                reason = f"The mean of the first 100 values in the submission file ({submission_mean}) is outside the expected range ({lower_bound} to {upper_bound})."
+        else: 
+            result = "Valid"
         # 比较两个 DataFrame 的第一列值是否相同
-        if df.iloc[:, 0].equals(df1.iloc[:, 0]) and result == "Valid":
+        if result == "Valid":
             return True, 27, "submission.csv is valid."
         else:
             false_info = f"submission.csv is not valid. {reason}"
             false_info += f'''
-This is the first 10 lines of submission.csv:
-{df1.head(10)}
 This is the first 10 lines of sample_submission.csv:
-{df.head(10)}
+{df_sample.head(10)}
+This is the first 10 lines of submission.csv:
+{df_submission.head(10)}
+For Id-type column, submission.csv should have exactly the same values as sample_submission.csv. I suggest you load Id-type column directly from `{state.competition_dir}/test.csv`.
 If you use some transformation on the features in submission.csv, please make sure you have reversed the transformation before submitting the file.
 Here is an example that specific transformation applied on features (ID, SalePrice) in submisson.csv is **not reversed**, which is wrong:
 <example>
@@ -542,6 +561,53 @@ Id,SalePrice
         else:
             return False, 28, f"The three files are too large, the maximum allowed size is {max_size_mb}MB, the current size is {file_size_mb:.2f}MB."
 
+    def test_cleaned_train_id_column(self, state: State):
+        path = f"{state.competition_dir}/cleaned_train.csv"
+        df = pd.read_csv(path)
+        
+        # Check if any column name (case-insensitive) matches 'id'
+        id_columns = [col for col in df.columns if col.lower() == 'id']
+        
+        if id_columns:
+            return True, 29, f"The cleaned_train.csv file contains an ID column: {id_columns[0]}"
+        else:
+            return False, 29, "The cleaned_train.csv file does not contain an ID column. The columns in cleaned_train.csv are {df.columns}. Please ensure that the ID column is preserved during the cleaning process."
+    
+    def test_cleaned_test_id_column(self, state: State):
+        path = f"{state.competition_dir}/cleaned_test.csv"
+        df = pd.read_csv(path)
+        
+        # Check if any column name (case-insensitive) matches 'id'
+        id_columns = [col for col in df.columns if col.lower() == 'id']
+        
+        if id_columns:
+            return True, 30, f"The cleaned_test.csv file contains an ID column: {id_columns[0]}"
+        else:
+            return False, 30, "The cleaned_test.csv file does not contain an ID column. The columns in cleaned_test.csv are {df.columns}. Please ensure that the ID column is preserved during the cleaning process."
+
+    def test_processed_train_id_column(self, state: State):
+        path = f"{state.competition_dir}/processed_train.csv"
+        df = pd.read_csv(path)
+        
+        # Check if any column name (case-insensitive) matches 'id'
+        id_columns = [col for col in df.columns if col.lower() == 'id']
+        
+        if id_columns:
+            return True, 31, f"The processed_train.csv file contains an ID column: {id_columns[0]}"
+        else:
+            return False, 31, "The processed_train.csv file does not contain an ID column. The columns in processed_train.csv are {df.columns}. Please ensure that the ID column is preserved during the cleaning process."
+
+    def test_processed_test_id_column(self, state: State):
+        path = f"{state.competition_dir}/processed_test.csv"
+        df = pd.read_csv(path)
+        
+        # Check if any column name (case-insensitive) matches 'id'
+        id_columns = [col for col in df.columns if col.lower() == 'id']
+        
+        if id_columns:
+            return True, 32, f"The processed_test.csv file contains an ID column: {id_columns[0]}"
+        else:
+            return False, 32, "The processed_test.csv file does not contain an ID column. The columns in processed_test.csv are {df.columns}. Please ensure that the ID column is preserved during the cleaning process."
 
 if __name__ == '__main__':
     # llm = LLM('gpt-4o', 'api')

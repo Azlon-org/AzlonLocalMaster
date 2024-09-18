@@ -25,7 +25,7 @@ class DebugTool:
     ):
         self.llm = LLM(model, type)
 
-    def debug_code_with_error(self, state: State, output_messages: str, all_error_messages: list, previous_code: str, wrong_code: str, error_messages: str) -> str:
+    def debug_code_with_error(self, state: State, all_error_messages: list, output_messages: str, previous_code: str, wrong_code: str, error_messages: str, tools: str, tool_names: list) -> str:
         debug_times = len(all_error_messages)
         print(f"Debug times: {debug_times}")
 
@@ -37,7 +37,9 @@ class DebugTool:
             error_messages=error_messages,
             output_messages=output_messages
         )
-        locate_reply, locate_history = self.llm.generate(input, [], max_tokens=4096)
+        _, locate_history = self.llm.generate(input, [], max_tokens=4096)
+        input = f"# TOOL DESCRIPTIONS #\n{tools}"
+        locate_reply, locate_history = self.llm.generate(input, locate_history, max_tokens=4096)
         single_round_debug_history.append(locate_history)
         with open(f'{state.restore_dir}/debug_locate_error.txt', 'w') as f:
             f.write(locate_reply)
@@ -60,7 +62,8 @@ class DebugTool:
         input = PROMPT_DEVELOPER_DEBUG_FIX.format(
             most_relevant_code_snippet=most_relevant_code_snippet,
             error_messages=error_messages,
-            output_messages=output_messages
+            output_messages=output_messages,
+            tools=tools
         )
         fix_reply, fix_bug_history = self.llm.generate(input, [], max_tokens=4096)
         single_round_debug_history.append(fix_bug_history)

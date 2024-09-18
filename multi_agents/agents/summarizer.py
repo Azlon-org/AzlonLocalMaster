@@ -136,6 +136,8 @@ class Summarizer(Agent):
         input = PROMPT_SUMMARIZER_REORGANIZE_ANSWERS
         reorganize_answers_reply, answer_questions_history = self.llm.generate(input, answer_questions_history, max_tokens=4096)
         report = self._parse_markdown(reorganize_answers_reply)
+        feature_info = self._get_feature_info(state)
+        report = feature_info + report
         with open(f'{state.restore_dir}/report.txt', 'w') as f:
             f.write(report)
         history.append(answer_questions_history)

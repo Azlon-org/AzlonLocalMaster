@@ -1,49 +1,94 @@
+PREFIX_IN_CODE_FILE = '''import sys
+import os
+sys.path.extend(['.', '..', '../..', '../../..', '../../../..', 'multi_agents', 'multi_agents/tools', 'multi_agents/prompts'])
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+from tools.ml_tools import *
+
+def generated_code_function():
+    import numpy as np
+    import pandas as pd'''
+
+
 PROMPT_DEVELOPER_TASK = '''
-Develop a solution based on the plan provided by the Planner. 
-Implement the specific tasks and methods outlined in the plan, ensuring that the code is clear, concise, and efficient.
-You must consider the data types, project requirements, and resource constraints. 
-Ensure that the code is well-documented and can be easily understood by others.
+Develop an efficient solution based on the Planner's provided plan:
+1. Implement specific tasks and methods outlined in the plan
+2. Ensure code is clear, concise, and well-documented
+3. Utilize available tools by calling them with correct parameters
+4. Consider data types, project requirements, and resource constraints
+5. Write code that is easily understandable by others
+
+Remember to balance efficiency with readability and maintainability.
+'''
+
+
+PROMPT_AVAILABLE_TOOLS = '''
+# AVAILABLE TOOLS #
+## TOOL LIST ##
+You have access to the following tools:
+{tool_names}
+## USAGE INSTRUCTIONS ##
+1. These tools are pre-defined and pre-imported in the system. You do NOT need to implement them or import them again.
+2. Use these tools by calling them with the correct parameters.
+3. Example: To drop specific columns, use the `remove_columns_with_missing_data` tool with appropriate parameters.
+## ADDITIONAL RESOURCES ##
+You can also use functions from public libraries such as:
+- Pandas
+- NumPy
+- Scikit-learn
+- etc.
+## DETAILED TOOL DESCRIPTIONS ##
+{tools}
 '''
 
 
 PROMPT_DEVELOPER_CONSTRAINTS = '''
 # CONSTRAINTS #
-## FILE SAVE PATH ##
-- Always save the image file in the `{restore_path}/images/` directory.
-- Always save the data file in the `{competition_path}/` directory.
-## FILE NAME ##
-- Always name the image file with clear and meaningful names related to the content which makes it easy to understand.
-- Always choose the correct name for data file from the following options: `cleaned_train.csv`, `cleaned_test.csv`, `processed_train.csv`, `processed_test.csv`. Note you are in phase: {phase_name}.
-## RESOURCE CONSTRAINTS ##
-- Always consider the runtime and efficiency of your code when writing code, especially for data visualization, handling large datasets, or complex algorithms.
-<example>
-Data visualization: When using libraries such as seaborn or matplotlib to create plots, consider turning off unnecessary details (e.g., annot=False in heatmaps), especially when the number of data points is large.
-</example>
-- Always consider resource constraints and limit the number of generated images to ensure that they do not exceed 10 when performing Exploratory Data Analysis (EDA), 
-    - **Note that the generated images should be LIMITED to the most critical visualizations that provide valuable insights.**
-## CODING RULES ##
-- Always use `print()` function if you need to print a value. 
-- Always use `plt.close()` to close the figure after saving the image.
-- Always make sure that the data types of each column in the dataset are correct before performing any data computation, analysis, or other operations.
-- Do NOT write any `assert` statements.
-<example>
-- Before calculating a correlation matrix, confirm that the dataset only contains numerical data. If there is non-numerical data, handle it appropriately, such as by removing or converting it to numerical data.
-- Before performing data merging or joining operations, ensure that the data types of all relevant columns are consistent to avoid errors caused by type mismatches.
-</example>
-- Always ensure that the same modifications, such as feature scaling, missing value handling, and categorical variable encoding, are applied to both the training set and the test set when handling datasets. 
-    - Note that the test dataset typically does not include the target variable, so special care must be taken when applying target encoding or feature engineering that depends on the target variable.
-- Always copy the DataFrame before processing it and use the copy to process.
+
+## DATA HANDLING ##
+1. Data Loading:
+   - Always load data files from the `{competition_path}/` directory.
+   - Use specific files for each phase:
+     - Data Cleaning: `train.csv` and `test.csv`
+     - Feature Engineering: `cleaned_train.csv` and `cleaned_test.csv`
+     - Model Building, Validation, and Prediction: `processed_train.csv` and `processed_test.csv`
+
+2. Data Saving:
+   - Save image files in the `{restore_path}/images/` directory.
+   - Save data files in the `{competition_path}/` directory.
+   - Use clear, meaningful names for image files that reflect their content.
+   - Save specific files for each phase:
+     - Data Cleaning: `cleaned_train.csv` and `cleaned_test.csv`
+     - Feature Engineering: `processed_train.csv` and `processed_test.csv`
+
+3. Data Processing:
+   - Always work on a copy of the DataFrame, not the original.
+   - Ensure correct data types for all columns before any operations.
+   - Apply consistent modifications (e.g., scaling, encoding) to both training and test sets.
+   - Take care with target-dependent operations on the test set, which lacks the target variable.
+   - Do NOT modify Id-type columns.
+
+## CODING PRACTICES ##
+1. General Rules:
+   - Use `print()` for outputting values.
+   - Avoid writing `assert` statements.
+
+2. Visualization:
+   - Use `plt.close()` after saving each image.
+   - Limit EDA visualizations to 10 or fewer, focusing on the most insightful.
+   - Optimize for large datasets (e.g., `annot=False` in seaborn heatmaps).
+
+3. Efficiency:
+   - Prioritize runtime efficiency, especially for:
+     - Data visualization
+     - Large dataset handling
+     - Complex algorithms
+
+## EXAMPLES ##
+- Before calculating a correlation matrix, ensure all data is numerical. Handle non-numerical data appropriately.
+- Verify consistent data types across columns before merging or joining operations.
+
+Remember: Always consider resource constraints and prioritize efficiency in your code.
 '''
-
-# - At each critical step of writing code, always reasonable `assert` statements to verify the correctness of the code segments and the successful execution of step {phase_name}.
-#     - If current step is Preliminary EDA or In-depth EDA, do NOT write `assert` statements.
-# <example>
-# After data cleaning, you can use assert statements to check whether the cleaned dataset is empty or if the data types of specific columns meet expectations.
-# </example>
-
-# <example>   
-# When using the matplotlib library for visualizing multiple subplots, if you need to display relationships between multiple variables, you can set up subplots within a single figure window instead of generating separate plots for each variable relationship. This approach not only makes effective use of visual space but also adheres to the rule of limiting the number of generated plots. For example, if there are 12 variable combinations, you can choose the most critical 10 combinations to display.
-# </example>
 
 
 PROMPT_DEVELOPER = '''
@@ -51,6 +96,7 @@ PROMPT_DEVELOPER = '''
 {phases_in_context}
 Currently, I am at phase: {phase_name}.
 {state_info}
+
 #############
 # COMPETITION INFORMATION #
 {competition_info}
@@ -66,19 +112,28 @@ Currently, I am at phase: {phase_name}.
 #############
 # RESPONSE: BLOCK (CODE & EXPLANATION) #
 TASK 1:
-THOUGHT PROCESS
-CODE
-EXPLANATION
+THOUGHT PROCESS:
+[Explain your approach and reasoning]
+CODE:
+```python
+[code]
+```
+EXPLANATION:
+[Brief explanation of the code and its purpose]
+
 TASK 2:
-THOUGHT PROCESS
-CODE
-EXPLANATION
+[Repeat the above structure for each task/subtask]
+
 ...
 
 #############
 # START CODING #
-If you understand, please request the code and insight from previous phases, all the features of the data and 10 data samples in both training data and test data from me.
-You should output all the code and explanation in ONE response (After you request the information from me).
+Before you begin, please request the following information from me:
+1. Code from previous phases
+2. All features of the data
+3. Available tools
+
+Once you have this information, provide your complete response with code and explanations for all tasks in a single message.
 '''
 
 
@@ -87,6 +142,7 @@ PROMPT_DEVELOPER_WITH_EXPERIENCE_ROUND0_0 = '''
 {phases_in_context}
 Currently, I am at phase:{phase_name}.
 {state_info}
+
 #############
 # COMPETITION INFORMATION #
 {competition_info}
@@ -97,11 +153,20 @@ Currently, I am at phase:{phase_name}.
 
 #############
 # TASK #
-{task} In the past, you have attempted this task multiple times. However, due to errors in your answers or insufficient quality, you have not succeeded. 
-I will provide you with your previous attempts' experiences and a professional reviewer's suggestions for improvement (PREVIOUS EXPERIENCE WITH SUGGESTION). Based on these, please learn from previous experience, try again to mitigate similar failures and successfully complete the task.
-You must follow these subtasks:
-1. Analyze the previous experience and suggestions. Think about what went wrong and how you can improve.
-2. Develop a new solution based on the previous experience and suggestions.
+{task} 
+You have attempted this task multiple times but have not succeeded due to errors or insufficient quality in your answers.
+
+I will provide you with:
+1. Your previous attempts' experiences
+2. A professional reviewer's suggestions for improvement
+
+This information will be in the "PREVIOUS EXPERIENCE WITH SUGGESTION" section below.
+
+You must complete the following subtasks:
+1. Analyze the previous experience and suggestions
+   - Think about what went wrong
+   - Consider how you can improve
+2. Develop a new solution based on your analysis
 
 #############
 # PREVIOUS EXPERIENCE WITH SUGGESTION #
@@ -109,27 +174,35 @@ You must follow these subtasks:
 
 #############
 # RESPONSE #
-Subtask 1: Analyze the previous experience and suggestions. Think about what went wrong and how you can improve.
-You should ONLY focus on Subtask1.
-Let's work **Subtask1** out in a step by step way.
+Focus ONLY on Subtask 1: Analyze the previous experience and suggestions
+Approach Subtask 1 step by step in your response
 
 #############
 # START ANALYSIS #
-If you understand, please request the code and insight from previous phases, all the features of the data and 10 data samples in both training data and test data from me. Then you can start analyzing the previous experience and suggestions.
-'''
+Before you begin, please request the following information from me:
+1. Code from previous phases
+2. All features of the data
+3. Available tools
 
+Once you have this information, begin your analysis of the previous experience and suggestions.
+'''
 
 PROMPT_DEVELOPER_WITH_EXPERIENCE_ROUND0_2 = '''
 # RESPONSE: BLOCK (CODE & EXPLANATION) #
 Subtask 2: Develop a new solution based on the previous experience and suggestions.
 TASK 1:
-THOUGHT PROCESS
-CODE
-EXPLANATION
+THOUGHT PROCESS:
+[Explain your approach and reasoning]
+CODE:
+```python
+[code]
+```
+EXPLANATION:
+[Brief explanation of the code and its purpose]
+
 TASK 2:
-THOUGHT PROCESS
-CODE
-EXPLANATION
+[Repeat the above structure for each task/subtask]
+
 ...
 
 #############
@@ -145,13 +218,25 @@ I'm getting an error executing the code you generated.
 
 #############
 # TASK #
-Please locate the error in the code and output the most relevant code snippet causes error (5 to 10 lines in length). 
-I will provide you with the previous code, code contains error, error messages and output messages of code.
-NOTE that if assert statements just reports the error, you must find out the most relevant code snippet which makes the assert statement fail, not output the assert statement itself.
-    - However, if you believe the assert statement is redundant, you can output it.
-    - This rule can be apply to raise error statement or other statements that only used to give information without performing any calculations, drawing graphs, or making changes to the dataset.
-NOTE that the **last** code snippet in your response should be the **most relevant code snippet causes error** that I ask you to output.
-DO NOT correct the error in this step. Just analyze and locate the error.
+Locate and identify the most relevant code snippet causing the error (5 to 10 lines in length).
+
+## Input Provided ##
+1. Previous code
+2. Code containing the error
+3. Error messages
+4. Output messages of the code
+5. Tools used in this phase (with detailed descriptions)
+
+## Instructions ##
+1. Analyze the provided information to identify the error source.
+2. Focus on the code that causes the error, not just error reporting statements.
+3. If an assert statement or similar construct merely reports an error:
+   - Identify the underlying code causing the assert to fail.
+   - Only output the assert statement if you believe it's redundant or incorrect.
+   - Apply this rule to raise statements or other error-reporting constructs that don't perform calculations, create graphs, or modify data.
+4. Do NOT attempt to correct the error in this step.
+
+Note: Ensure the final code snippet in your response is the most relevant error-causing code.
 
 #############
 # PREVIOUS CODE #
@@ -172,6 +257,11 @@ DO NOT correct the error in this step. Just analyze and locate the error.
 #############
 # RESPONSE: MOST RELEVANT CODE SNIPPET CAUSES ERROR #
 Let's work this out in a step by step way. 
+
+#############
+# START LOCATION ERROR #
+Before you begin, please request the following information from me:
+1. Tool Descriptions
 '''
 
 PROMPT_DEVELOPER_DEBUG_ASK_FOR_HELP = '''
@@ -207,7 +297,7 @@ I have an error code snippet with error messages.
 
 #############
 # TASK #
-Please correct the error code snippet according to the error messages and output messages of code. You must follow these steps:
+Please correct the error code snippet according to the error messages, output messages of code and tools' descriptions. You must follow these steps:
 1. Analyze why the error code snippet causes the error according to the error messages and output messages of code.
 2. Think about how to correct the error code snippet.
 3. Correct the error code snippet.
@@ -224,6 +314,10 @@ NOTE that the **last** code snippet in your response should be the **code snippe
 #############
 # OUTPUT MESSAGES #
 {output_messages}
+
+#############
+# TOOL DESCRIPTIONS #
+{tools}
 
 #############
 # RESPONSE: CODE SNIPPET AFTER CORRECTION #

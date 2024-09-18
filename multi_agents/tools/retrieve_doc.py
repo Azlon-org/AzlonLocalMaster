@@ -4,8 +4,7 @@ import sys
 from tqdm import tqdm
 from html2text import html2text
 
-sys.path.append('/Users/qianbo.zang/Documents/GitHub/AutoKaggleMaster/multi_agents')
-sys.path.append('/Users/qianbo.zang/Documents/GitHub/AutoKaggleMaster')
+sys.path.extend(['.', '..'])
 from llm import OpenaiEmbeddings, LLM
 from memory import Memory, split_text
 
