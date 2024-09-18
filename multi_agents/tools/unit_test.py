@@ -27,6 +27,10 @@ class TestTool:
         self.llm = LLM(model, type)
         self.memory = memory
         # self.summary_ducument = summary_ducument
+        # 不限制显示列数
+        pd.set_option('display.max_columns', None)
+        # 不限制显示行数
+        pd.set_option('display.max_rows', None)
 
     def execute_tests(self, state: State):
         not_pass_tests = []
@@ -358,8 +362,8 @@ Here is the information about the features of processed_test.csv:
             return True, 19, "The cleaned_train.csv file has one more column than cleaned_test.csv, which is the target column, please continue to the next step of the process"
         else:
             error_message = f"The cleaned_train.csv file has different columns from cleaned_test.csv, please find the difference between the two files and find out the reason. cleaned_train.csv should only have one more column than cleaned_test.csv, which is the target column {target_column[0]}.\n"
-            error_message += f"Features in cleaned_train.csv: {df_train.columns}.\n"
-            error_message += f"Features in cleaned_test.csv: {df_test.columns}.\n"
+            # error_message += f"Features in cleaned_train.csv: {df_train.columns}.\n"
+            # error_message += f"Features in cleaned_test.csv: {df_test.columns}.\n"
             error_message += f"Columns only in cleaned_train.csv: {train_only_columns}\n"
             error_message += f"Columns only in cleaned_test.csv: {test_only_columns}"
             return False, 19, error_message
@@ -385,8 +389,8 @@ Here is the information about the features of processed_test.csv:
             return True, 20, "The processed_train.csv file has one more column than processed_test.csv, which is the target column, please continue to the next step of the process"
         else:
             error_message = f"The processed_train.csv file has different columns from processed_test.csv, please find the difference between the two files and find out the reason. processed_train.csv should only have one more column than processed_test.csv, which is the target column {target_column[0]}.\n"
-            error_message += f"Features in processed_train.csv: {df_train.columns}.\n"
-            error_message += f"Features in processed_test.csv: {df_test.columns}.\n"
+            # error_message += f"Features in processed_train.csv: {df_train.columns}.\n"
+            # error_message += f"Features in processed_test.csv: {df_test.columns}.\n"
             error_message += f"Columns only in processed_train.csv: {train_only_columns}\n"
             error_message += f"Columns only in processed_test.csv: {test_only_columns}"
             return False, 20, error_message
