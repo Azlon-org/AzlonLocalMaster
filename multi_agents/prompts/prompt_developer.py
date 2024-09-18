@@ -260,8 +260,9 @@ Let's work this out in a step by step way.
 
 #############
 # START LOCATION ERROR #
-Before you begin, please request the following information from me:
+Please request the following information from me:
 1. Tool Descriptions
+After you get the tool descriptions, you can start to locate the error.
 '''
 
 PROMPT_DEVELOPER_DEBUG_ASK_FOR_HELP = '''

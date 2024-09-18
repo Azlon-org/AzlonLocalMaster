@@ -239,6 +239,7 @@ class Developer(Agent):
         test_tool = TestTool(memory=None, model='gpt-4o', type='api')
         not_pass_flag = False
         not_pass_tests = test_tool.execute_tests(state) # [(test1_number, test1_information), ...] 全通过返回[]
+        print(f"There are {len(not_pass_tests)} not pass tests.")
         not_pass_information = ""
         if not_pass_tests:
             not_pass_flag = True

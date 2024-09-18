@@ -306,23 +306,6 @@ Here is the information about the features of processed_test.csv:
 '''
             return False, 16, false_info
 
-    def test_processed_train_no_missing_target(self, state: State):
-        # read train.csv and test.csv
-        path_train = f"{state.competition_dir}/train.csv"
-        path_test = f"{state.competition_dir}/test.csv"
-        path_processed_train = f"{state.competition_dir}/processed_train.csv"
-        
-        train_columns = pd.read_csv(path_train).columns
-        test_columns = pd.read_csv(path_test).columns
-        target_column = [col for col in train_columns if col not in test_columns]
-
-        # check if the target column is in the processed_train.csv
-        df = pd.read_csv(path_processed_train)
-        if target_column[0] in df.columns:
-            return True, 17, "The target column is in the processed_train.csv file, please continue to the next step of the process"
-        else:
-            return False, 17, f"The target column {target_column[0]} is not in the processed_train.csv file, please reprocess it"
-
     def test_cleaned_train_no_missing_target(self, state: State):
         # read train.csv and test.csv
         path_train = f"{state.competition_dir}/train.csv"
@@ -336,9 +319,58 @@ Here is the information about the features of processed_test.csv:
         # check if the target column is in the cleaned_train.csv
         df = pd.read_csv(path_cleaned_train)
         if target_column[0] in df.columns:
-            return True, 18, "The target column is in the cleaned_train.csv file, please continue to the next step of the process"
+            return True, 17, "The target column is in the cleaned_train.csv file, please continue to the next step of the process"
         else:
-            return False, 18, f"The target column {target_column[0]} is not in the cleaned_train.csv file, please reprocess it"
+            return False, 17, f"The target column {target_column[0]} is not in the cleaned_train.csv file, please reprocess it"
+        
+    def test_cleaned_test_no_target_column(self, state: State):
+        # read train.csv and test.csv
+        path_train = f"{state.competition_dir}/train.csv"
+        path_test = f"{state.competition_dir}/test.csv"
+        path_cleaned_test = f"{state.competition_dir}/cleaned_test.csv"
+        
+        train_columns = pd.read_csv(path_train).columns
+        test_columns = pd.read_csv(path_test).columns
+        target_column = [col for col in train_columns if col not in test_columns]
+
+        df = pd.read_csv(path_cleaned_test)
+        if target_column[0] in df.columns:
+            return False, 18, f"The target column {target_column[0]} is in the cleaned_test.csv file, please reprocess it"
+        else:
+            return True, 18, "The target column is not in the cleaned_test.csv file, please continue to the next step of the process"
+        
+    def test_processed_train_no_missing_target(self, state: State):
+        # read train.csv and test.csv
+        path_train = f"{state.competition_dir}/train.csv"
+        path_test = f"{state.competition_dir}/test.csv"
+        path_processed_train = f"{state.competition_dir}/processed_train.csv"
+        
+        train_columns = pd.read_csv(path_train).columns
+        test_columns = pd.read_csv(path_test).columns
+        target_column = [col for col in train_columns if col not in test_columns]
+
+        # check if the target column is in the processed_train.csv
+        df = pd.read_csv(path_processed_train)
+        if target_column[0] in df.columns:
+            return True, 19, "The target column is in the processed_train.csv file, please continue to the next step of the process"
+        else:
+            return False, 19, f"The target column {target_column[0]} is not in the processed_train.csv file, please reprocess it"
+
+    def test_processed_test_no_target_column(self, state: State):
+        # read train.csv and test.csv
+        path_train = f"{state.competition_dir}/train.csv"
+        path_test = f"{state.competition_dir}/test.csv"
+        path_processed_test = f"{state.competition_dir}/processed_test.csv"
+        
+        train_columns = pd.read_csv(path_train).columns
+        test_columns = pd.read_csv(path_test).columns
+        target_column = [col for col in train_columns if col not in test_columns]
+
+        df = pd.read_csv(path_processed_test)
+        if target_column[0] in df.columns:
+            return False, 20, f"The target column {target_column[0]} is in the processed_test.csv file, please reprocess it"
+        else:
+            return True, 20, "The target column is not in the processed_test.csv file, please continue to the next step of the process"
         
     def test_cleaned_difference_train_test_columns(self, state: State):
         # test if the columns in cleaned_train.csv only has one more column than cleaned_test.csv, which is the target column
@@ -359,14 +391,14 @@ Here is the information about the features of processed_test.csv:
         test_only_columns = set(df_test.columns) - set(df_train.columns)
         
         if len(df_train.columns) == len(df_test.columns) + 1 and target_column[0] in df_train.columns and len(target_column) == 1:
-            return True, 19, "The cleaned_train.csv file has one more column than cleaned_test.csv, which is the target column, please continue to the next step of the process"
+            return True, 21, "The cleaned_train.csv file has one more column than cleaned_test.csv, which is the target column, please continue to the next step of the process"
         else:
             error_message = f"The cleaned_train.csv file has different columns from cleaned_test.csv, please find the difference between the two files and find out the reason. cleaned_train.csv should only have one more column than cleaned_test.csv, which is the target column {target_column[0]}.\n"
             # error_message += f"Features in cleaned_train.csv: {df_train.columns}.\n"
             # error_message += f"Features in cleaned_test.csv: {df_test.columns}.\n"
             error_message += f"Columns only in cleaned_train.csv: {train_only_columns}\n"
             error_message += f"Columns only in cleaned_test.csv: {test_only_columns}"
-            return False, 19, error_message
+            return False, 21, error_message
     
     def test_processed_difference_train_test_columns(self, state: State):
         path_train = f"{state.competition_dir}/train.csv"
@@ -386,14 +418,14 @@ Here is the information about the features of processed_test.csv:
         test_only_columns = set(df_test.columns) - set(df_train.columns)
 
         if len(df_train.columns) == len(df_test.columns) + 1 and target_column[0] in df_train.columns and len(target_column) == 1:
-            return True, 20, "The processed_train.csv file has one more column than processed_test.csv, which is the target column, please continue to the next step of the process"
+            return True, 22, "The processed_train.csv file has one more column than processed_test.csv, which is the target column, please continue to the next step of the process"
         else:
             error_message = f"The processed_train.csv file has different columns from processed_test.csv, please find the difference between the two files and find out the reason. processed_train.csv should only have one more column than processed_test.csv, which is the target column {target_column[0]}.\n"
             # error_message += f"Features in processed_train.csv: {df_train.columns}.\n"
             # error_message += f"Features in processed_test.csv: {df_test.columns}.\n"
             error_message += f"Columns only in processed_train.csv: {train_only_columns}\n"
             error_message += f"Columns only in processed_test.csv: {test_only_columns}"
-            return False, 20, error_message
+            return False, 22, error_message
         
     def test_submission_no_missing_values(self, state: State):
         files = os.listdir(state.competition_dir)
@@ -404,9 +436,9 @@ Here is the information about the features of processed_test.csv:
                 df = pd.read_csv(path)
                 missing_columns = df.columns[df.isnull().any()].tolist()
                 if df.isnull().sum().sum() == 0:
-                    return True, 21, "The submission.csv file has no missing values, please continue to the next step of the process"
+                    return True, 23, "The submission.csv file has no missing values, please continue to the next step of the process"
                 else:
-                    return False, 21, f"There are missing values in the submission.csv file. The columns with missing values are: {', '.join(missing_columns)}"
+                    return False, 23, f"There are missing values in the submission.csv file. The columns with missing values are: {', '.join(missing_columns)}"
 
     def test_processed_train_no_missing_values(self, state: State):
         path = f"{state.competition_dir}/processed_train.csv"
@@ -415,14 +447,14 @@ Here is the information about the features of processed_test.csv:
         missing_columns = missing_info[missing_info > 0]
 
         if missing_columns.empty:
-            return True, 22, "The processed_train.csv file has no missing values, please continue to the next step of the process"
+            return True, 24, "The processed_train.csv file has no missing values, please continue to the next step of the process"
         else:
             missing_details = []
             for col, count in missing_columns.items():
                 percentage = (count / len(df)) * 100
                 missing_details.append(f"{col}: {count} ({percentage:.2f}%)")
             
-            return False, 22, f"There are missing values in the processed_train.csv file. Detailed missing value information:\n" + "\n".join(missing_details) + "\nDo NOT fill the missing values with another NaN-type value, such as 'None', 'NaN', or 'nan'."
+            return False, 24, f"There are missing values in the processed_train.csv file. Detailed missing value information:\n" + "\n".join(missing_details) + "\nDo NOT fill the missing values with another NaN-type value, such as 'None', 'NaN', or 'nan'."
 
     def test_processed_test_no_missing_values(self, state: State):
         path = f"{state.competition_dir}/processed_test.csv"
@@ -431,14 +463,14 @@ Here is the information about the features of processed_test.csv:
         missing_columns = missing_info[missing_info > 0]
 
         if missing_columns.empty:
-            return True, 23, "The processed_test.csv file has no missing values, please continue to the next step of the process"
+            return True, 25, "The processed_test.csv file has no missing values, please continue to the next step of the process"
         else:
             missing_details = []
             for col, count in missing_columns.items():
                 percentage = (count / len(df)) * 100
                 missing_details.append(f"{col}: {count} ({percentage:.2f}%)")
             
-            return False, 23, f"There are missing values in the processed_test.csv file. Detailed missing value information:\n" + "\n".join(missing_details) + "\nDo NOT fill the missing values with another NaN-type value, such as 'None', 'NaN', or 'nan'."
+            return False, 25, f"There are missing values in the processed_test.csv file. Detailed missing value information:\n" + "\n".join(missing_details) + "\nDo NOT fill the missing values with another NaN-type value, such as 'None', 'NaN', or 'nan'."
 
     def test_image_num(self, state: State):
         image_count = 0
@@ -453,9 +485,9 @@ Here is the information about the features of processed_test.csv:
             if entry.is_file() and entry.name.lower().endswith(('.png', '.jpg', '.jpeg', '.bmp', '.gif', '.tiff')):
                 image_count += 1
         if image_count > 10:
-            return False, 24, f"The number of images in the path is {image_count}, greater than 10, please re-process to reduce the number of images to 10 or less."
+            return False, 26, f"The number of images in the path is {image_count}, greater than 10, please re-process to reduce the number of images to 10 or less."
         else:
-            return True, 24, "Number of images is less than or equal to 10, unit test passed, please continue to the next step of the process"
+            return True, 26, "Number of images is less than or equal to 10, unit test passed, please continue to the next step of the process"
     
     def test_file_num_submission(self, state: State):
         path = f"{state.competition_dir}/sample_submission.csv"
@@ -467,13 +499,13 @@ Here is the information about the features of processed_test.csv:
                 path1 = f"{state.competition_dir}/{file}"
                 df1 = pd.read_csv(path1)
                 if len(df) == len(df1):
-                    return True, 25, "submission.csv and sample_submission.csv files have the same number of rows, unit test passed"
+                    return True, 27, "submission.csv and sample_submission.csv files have the same number of rows, unit test passed"
                 else:
                     # aslo report missing rows number
                     row_inx_sample = set(df.index)
                     row_inx_submission = set(df1.index)
                     missing_rows = row_inx_sample - row_inx_submission
-                    return False, 25, f"submission.csv and sample_submission.csv files have different number of rows. submission.csv has {len(df1)} rows, while sample_submission.csv has {len(df)} rows. Missing rows are: {missing_rows}."
+                    return False, 27, f"submission.csv and sample_submission.csv files have different number of rows. submission.csv has {len(df1)} rows, while sample_submission.csv has {len(df)} rows. Missing rows are: {missing_rows}."
     
     def test_column_names_submission(self, state: State):
         path = f"{state.competition_dir}/sample_submission.csv"
@@ -486,9 +518,9 @@ Here is the information about the features of processed_test.csv:
                 df1 = pd.read_csv(path1)
                 # 比较两个 DataFrame 的列名集合是否相同
                 if list(df.columns) == list(df1.columns):
-                    return True, 26, "submission.csv and sample_submission.csv files have the same column names, unit test passed"
+                    return True, 28, "submission.csv and sample_submission.csv files have the same column names, unit test passed"
                 else:
-                    return False, 26, f"submission.csv and sample_submission.csv files have different column names or different column order. submission.csv has columns: {set(df1.columns)}, while sample_submission.csv has columns: {set(df.columns)}."
+                    return False, 28, f"submission.csv and sample_submission.csv files have different column names or different column order. submission.csv has columns: {set(df1.columns)}, while sample_submission.csv has columns: {set(df.columns)}."
 
     
     def test_submission_validity(self, state: State):
@@ -526,7 +558,7 @@ Here is the information about the features of processed_test.csv:
             result = "Valid"
         # 比较两个 DataFrame 的第一列值是否相同
         if result == "Valid":
-            return True, 27, "submission.csv is valid."
+            return True, 29, "submission.csv is valid."
         else:
             false_info = f"submission.csv is not valid. {reason}"
             false_info += f'''
@@ -549,7 +581,7 @@ Id,SalePrice
 1462,187758.393988768
 </example>
 '''
-            return False, 27, false_info
+            return False, 29, false_info
     
     
     def test_file_size(self, state: State):
@@ -561,9 +593,9 @@ Id,SalePrice
         path = f"{state.competition_dir}/sample_submission.csv"
         file_size_mb += os.path.getsize(path) / (1024 * 1024)
         if file_size_mb < max_size_mb:
-            return True, 28, "File size less than 100M, unit test passed"
+            return True, 30, "File size less than 100M, unit test passed"
         else:
-            return False, 28, f"The three files are too large, the maximum allowed size is {max_size_mb}MB, the current size is {file_size_mb:.2f}MB."
+            return False, 30, f"The three files are too large, the maximum allowed size is {max_size_mb}MB, the current size is {file_size_mb:.2f}MB."
 
     def test_cleaned_train_id_column(self, state: State):
         path = f"{state.competition_dir}/cleaned_train.csv"
@@ -573,9 +605,9 @@ Id,SalePrice
         id_columns = [col for col in df.columns if col.lower() == 'id']
         
         if id_columns:
-            return True, 29, f"The cleaned_train.csv file contains an ID column: {id_columns[0]}"
+            return True, 31, f"The cleaned_train.csv file contains an ID column: {id_columns[0]}"
         else:
-            return False, 29, "The cleaned_train.csv file does not contain an ID column. The columns in cleaned_train.csv are {df.columns}. Please ensure that the ID column is preserved during the cleaning process."
+            return False, 31, "The cleaned_train.csv file does not contain an ID column. The columns in cleaned_train.csv are {df.columns}. Please ensure that the ID column is preserved during the cleaning process."
     
     def test_cleaned_test_id_column(self, state: State):
         path = f"{state.competition_dir}/cleaned_test.csv"
@@ -585,9 +617,9 @@ Id,SalePrice
         id_columns = [col for col in df.columns if col.lower() == 'id']
         
         if id_columns:
-            return True, 30, f"The cleaned_test.csv file contains an ID column: {id_columns[0]}"
+            return True, 32, f"The cleaned_test.csv file contains an ID column: {id_columns[0]}"
         else:
-            return False, 30, "The cleaned_test.csv file does not contain an ID column. The columns in cleaned_test.csv are {df.columns}. Please ensure that the ID column is preserved during the cleaning process."
+            return False, 32, "The cleaned_test.csv file does not contain an ID column. The columns in cleaned_test.csv are {df.columns}. Please ensure that the ID column is preserved during the cleaning process."
 
     def test_processed_train_id_column(self, state: State):
         path = f"{state.competition_dir}/processed_train.csv"
@@ -597,9 +629,9 @@ Id,SalePrice
         id_columns = [col for col in df.columns if col.lower() == 'id']
         
         if id_columns:
-            return True, 31, f"The processed_train.csv file contains an ID column: {id_columns[0]}"
+            return True, 33, f"The processed_train.csv file contains an ID column: {id_columns[0]}"
         else:
-            return False, 31, "The processed_train.csv file does not contain an ID column. The columns in processed_train.csv are {df.columns}. Please ensure that the ID column is preserved during the cleaning process."
+            return False, 33, "The processed_train.csv file does not contain an ID column. The columns in processed_train.csv are {df.columns}. Please ensure that the ID column is preserved during the cleaning process."
 
     def test_processed_test_id_column(self, state: State):
         path = f"{state.competition_dir}/processed_test.csv"
@@ -609,9 +641,9 @@ Id,SalePrice
         id_columns = [col for col in df.columns if col.lower() == 'id']
         
         if id_columns:
-            return True, 32, f"The processed_test.csv file contains an ID column: {id_columns[0]}"
+            return True, 34, f"The processed_test.csv file contains an ID column: {id_columns[0]}"
         else:
-            return False, 32, "The processed_test.csv file does not contain an ID column. The columns in processed_test.csv are {df.columns}. Please ensure that the ID column is preserved during the cleaning process."
+            return False, 34, "The processed_test.csv file does not contain an ID column. The columns in processed_test.csv are {df.columns}. Please ensure that the ID column is preserved during the cleaning process."
 
 if __name__ == '__main__':
     # llm = LLM('gpt-4o', 'api')

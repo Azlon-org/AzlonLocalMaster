@@ -33,11 +33,12 @@
         "Data Cleaning": ["test_document_exist", "test_cleaned_train_no_missing_values", "test_cleaned_test_no_missing_values",
                             "test_cleaned_train_no_duplicated_features", "test_cleaned_test_no_duplicated_features",
                             "test_cleaned_difference_train_test_columns", "test_cleaned_train_no_missing_target", 
-                            "test_cleaned_train_id_column", "test_cleaned_test_id_column"],
+                            "test_cleaned_train_id_column", "test_cleaned_test_id_column", "test_cleaned_test_no_target_column"],
         "In-depth Exploratory Data Analysis": [],
         "Feature Engineering": ["test_document_exist", "test_processed_train_feature_number", "test_processed_train_no_duplicated_features",
                                 "test_processed_test_no_duplicated_features", "test_processed_difference_train_test_columns", 
-                                "test_processed_train_no_missing_target", "test_processed_train_id_column", "test_processed_test_id_column"],
+                                "test_processed_train_no_missing_target", "test_processed_train_id_column", "test_processed_test_id_column",
+                                "test_processed_test_no_target_column"],
         "Model Building, Validation, and Prediction": ["test_document_exist", "test_column_names_submission", "test_submission_validity"]
     },
     "phase_to_ml_tools": {
