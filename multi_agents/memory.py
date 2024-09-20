@@ -5,7 +5,7 @@ from tqdm import tqdm
 import json
 
 # from SOP import SOP
-from LLM import OpenaiEmbeddings
+from llm import OpenaiEmbeddings
 
 
 def split_sklearn(text: str, max_chunk_length: int = 8191, overlap_ratio: float = 0.1):

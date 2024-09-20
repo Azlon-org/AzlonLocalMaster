@@ -5,7 +5,7 @@ from tqdm import tqdm
 from html2text import html2text
 
 sys.path.extend(['.', '..'])
-from LLM import OpenaiEmbeddings, LLM
+from llm import OpenaiEmbeddings, LLM
 from memory import Memory, split_sklearn, split_tools
 # from state import State
 
