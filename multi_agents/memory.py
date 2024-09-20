@@ -5,10 +5,10 @@ from tqdm import tqdm
 import json
 
 # from SOP import SOP
-from llm import OpenaiEmbeddings
+from LLM import OpenaiEmbeddings
 
 
-def split_text(text: str, max_chunk_length: int = 8191, overlap_ratio: float = 0.1):
+def split_sklearn(text: str, max_chunk_length: int = 8191, overlap_ratio: float = 0.1):
     if not (0 <= overlap_ratio < 1):
         raise ValueError("Overlap ratio must be between 0 and 1 (exclusive).")
     
@@ -24,6 +24,13 @@ def split_text(text: str, max_chunk_length: int = 8191, overlap_ratio: float = 0
         start += max_chunk_length - overlap_length
         
     return chunks
+
+
+def split_tools(text: str):
+    # Split the text into chunks
+    chunks = re.split(r'---', text)
+    return chunks
+    
 
 
 class Memory:
@@ -63,5 +70,14 @@ class Memory:
     def search_context(self, query: str, n_results=5) -> dict:
         query_embeddings = self.embedding_model.encode(query)[0].embedding
         results =  self.collection.query(query_embeddings=query_embeddings, n_results=n_results, include=['documents', 'distances', 'metadatas'])
+        return results
+    
+    def search_context_with_metadatas(self, query: str, label: str, n_results=5) -> dict:
+        query_embeddings = self.embedding_model.encode(query)[0].embedding
+        results =  self.collection.query(
+            query_embeddings=query_embeddings, n_results=n_results, 
+            include=['documents', 'distances', 'metadatas'], 
+            where={'doc name': label}
+        )
         return results
     
