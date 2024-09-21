@@ -84,13 +84,11 @@ def remove_columns_with_missing_data(data: pd.DataFrame, thresh: float = 0.5, co
 def detect_and_handle_outliers_zscore(data: pd.DataFrame, columns: Union[str, List[str]], threshold: float = 3.0, method: str = 'clip') -> pd.DataFrame:
     """
     Detect and handle outliers in specified columns using the Z-score method.
-
     Args:
         data (pd.DataFrame): The input DataFrame.
         columns (str or List[str]): The name(s) of the column(s) to check for outliers.
         threshold (float, optional): The Z-score threshold to identify outliers. Defaults to 3.0.
         method (str, optional): The method to handle outliers. Options: 'clip', 'remove'. Defaults to 'clip'.
-
     Returns:
         pd.DataFrame: The DataFrame with outliers handled.
     """
@@ -106,9 +104,13 @@ def detect_and_handle_outliers_zscore(data: pd.DataFrame, columns: Union[str, Li
         z_scores = (data[column] - mean) / std
 
         if method == 'clip':
+            # Define the bounds
             lower_bound = mean - threshold * std
             upper_bound = mean + threshold * std
-            data[column] = data[column].clip(lower_bound, upper_bound)
+            print(lower_bound, upper_bound)
+            # Apply clipping only to values exceeding the threshold
+            data.loc[z_scores > threshold, column] = upper_bound
+            data.loc[z_scores < -threshold, column] = lower_bound
         elif method == 'remove':
             data = data[abs(z_scores) <= threshold]
         else:
@@ -169,11 +171,26 @@ def remove_duplicates(data: pd.DataFrame, columns: Union[str, List[str]] = None,
     Returns:
         pd.DataFrame: The DataFrame with duplicate rows removed.
     """
-    if inplace:
-        data.drop_duplicates(subset=columns, keep=keep, inplace=True)
-        return data
-    else:
-        return data.drop_duplicates(subset=columns, keep=keep)
+    try:
+        if not isinstance(data, pd.DataFrame):
+            raise TypeError("The 'data' argument must be a pandas DataFrame.")
+        
+        if columns is not None and not isinstance(columns, (str, list)):
+            raise TypeError("The 'columns' argument must be a string, list of strings, or None.")
+        
+        if keep not in ['first', 'last', False]:
+            raise ValueError("The 'keep' argument must be 'first', 'last', or False.")
+        
+        if not isinstance(inplace, bool):
+            raise TypeError("The 'inplace' argument must be a boolean.")
+
+        if inplace:
+            data.drop_duplicates(subset=columns, keep=keep, inplace=True)
+            return data
+        else:
+            return data.drop_duplicates(subset=columns, keep=keep)
+    except Exception as e:
+        raise RuntimeError(f"Error occurred while removing duplicates: {e}")
 
 def convert_data_types(data: pd.DataFrame, columns: Union[str, List[str]], target_type: str) -> pd.DataFrame:
     """
@@ -486,7 +503,7 @@ def correlation_feature_selection(data: pd.DataFrame, target: str, method: str =
         'correlation': selected_features.values
     }).sort_values('correlation', key=abs, ascending=False)
 
-def variance_feature_selection(self, data: pd.DataFrame, threshold: float = 0.0, columns: Union[str, List[str]] = None) -> pd.DataFrame:
+def variance_feature_selection(data: pd.DataFrame, threshold: float = 0.0, columns: Union[str, List[str]] = None) -> pd.DataFrame:
     """
     Perform feature selection based on variance analysis.
 
@@ -825,3 +842,322 @@ def create_feature_combinations(data: pd.DataFrame,
 
     return result
 
+
+def model_choice(model_name: str):
+    """
+    Choose a machine learning model based on the input model name.
+    
+    Args:
+        model_name (str): The name of the model to choose.
+                          Options: 'linear regression', 'logistic regression', 'decision tree', 
+                          'random forest', 'XGBoost', 'SVM', 'neural network'.
+    
+    Returns:
+        Model: The corresponding model instance.
+    
+    Raises:
+        ValueError: If the model_name is not recognized.
+    """
+    from sklearn.linear_model import LinearRegression, LogisticRegression
+    from sklearn.tree import DecisionTreeClassifier
+    from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
+    from sklearn.svm import SVC
+    from sklearn.neural_network import MLPClassifier
+    models = {
+        'linear regression': LinearRegression(),
+        'logistic regression': LogisticRegression(),
+        'decision tree': DecisionTreeClassifier(),
+        'random forest': RandomForestClassifier(),
+        'XGBoost': GradientBoostingClassifier(),
+        'SVM': SVC(),
+        'neural network': MLPClassifier()
+    }
+
+    if model_name not in models:
+        raise ValueError(f"Model '{model_name}' is not in the available model list. Please choose from: {list(models.keys())}")
+
+    return models[model_name]
+
+
+
+from sklearn.model_selection import cross_val_score, GridSearchCV, RandomizedSearchCV
+
+def model_train(train_tool: str):
+    """
+    Choose a model training tool based on the input training tool name.
+    
+    Args:
+        train_tool (str): The name of the model training tool.
+                          Options: 'cross validation', 'grid search', 'random search'.
+    
+    Returns:
+        str: The corresponding training tool name.
+    
+    Raises:
+        ValueError: If the train_tool is not recognized.
+    """
+    training_tools = {
+        'cross validation': cross_val_score,
+        'grid search': GridSearchCV,
+        'random search': RandomizedSearchCV
+    }
+
+    if train_tool not in training_tools:
+        raise ValueError(f"Training tool '{train_tool}' is not supported. Please choose from: {list(training_tools.keys())}")
+
+    return training_tools[train_tool]
+
+
+def model_evaluation(evaluation_tool: str):
+    """
+    Choose a model evaluation tool based on the input evaluation tool name.
+    
+    Args:
+        evaluation_tool (str): The name of the evaluation tool.
+                               Options for classification: 'accuracy', 'precision', 'recall', 
+                               'F1 score', 'ROC AUC'.
+                               Options for regression: 'MSE', 'RMSE', 'MAE', 'R²'.
+    
+    Returns:
+        function: The corresponding evaluation function.
+    
+    Raises:
+        ValueError: If the evaluation_tool is not recognized.
+    """
+    from sklearn.metrics import (accuracy_score, precision_score, recall_score, f1_score, roc_auc_score,
+                                mean_squared_error, mean_absolute_error, r2_score)
+    evaluation_tools = {
+        # Classification metrics
+        'accuracy': accuracy_score,
+        'precision': precision_score,
+        'recall': recall_score,
+        'F1 score': f1_score,
+        'ROC AUC': roc_auc_score,
+        
+        # Regression metrics
+        'MSE': mean_squared_error,
+        'RMSE': lambda y_true, y_pred: mean_squared_error(y_true, y_pred, squared=False),  # Root Mean Squared Error
+        'MAE': mean_absolute_error,
+        'R²': r2_score
+    }
+
+    if evaluation_tool not in evaluation_tools:
+        raise ValueError(f"Evaluation tool '{evaluation_tool}' is not supported. Please choose from: {list(evaluation_tools.keys())}")
+
+    return evaluation_tools[evaluation_tool]
+
+
+
+
+from sklearn.inspection import PartialDependenceDisplay
+import shap
+import warnings
+
+def model_explanation(explanation_tool: str):
+    """
+    Choose a model explanation tool based on the input tool name.
+    
+    Args:
+        explanation_tool (str): The name of the explanation tool.
+                               Options: 'feature importance', 'SHAP', 'partial dependence'.
+    
+    Returns:
+        function: The corresponding explanation tool.
+    
+    Raises:
+        ValueError: If the explanation_tool is not recognized.
+    """
+    def feature_importance(model):
+        if hasattr(model, 'feature_importances_'):
+            return model.feature_importances_
+        else:
+            raise ValueError("Model does not have `feature_importances_` attribute.")
+
+    explanation_tools = {
+        'feature importance': feature_importance,
+        'SHAP': shap.Explainer,
+        'partial dependence': PartialDependenceDisplay.from_estimator
+    }
+
+    if explanation_tool not in explanation_tools:
+        raise ValueError(f"Explanation tool '{explanation_tool}' is not supported. Please choose from: {list(explanation_tools.keys())}")
+
+    return explanation_tools[explanation_tool]
+
+
+
+import joblib
+import pickle
+
+def model_persistence(tool_name: str):
+    """
+    Choose a model persistence tool for saving and loading models.
+
+    Args:
+        tool_name (str): The name of the persistence tool.
+                         Options: 'joblib', 'pickle'.
+    
+    Returns:
+        dict: A dictionary with 'save' and 'load' functions for the chosen tool.
+    
+    Raises:
+        ValueError: If the tool_name is not recognized.
+    """
+    persistence_tools = {
+        'joblib': {
+            'save': joblib.dump,
+            'load': joblib.load
+        },
+        'pickle': {
+            'save': lambda model, file_name: pickle.dump(model, open(file_name, 'wb')),
+            'load': lambda file_name: pickle.load(open(file_name, 'rb'))
+        }
+    }
+
+    if tool_name not in persistence_tools:
+        raise ValueError(f"Persistence tool '{tool_name}' is not supported. Please choose from: {list(persistence_tools.keys())}")
+    
+    return persistence_tools[tool_name]
+
+def prediction_tool(tool_name: str, model, X):
+    """
+    Choose a prediction tool for single or batch predictions.
+
+    Args:
+        tool_name (str): The name of the prediction tool.
+                         Options: 'single prediction', 'batch prediction'.
+        model: The trained model to use for predictions.
+        X: The input data for prediction, either a single sample or batch of samples.
+
+    Returns:
+        np.ndarray: The predictions made by the model.
+
+    Raises:
+        ValueError: If the tool_name is not recognized.
+    """
+    prediction_tools = {
+        'single prediction': lambda model, X: model.predict([X]),
+        'batch prediction': lambda model, X: model.predict(X)
+    }
+
+    if tool_name not in prediction_tools:
+        raise ValueError(f"Prediction tool '{tool_name}' is not supported. Please choose from: {list(prediction_tools.keys())}")
+
+    return prediction_tools[tool_name](model, X)
+
+def best_model_selection_tool(tool_name: str, model_paths: list, persistence_tool: str, X_test, y_test, evaluation_tool: str):
+    """
+    Choose the best model based on a specific evaluation metric.
+    
+    Args:
+        tool_name (str): The name of the model selection tool.
+                         Options: 'classification', 'regression'.
+        model_paths (list): A list of file paths to the trained models.
+        persistence_tool (str): The model persistence tool. Options: 'joblib', 'pickle'.
+        X_test: The test input data.
+        y_test: The test target labels.
+        evaluation_tool (str): The name of the evaluation metric to use.
+    
+    Returns:
+        tuple: The best model and its evaluation score.
+    
+    Raises:
+        ValueError: If the tool_name is not recognized.
+    """
+    # Get the evaluation function based on the tool_name
+    eval_fn = model_evaluation(evaluation_tool)
+    
+    # Get the save/load functions using the model persistence tool
+    persistence = model_persistence(persistence_tool)
+    
+    best_model = None
+    best_score = None
+    
+    for model_path in model_paths:
+        # Load the model from the file path using the selected persistence tool
+        model = persistence['load'](model_path)
+        
+        # Make predictions based on the tool_name
+        if tool_name == 'classification':
+            y_pred = model.predict(X_test)
+        elif tool_name == 'regression':
+            y_pred = model.predict(X_test)
+        else:
+            raise ValueError(f"Model selection tool '{tool_name}' is not supported. Please choose either 'classification' or 'regression'.")
+        
+        # Calculate the evaluation score
+        score = eval_fn(y_test, y_pred)
+        
+        # Track the best model and score
+        if best_score is None or score > best_score:
+            best_model = model
+            best_score = score
+    
+    return best_model, best_score
+
+
+from sklearn.ensemble import BaggingClassifier, RandomForestClassifier, GradientBoostingClassifier, StackingClassifier
+
+def ensemble_model_tool(tool_name: str, base_estimator=None, estimators=None):
+    """
+    Choose an ensemble learning tool based on the input tool name.
+
+    Args:
+        tool_name (str): The name of the ensemble learning tool.
+                         Options: 'Bagging', 'Boosting', 'Stacking'.
+        base_estimator: The base estimator for Bagging (default: None).
+        estimators: List of estimators for Stacking (default: None).
+    
+    Returns:
+        An instance of the corresponding ensemble learning tool.
+    
+    Raises:
+        ValueError: If the tool_name is not recognized.
+    """
+    ensemble_tools = {
+        'Bagging': lambda: BaggingClassifier(base_estimator=base_estimator),
+        'Boosting': lambda: GradientBoostingClassifier(),
+        'Stacking': lambda: StackingClassifier(estimators=estimators)
+    }
+
+    if tool_name not in ensemble_tools:
+        raise ValueError(f"Ensemble tool '{tool_name}' is not supported. Please choose from: {list(ensemble_tools.keys())}")
+
+    return ensemble_tools[tool_name]()
+
+
+from sklearn.model_selection import GridSearchCV, RandomizedSearchCV
+from skopt import BayesSearchCV
+
+def hyperparameter_optimization_tool(tool_name: str, model, param_grid, X, y, cv=5, n_iter=10):
+    """
+    Choose a hyperparameter optimization tool based on the input tool name.
+
+    Args:
+        tool_name (str): The name of the optimization tool.
+                         Options: 'Grid Search', 'Random Search', 'Bayesian Optimization'.
+        model: The machine learning model to optimize.
+        param_grid (dict): The parameter grid to search over.
+        X (pd.DataFrame): Training data features.
+        y (pd.Series): Training data labels.
+        cv (int, optional): Number of cross-validation folds. Defaults to 5.
+        n_iter (int, optional): Number of iterations for Random Search or Bayesian Optimization. Defaults to 10.
+
+    Returns:
+        Optimized model after performing the selected hyperparameter search.
+    
+    Raises:
+        ValueError: If the tool_name is not recognized.
+    """
+    optimization_tools = {
+        'Grid Search': lambda: GridSearchCV(estimator=model, param_grid=param_grid, cv=cv),
+        'Random Search': lambda: RandomizedSearchCV(estimator=model, param_distributions=param_grid, n_iter=n_iter, cv=cv),
+        'Bayesian Optimization': lambda: BayesSearchCV(estimator=model, search_spaces=param_grid, n_iter=n_iter, cv=cv)
+    }
+
+    if tool_name not in optimization_tools:
+        raise ValueError(f"Optimization tool '{tool_name}' is not supported. Please choose from: {list(optimization_tools.keys())}")
+    
+    optimizer = optimization_tools[tool_name]()
+    optimizer.fit(X, y)
+    return optimizer.best_estimator_
