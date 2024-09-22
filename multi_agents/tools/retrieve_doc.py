@@ -5,17 +5,18 @@ from tqdm import tqdm
 from html2text import html2text
 
 sys.path.extend(['.', '..'])
+from api_handler import load_api_config
 from llm import OpenaiEmbeddings, LLM
 from memory import Memory, split_sklearn, split_tools
 # from state import State
 
 
 class RetrieveTool:
-    def __init__(self, model: str, embeddings: OpenaiEmbeddings, doc_path: str = 'tools/ml_tools_doc', collection_name: str = 'tools'):
+    def __init__(self, model: str, embeddings: OpenaiEmbeddings, doc_path: str = 'multi_agents/tools/ml_tools_doc', collection_name: str = 'tools'):
         self.llm = model
         self.embeddings = embeddings
         self.doc_path = os.path.join(os.getcwd(), doc_path)
-        self.client = chromadb.PersistentClient(path='db')
+        self.client = chromadb.PersistentClient(path='multi_agents/db')
         self.collection_name = collection_name
 
         self.db = Memory(self.client, self.collection_name, self.embeddings)
@@ -83,8 +84,8 @@ text: {content}
                 chunks = split_tools(content)
                 self.db.insert_vectors(chunks, path.split('/')[-1])
 
-    def query_tools(self, query: str, state: str='data_cleaning'):
-        label = state + '_tools.md'
+    def query_tools(self, query: str, state_name: str='data_cleaning'):
+        label = state_name + '_tools.md'
         results = self.db.search_context_with_metadatas(query, label)
         return results['documents'][0][0]
 
@@ -93,6 +94,7 @@ text: {content}
 
 
 def main():
+    # print(load_api_config())
     embeddings = OpenaiEmbeddings(api_key='')
     llm = LLM('gpt-4o', 'api')
 
