@@ -602,48 +602,48 @@ Id,SalePrice
         df = pd.read_csv(path)
         
         # Check if any column name (case-insensitive) matches 'id'
-        id_columns = [col for col in df.columns if col.lower() == 'id']
+        id_columns = [col for col in df.columns if (col.lower() == 'id' or 'id' in col.lower())]
         
         if id_columns:
             return True, 31, f"The cleaned_train.csv file contains an ID column: {id_columns[0]}"
         else:
-            return False, 31, "The cleaned_train.csv file does not contain an ID column. The columns in cleaned_train.csv are {df.columns}. Please ensure that the ID column is preserved during the cleaning process."
+            return False, 31, f"The cleaned_train.csv file does not contain an ID column. The columns in cleaned_train.csv are {df.columns}. Please ensure that the ID column is preserved during the cleaning process."
     
     def test_cleaned_test_id_column(self, state: State):
         path = f"{state.competition_dir}/cleaned_test.csv"
         df = pd.read_csv(path)
         
         # Check if any column name (case-insensitive) matches 'id'
-        id_columns = [col for col in df.columns if col.lower() == 'id']
+        id_columns = [col for col in df.columns if (col.lower() == 'id' or 'id' in col.lower())]
         
         if id_columns:
             return True, 32, f"The cleaned_test.csv file contains an ID column: {id_columns[0]}"
         else:
-            return False, 32, "The cleaned_test.csv file does not contain an ID column. The columns in cleaned_test.csv are {df.columns}. Please ensure that the ID column is preserved during the cleaning process."
+            return False, 32, f"The cleaned_test.csv file does not contain an ID column. The columns in cleaned_test.csv are {df.columns}. Please ensure that the ID column is preserved during the cleaning process."
 
     def test_processed_train_id_column(self, state: State):
         path = f"{state.competition_dir}/processed_train.csv"
         df = pd.read_csv(path)
         
         # Check if any column name (case-insensitive) matches 'id'
-        id_columns = [col for col in df.columns if col.lower() == 'id']
+        id_columns = [col for col in df.columns if (col.lower() == 'id' or 'id' in col.lower())]
         
         if id_columns:
             return True, 33, f"The processed_train.csv file contains an ID column: {id_columns[0]}"
         else:
-            return False, 33, "The processed_train.csv file does not contain an ID column. The columns in processed_train.csv are {df.columns}. Please ensure that the ID column is preserved during the cleaning process."
+            return False, 33, f"The processed_train.csv file does not contain an ID column. The columns in processed_train.csv are {df.columns}. Please ensure that the ID column is preserved during the cleaning process."
 
     def test_processed_test_id_column(self, state: State):
         path = f"{state.competition_dir}/processed_test.csv"
         df = pd.read_csv(path)
         
         # Check if any column name (case-insensitive) matches 'id'
-        id_columns = [col for col in df.columns if col.lower() == 'id']
+        id_columns = [col for col in df.columns if (col.lower() == 'id' or 'id' in col.lower())]
         
         if id_columns:
             return True, 34, f"The processed_test.csv file contains an ID column: {id_columns[0]}"
         else:
-            return False, 34, "The processed_test.csv file does not contain an ID column. The columns in processed_test.csv are {df.columns}. Please ensure that the ID column is preserved during the cleaning process."
+            return False, 34, f"The processed_test.csv file does not contain an ID column. The columns in processed_test.csv are {df.columns}. Please ensure that the ID column is preserved during the cleaning process."
 
 if __name__ == '__main__':
     # llm = LLM('gpt-4o', 'api')

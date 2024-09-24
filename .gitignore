@@ -28,6 +28,8 @@
 
 **/weak_baseline/
 
+**/experiments_history.ZIP
+
 test.py
 test.txt
 api_key.txt

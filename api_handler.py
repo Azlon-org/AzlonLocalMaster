@@ -100,6 +100,7 @@ class APIHandler:
         for attempt in range(MAX_ATTEMPTS):
             try:
                 response = generate_response(self.client, self.engine, messages, settings, response_type)
+                # import pdb; pdb.set_trace()
                 if response.choices and response.choices[0].message and hasattr(response.choices[0].message, 'content'):
                     return response.choices[0].message.content
                 else:
