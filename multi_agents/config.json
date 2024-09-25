@@ -45,10 +45,13 @@
     "phase_to_ml_tools": {
         "Understand Background": [],
         "Preliminary Exploratory Data Analysis": [],
-        "Data Cleaning": [],
+        "Data Cleaning": ["fill_missing_values", "remove_columns_with_missing_data", "detect_and_handle_outliers_zscore", 
+                            "detect_and_handle_outliers_iqr", "convert_data_types", "remove_duplicates", "format_datetime"],
         "In-depth Exploratory Data Analysis": [],
-        "Feature Engineering": [],
-        "Model Building, Validation, and Prediction": []
+        "Feature Engineering": ["one_hot_encode", "label_encode", "frequency_encode", "target_encode", "correlation_feature_selection", 
+                                "variance_feature_selection", "scale_features", "perform_pca", "perform_rfe", "create_polynomial_features", 
+                                "create_feature_combinations", "extract_time_series_features"],
+        "Model Building, Validation, and Prediction": ["model_choice", "model_train", "model_evaluation", "model_explanation", "model_persistence", "prediction_tool", "best_model_selection_tool", "ensemble_model_tool", "hyperparameter_optimization_tool"]
     },
     "_phase_to_ml_tools": {
         "Understand Background": [],
@@ -59,7 +62,7 @@
         "Feature Engineering": ["one_hot_encode", "label_encode", "frequency_encode", "target_encode", "correlation_feature_selection", 
                                 "variance_feature_selection", "scale_features", "perform_pca", "perform_rfe", "create_polynomial_features", 
                                 "create_feature_combinations", "extract_time_series_features"],
-        "Model Building, Validation, and Prediction": []
+        "Model Building, Validation, and Prediction": ["model_choice", "model_train", "model_evaluation", "model_explanation", "model_persistence", "prediction_tool", "best_model_selection_tool", "ensemble_model_tool", "hyperparameter_optimization_tool"]
     },
     "rulebook_parameters": {
         "Preliminary Exploratory Data Analysis": {
