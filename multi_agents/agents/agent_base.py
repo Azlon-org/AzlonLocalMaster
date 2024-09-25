@@ -21,6 +21,11 @@ from llm import LLM
 from state import State
 from prompts.prompt_base import *
 from typing import Tuple, List
+from multi_agents.memory import Memory
+from multi_agents.tools.retrieve_doc import RetrieveTool
+from multi_agents.llm import OpenaiEmbeddings, LLM
+from api_handler import load_api_config
+
 
 class Agent:
     def __init__(self, role: str, description: str, model: str, type: str):
@@ -176,24 +181,43 @@ class Agent:
         return md_output
 
     def _get_tools(self, state: State) -> Tuple[str, List[str]]:
-        tools = ""
-        tool_names = state.ml_tools
-        path_to_tools_doc = f'{PREFIX_MULTI_AGENTS}/tools/ml_tools_doc/{state.dir_name}_tools.md'
-        if len(tool_names) > 0:
-            if os.path.exists(path_to_tools_doc):
-                with open(path_to_tools_doc, 'r') as file:
-                    tools = file.read()
-            else:
-                # Read the JSON file
-                with open('multi_agents/function_to_schema.json', 'r') as file:
-                    schema_data = json.load(file)
-                for tool_name in tool_names:
-                    tools += self._json_to_markdown(schema_data[tool_name])
-                with open(f'{PREFIX_MULTI_AGENTS}/tools/ml_tools_doc/{state.dir_name}_tools.md', 'w') as file:
-                    file.write(tools)
-        else:
-            tools = "There is no pre-defined tools used in this phase."
+        embeddings = OpenaiEmbeddings(api_key=load_api_config()[0])
+        memory = RetrieveTool(self.llm, embeddings)
+
+        state_name = state.dir_name
+        with open('multi_agents/config.json', 'r') as file:
+            phase_to_dir = [key for key, value in json.load(file)['phase_to_directory'].items() if value == state_name][0]
+            # print(phase_to_dir)
+        with open('multi_agents/config.json', 'r') as file:
+            tool_names = json.load(file)['_phase_to_ml_tools'][phase_to_dir]
+
+        tools = []
+        for tool_name in tool_names:
+            conclusion = memory.query_tools(f'Use the {tool_name} tool.', state_name)
+            tools.append(conclusion)
+
         return tools, tool_names
+
+        # tools = ""
+        # tool_names = state.ml_tools
+        # path_to_tools_doc = f'{PREFIX_MULTI_AGENTS}/tools/ml_tools_doc/{state.dir_name}_tools.md'
+        # print(path_to_tools_doc)
+        # if len(tool_names) > 0:
+        #     if os.path.exists(path_to_tools_doc):
+        #         with open(path_to_tools_doc, 'r') as file:
+        #             tools = file.read()
+        #     else:
+        #         # Read the JSON file
+        #         with open('multi_agents/function_to_schema.json', 'r') as file:
+        #             schema_data = json.load(file)
+        #         print(schema_data)
+        #         for tool_name in tool_names:
+        #             tools += self._json_to_markdown(schema_data[tool_name])
+        #         with open(f'{PREFIX_MULTI_AGENTS}/tools/ml_tools_doc/{state.dir_name}_tools.md', 'w') as file:
+        #             file.write(tools)
+        # else:
+        #     tools = "There is no pre-defined tools used in this phase."
+        # return tools, tool_names
 
     def _get_feature_info(self, state: State) -> str:
         # Define file names for before and after the current phase
