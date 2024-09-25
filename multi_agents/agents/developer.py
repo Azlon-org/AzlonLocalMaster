@@ -233,6 +233,7 @@ class Developer(Agent):
             with open(path_to_output, 'w') as f:
                 f.write("")
 
+        # 在这里如果error信息太长 可以读取做去重
         return error_flag
 
     def _conduct_unit_test(self, state: State) -> None:

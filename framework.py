@@ -2,17 +2,14 @@ import os
 import sys
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
-sys.path.append('/home/data_llm/madehua/AutoKaggleMaster')
 from multi_agents.state import State
-from multi_agents.SOP import SOP
+from multi_agents.sop import SOP
 from utils import PREFIX_MULTI_AGENTS, load_config
 import pdb
 import argparse
 import logging
 
 import sys
-sys.path.append('/home/data_llm/madehua/AutoKaggleMaster')
-
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Run SOP for a competition.')
@@ -21,9 +18,9 @@ if __name__ == '__main__':
     competition = args.competition
 
     sop = SOP(competition)
-    start_state = State(phase="Understand Background", competition=competition)
+    # start_state = State(phase="Understand Background", competition=competition)
     # start_state = State(phase="Preliminary Exploratory Data Analysis", competition=competition)
-    # start_state = State(phase="Data Cleaning", competition=competition)
+    start_state = State(phase="Data Cleaning", competition=competition)
     # start_state = State(phase="In-depth Exploratory Data Analysis", competition=competition)
     # start_state = State(phase="Feature Engineering", competition=competition)
     # start_state = State(phase="Model Building, Validation, and Prediction", competition=competition)
