@@ -56,7 +56,10 @@ class DebugTool:
         # extract code
         pattern = r"```python(.*?)```"
         error_code_matches = re.findall(pattern, locate_reply, re.DOTALL)
-        most_relevant_code_snippet = error_code_matches[-1]
+        try:
+            most_relevant_code_snippet = error_code_matches[-1]
+        except:
+            most_relevant_code_snippet = "Can't find the most relevant code snippet."
 
         # fix bug
         input = PROMPT_DEVELOPER_DEBUG_FIX.format(
