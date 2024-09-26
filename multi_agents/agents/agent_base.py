@@ -182,7 +182,9 @@ class Agent:
 
     def _get_tools(self, state: State) -> Tuple[str, List[str]]:
         embeddings = OpenaiEmbeddings(api_key=load_api_config()[0])
-        memory = RetrieveTool(self.llm, embeddings)
+        memory = RetrieveTool(self.llm, embeddings, doc_path='multi_agents/tools/ml_tools_doc', collection_name='tools')
+        # update the memory
+        memory.create_db_tools()
 
         state_name = state.dir_name
         with open('multi_agents/config.json', 'r') as file:

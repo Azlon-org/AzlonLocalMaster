@@ -38,5 +38,4 @@ if __name__ == '__main__':
             exit()
         if state_info == 'Complete':
             print(f"Competition {competition} SOP is completed.")
-            break
-    
+            break    

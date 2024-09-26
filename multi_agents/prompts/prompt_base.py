@@ -47,8 +47,6 @@ Your response should be in the following format:
 ```
 '''
 
-
-
 REORGANIZE_REPLY_TYPE1 = '''
 # TASK #
 Please extract essential information and reorganize into a JSON format. You need to organize the information in a clear and concise manner, ensuring that the content is logically structured and easy to understand. You must ensure that the essential information is complete and accurate.
