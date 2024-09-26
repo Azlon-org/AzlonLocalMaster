@@ -27,6 +27,25 @@ PROMPT_FEATURE_INFO = '''# FEATURE INFO
 {features_after}
 '''
 
+PROMPT_EXTRACT_TOOLS = '''
+Please extract the alltools involved in the following document.
+{document}
+All available tools are as follows:
+{all_tool_names}
+
+Each tool name MUST be in the available tool names.
+Your response should be in the following format:
+```json
+{{
+    "tool_names": list=[
+        "tool_name 1",
+        "tool_name 2",
+        "tool_name 3",
+        ...
+    ]
+}}
+```
+'''
 
 REORGANIZE_REPLY_TYPE1 = '''
 # TASK #

@@ -78,11 +78,13 @@ text: {content}
 
         # print(md_path)
         # Read the HTML files
-        for path in tqdm(md_path):
-            with open(path, 'r') as f:
-                content = f.read()
-                chunks = split_tools(content)
-                self.db.insert_vectors(chunks, path.split('/')[-1])
+        num_data = self.db.check_collection_none()
+        if num_data == 0:
+            for path in tqdm(md_path):
+                with open(path, 'r') as f:
+                    content = f.read()
+                    chunks = split_tools(content)
+                    self.db.insert_vectors(chunks, path.split('/')[-1])
 
     def query_tools(self, query: str, state_name: str='data_cleaning'):
         label = state_name + '_tools.md'

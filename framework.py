@@ -49,11 +49,15 @@ if __name__ == '__main__':
     embeddings = OpenaiEmbeddings(api_key=load_api_config()[0])
     llm = LLM('gpt-4o', 'api')
 
-    tool = RetrieveTool(llm, embeddings)
+    memory = RetrieveTool(llm, embeddings)
+    # memory.create_db_tools()
+
     agent = Agent(role="Planner", description="Preliminary Exploratory Data Analysis", model="gpt-4o", type='api')
     tools, tool_names = agent._get_tools(start_state)
-    # display tools
-    for i, tool in enumerate(tools):
-        print(f"{i+1}. {tool_names[i]}")
-        print(tool)
+
+    print(tool_names)
+    # # display tools
+    # for i, tool in enumerate(tools):
+    #     print(f"{i+1}. {tool_names[i]}")
+    #     print(tool)
     

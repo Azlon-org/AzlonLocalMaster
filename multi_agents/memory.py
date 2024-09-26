@@ -81,3 +81,11 @@ class Memory:
         )
         return results
     
+    def check_collection_none(self):
+        document_count = self.collection.count()
+        if document_count == 0:
+            print("The collection is empty.")
+        else:
+            print(f"The collection has {document_count} documents.")
+
+        return document_count

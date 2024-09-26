@@ -182,20 +182,39 @@ class Agent:
 
     def _get_tools(self, state: State) -> Tuple[str, List[str]]:
         embeddings = OpenaiEmbeddings(api_key=load_api_config()[0])
-        memory = RetrieveTool(self.llm, embeddings)
+        memory = RetrieveTool(self.llm, embeddings, doc_path='multi_agents/tools/ml_tools_doc', collection_name='tools')
+        # update the memory
+        memory.create_db_tools()
 
         state_name = state.dir_name
         with open('multi_agents/config.json', 'r') as file:
             phase_to_dir = [key for key, value in json.load(file)['phase_to_directory'].items() if value == state_name][0]
             # print(phase_to_dir)
         with open('multi_agents/config.json', 'r') as file:
-            tool_names = json.load(file)['_phase_to_ml_tools'][phase_to_dir]
+            all_tool_names = json.load(file)['_phase_to_ml_tools'][phase_to_dir]
+
+        if self.role == 'developer' and state.phase in ['Data Cleaning', 'Feature Engineering', 'Model Building, Validation, and Prediction']:
+            logging.info(f"Extracting tools' description for developer in phase: {state.phase}")
+            with open(f'{state.competition_dir}/{state.dir_name}/markdown_plan.txt', 'r') as file:
+                markdown_plan = file.read()
+            input = PROMPT_EXTRACT_TOOLS.format(document=markdown_plan, all_tool_names=all_tool_names)
+            raw_reply, _ = self.llm.generate(input, history=[], max_tokens=4096)
+            with open(f'{state.competition_dir}/{state.dir_name}/extract_tools_reply.txt', 'w') as file:
+                file.write(raw_reply)
+            tool_names = self._parse_json(raw_reply)['tool_names']
+        else:
+            tool_names = all_tool_names
 
         tools = []
         for tool_name in tool_names:
             conclusion = memory.query_tools(f'Use the {tool_name} tool.', state_name)
             tools.append(conclusion)
 
+        if len(tools) > 0 and self.role == 'developer':  
+            with open(f'{PREFIX_MULTI_AGENTS}/tools/ml_tools_doc/tools_used_in_{state.dir_name}.md', 'w') as file:
+                file.write(''.join(tools))
+        
+        tools = ''.join(tools) if len(tool_names) > 0 else "There is no pre-defined tools used in this phase."
         return tools, tool_names
 
         # tools = ""
