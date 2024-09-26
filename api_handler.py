@@ -15,7 +15,7 @@ RETRY_DELAY = 30
 
 # Setup logging
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
+logger.setLevel(logging.WARNING)
 
 # # Load environment variables
 # from dotenv import load_dotenv

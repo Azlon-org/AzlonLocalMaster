@@ -2,6 +2,7 @@ import os
 import sys
 from typing import Dict, Tuple, List, Optional
 import copy
+import logging
 
 sys.path.append('..')
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
@@ -42,7 +43,7 @@ class SOP:
 
     # 执行完当前state，并返回新的state
     def step(self, state: State) -> Tuple[str, State]:
-        print(f"Current State: {state}")
+        logging.info(f"Current State: {state}")
         state.make_dir()
         state.make_context()
         

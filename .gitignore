@@ -35,7 +35,4 @@ test.txt
 api_key.txt
 long_message_**.txt
 
-**/tools_used_in_*.md
-multi_agents/tools/ml_tools_doc/tools_used_in_data_cleaning.md
-multi_agents/tools/ml_tools_doc/tools_used_in_feature_engineering.md
-multi_agents/tools/ml_tools_doc/tools_used_in_model_build_predict.md
+**/ml_tools_doc/

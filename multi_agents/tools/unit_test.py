@@ -43,13 +43,13 @@ class TestTool:
                 result = func(state) # return 执行结果, 测试编号, 测试信息
                 if not result[0]: # if the test failed
                     not_pass_tests.append(result)
-                    print(f"Test '{func_name}' failed: {result[2]}")
+                    logging.info(f"Test '{func_name}' failed: {result[2]}")
                     if func_name == 'test_document_exist': # 如果文件不存在 直接返回 不进行后续unit test
                         return not_pass_tests
                 else:
-                    print(f"Test '{func_name}' succeeded") # assert result
+                    logging.info(f"Test '{func_name}' succeeded") # assert result
             else:
-                print(f"Function '{func_name}' not found in TestTool class")
+                logging.info(f"Function '{func_name}' not found in TestTool class")
                 result = True, 0, f"Function '{func_name}' not found in TestTool class"
         return not_pass_tests
 

@@ -157,8 +157,8 @@ class Developer(Agent):
                     elif os.path.isdir(image_path):
                         shutil.rmtree(image_path)  # Delete directory
                 except Exception as e:
-                    print(f"Failed to delete {image_path}. Reason: {e}")
-            print(f"All files in directory '{images_dir}' have been deleted successfully.")
+                    logging.info(f"Failed to delete {image_path}. Reason: {e}")
+            logging.info(f"All files in directory '{images_dir}' have been deleted successfully.")
 
         # Run the code
         timeout_flag = False
@@ -189,7 +189,7 @@ class Developer(Agent):
                                     capture_output=True, text=True, timeout=timeout, 
                                     preexec_fn=os.setsid)
         except subprocess.TimeoutExpired:
-            print("Code execution timed out.")
+            logging.info("Code execution timed out.")
             self.all_error_messages.append(timeout_info)
             with open(path_to_error, 'w') as f:
                 f.write(timeout_info)
@@ -199,10 +199,10 @@ class Developer(Agent):
         except subprocess.CalledProcessError as e:
             if e.returncode < 0:
                 # Negative return codes usually indicate termination by a signal
-                print(f"Process was killed by signal {-e.returncode}")
+                logging.info(f"Process was killed by signal {-e.returncode}")
                 error_message = f"Process was terminated by the operating system (signal {-e.returncode})"
             else:
-                print(f"Process exited with non-zero status: {e.returncode}")
+                logging.info(f"Process exited with non-zero status: {e.returncode}")
                 error_message = f"Process exited with status {e.returncode}: {e.stderr}"
             self.all_error_messages.append(error_message)
             with open(path_to_error, 'w') as f:
@@ -210,20 +210,20 @@ class Developer(Agent):
             error_flag = True
         else:
             if result.returncode != 0:
-                print(f"Process exited with non-zero status: {result.returncode}")
+                logging.info(f"Process exited with non-zero status: {result.returncode}")
                 error_message = f"Process exited with status {result.returncode}: {result.stderr}"
                 self.all_error_messages.append(error_message)
                 with open(path_to_error, 'w') as f:
                     f.write(error_message)
                 error_flag = True
             else:
-                print("Code executed successfully without errors.")
+                logging.info("Code executed successfully without errors.")
                 self.all_error_messages = []
                 try:
                     os.remove(path_to_error)
-                    print(f"File '{path_to_error}' has been deleted successfully.")
+                    logging.info(f"File '{path_to_error}' has been deleted successfully.")
                 except FileNotFoundError:
-                    print(f"File '{path_to_error}' doesn't exist, you don't need to delete it.")
+                    logging.info(f"File '{path_to_error}' doesn't exist, you don't need to delete it.")
 
         # Write the output to a file
         if result and hasattr(result, 'stdout'):
@@ -240,25 +240,25 @@ class Developer(Agent):
         test_tool = TestTool(memory=None, model='gpt-4o', type='api')
         not_pass_flag = False
         not_pass_tests = test_tool.execute_tests(state) # [(test1_number, test1_information), ...] 全通过返回[]
-        print(f"There are {len(not_pass_tests)} not pass tests.")
+        logging.info(f"There are {len(not_pass_tests)} not pass tests.")
         not_pass_information = ""
         if not_pass_tests:
             not_pass_flag = True
-            print("Unit tests failed.")
+            logging.info("Unit tests failed.")
             for test_flag, test_number, test_information in not_pass_tests:
-                print(f"Test {test_number}: {test_information}")
+                logging.info(f"Test {test_number}: {test_information}")
                 not_pass_information += f"\n## TEST CASE NUMBER {test_number} ##\n{test_information}"
             # print("Not pass information: ", not_pass_information)
         else:
             not_pass_information = ""
-            print("All unit tests passed.")
+            logging.info("All unit tests passed.")
             try:
                 # Delete error file.
                 path_to_not_pass_info = f'{state.restore_dir}/{state.dir_name}_not_pass_information.txt'
                 os.remove(path_to_not_pass_info)
-                print(f"File '{path_to_not_pass_info}' has been deleted successfully.")
+                logging.info(f"File '{path_to_not_pass_info}' has been deleted successfully.")
             except FileNotFoundError:
-                print(f"File '{path_to_not_pass_info}' doesn't exist, you don't need to delete it.")
+                logging.info(f"File '{path_to_not_pass_info}' doesn't exist, you don't need to delete it.")
         return not_pass_flag, not_pass_information
 
     def _debug_code(self, state: State, error_flag: bool, not_pass_flag: bool, not_pass_information: str, raw_reply: str) -> str:
@@ -390,7 +390,7 @@ class Developer(Agent):
                 elif not error_flag: # 如果没有错误
                     # 进行unit test 如果根据unit test修改后的code存在问题 
                     while test_round < 2*max_tries and not error_flag:
-                        print(f"Start the {test_round+1}-th unit test.")
+                        logging.info(f"Start the {test_round+1}-th unit test.")
                         not_pass_flag, not_pass_information = self._conduct_unit_test(state)
                         if not_pass_flag: # 如果unit test不通过 进行debug test 假设run code又出错 就要重新debug code
                             raw_reply, single_round_test_history = self._debug_code(state, error_flag, not_pass_flag, not_pass_information, raw_reply)
@@ -404,7 +404,7 @@ class Developer(Agent):
                         break
                 else:
                     break
-            print(f"The {round+1}-th try.")
+            logging.info(f"The {round+1}-th try.")
             if retry_flag:
                 round -= 1
             else:
@@ -423,15 +423,15 @@ class Developer(Agent):
         execution_flag = True
         if os.path.exists(f'{state.restore_dir}/{state.dir_name}_error.txt'):
             execution_flag = False
-            print(f"State {state.phase} - Agent {self.role} finishes working with error.")
+            logging.info(f"State {state.phase} - Agent {self.role} finishes working with error.")
         else:
             if not_pass_flag:
                 execution_flag = False
-                print(f"State {state.phase} - Agent {self.role} finishes working with not pass tests.")
+                logging.info(f"State {state.phase} - Agent {self.role} finishes working with not pass tests.")
                 with open(f'{state.restore_dir}/{state.dir_name}_not_pass_information.txt', 'w') as f:
                     f.write(not_pass_information)
             else:
-                print(f"State {state.phase} - Agent {self.role} finishes working.")
+                logging.info(f"State {state.phase} - Agent {self.role} finishes working.")
 
         input_used_in_review = f"   <competition_info>\n{competition_info}\n    </competition_info>\n   <plan>\n{plan}\n    </plan>"
         return {
