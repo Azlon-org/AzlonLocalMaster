@@ -14,7 +14,8 @@ MAX_ATTEMPTS = 5
 RETRY_DELAY = 30
 
 # Setup logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
 # # Load environment variables
 # from dotenv import load_dotenv

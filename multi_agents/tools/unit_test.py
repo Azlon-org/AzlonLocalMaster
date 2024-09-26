@@ -5,6 +5,8 @@ import chromadb
 import sys
 import re
 import logging
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
 sys.path.append('..')
 sys.path.append('../..')
@@ -644,7 +646,7 @@ Id,SalePrice
             return True, 34, f"The processed_test.csv file contains an ID column: {id_columns[0]}"
         else:
             return False, 34, f"The processed_test.csv file does not contain an ID column. The columns in processed_test.csv are {df.columns}. Please ensure that the ID column is preserved during the cleaning process."
-
+    
 if __name__ == '__main__':
     # llm = LLM('gpt-4o', 'api')
     # reply, history = llm.generate('try me a joke', history=None)

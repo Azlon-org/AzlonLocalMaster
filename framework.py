@@ -18,24 +18,32 @@ if __name__ == '__main__':
     competition = args.competition
 
     sop = SOP(competition)
-    # start_state = State(phase="Understand Background", competition=competition)
+    start_state = State(phase="Understand Background", competition=competition)
     # start_state = State(phase="Preliminary Exploratory Data Analysis", competition=competition)
-    start_state = State(phase="Data Cleaning", competition=competition)
+    # start_state = State(phase="Data Cleaning", competition=competition)
     # start_state = State(phase="In-depth Exploratory Data Analysis", competition=competition)
     # start_state = State(phase="Feature Engineering", competition=competition)
     # start_state = State(phase="Model Building, Validation, and Prediction", competition=competition)
     start_message = ""
     new_state = start_state
 
-    # pdb.set_trace()
-    print(f"Start SOP for competition: {competition}")
-    # 主循环
+    # Configure logging
+    logging.basicConfig(
+        level=logging.INFO,  # Set the logging level to INFO
+        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',  # Log message format
+        handlers=[
+            logging.FileHandler(f"{PREFIX_MULTI_AGENTS}/competition/{competition}/{competition}.log"),  # Log to a file named 'project.log'
+            logging.StreamHandler(sys.stdout)  # Also log to the console
+        ]
+    )
+
+    logging.info(f"Start SOP for competition: {competition}")
     while True:
         current_state = new_state
-        state_info, new_state = sop.step(state=current_state) # 这一步执行完当前state，返回新的state
+        state_info, new_state = sop.step(state=current_state)
         if state_info == 'Fail':
-            print("Failed to update state.")
+            logging.error("Failed to update state.")
             exit()
         if state_info == 'Complete':
-            print(f"Competition {competition} SOP is completed.")
-            break    
+            logging.info(f"Competition {competition} SOP is completed.")
+            break  

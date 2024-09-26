@@ -10,8 +10,8 @@ import pdb
 import glob
 import pandas as pd
 
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
-
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 sys.path.append('..')
 sys.path.append('../..')
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
@@ -32,7 +32,7 @@ class Agent:
         self.role = role
         self.description = description
         self.llm = LLM(model, type)
-        print(f'Agent {self.role} is created.')
+        logging.info(f'Agent {self.role} is created.')
 
     def _gather_experience_with_suggestion(self, state: State) -> str:
         experience_with_suggestion = ""
@@ -285,7 +285,7 @@ class Agent:
 
     def action(self, state: State) -> Dict[str, Any]:
         # pdb.set_trace()
-        print(f"State {state.phase} - Agent {self.role} is executing.")
+        logging.info(f"State {state.phase} - Agent {self.role} is executing.")
         role_prompt = AGENT_ROLE_TEMPLATE.format(agent_role=self.role)
         return self._execute(state, role_prompt)
 

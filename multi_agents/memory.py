@@ -7,6 +7,9 @@ import json
 # from SOP import SOP
 from llm import OpenaiEmbeddings
 
+import logging
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.WARNING)
 
 def split_sklearn(text: str, max_chunk_length: int = 8191, overlap_ratio: float = 0.1):
     if not (0 <= overlap_ratio < 1):
