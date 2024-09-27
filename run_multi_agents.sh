@@ -1,8 +1,9 @@
 #!/bin/bash
 
 # Default values
-competitions=("titanic" "spaceship_titanic" "ghouls_goblins_and_ghosts_boo" "bank_churn" "house_prices" "classification_with_an_academic_success_dataset")
-runs=5
+# "titanic" "spaceship_titanic" 
+competitions=("ghouls_goblins_and_ghosts_boo" "bank_churn" "classification_with_an_academic_success_dataset")
+runs=2
 
 # Function to run a single experiment
 run_experiment() {
@@ -16,7 +17,7 @@ run_experiment() {
 
     # Define source and destination directories
     source_dir="multi_agents/competition/$competition"
-    dest_dir="multi_agents/experiments_history/$competition/$run_number"
+    dest_dir="multi_agents/experiments_history/$competition/tool_data_cleaning/$run_number"
 
     # Create destination directory if it doesn't exist
     mkdir -p "$dest_dir"

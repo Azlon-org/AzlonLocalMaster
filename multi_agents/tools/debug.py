@@ -4,6 +4,10 @@ import json
 import chromadb
 import sys
 import re
+import logging
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
 sys.path.append('..')
 sys.path.append('../..')
@@ -27,7 +31,7 @@ class DebugTool:
 
     def debug_code_with_error(self, state: State, all_error_messages: list, output_messages: str, previous_code: str, wrong_code: str, error_messages: str, tools: str, tool_names: list) -> str:
         debug_times = len(all_error_messages)
-        print(f"Debug times: {debug_times}")
+        logger.info(f"Debug times: {debug_times}")
 
         single_round_debug_history = []
         # locate error

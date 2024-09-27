@@ -181,7 +181,7 @@ class Agent:
         return md_output
 
     def _get_tools(self, state: State) -> Tuple[str, List[str]]:
-        embeddings = OpenaiEmbeddings(api_key=load_api_config()[0])
+        embeddings = OpenaiEmbeddings(api_key=load_api_config()[0], base_url=load_api_config()[1])
         memory = RetrieveTool(self.llm, embeddings, doc_path='multi_agents/tools/ml_tools_doc', collection_name='tools')
         # update the memory
         memory.create_db_tools()
@@ -191,9 +191,9 @@ class Agent:
             phase_to_dir = [key for key, value in json.load(file)['phase_to_directory'].items() if value == state_name][0]
             # print(phase_to_dir)
         with open('multi_agents/config.json', 'r') as file:
-            all_tool_names = json.load(file)['_phase_to_ml_tools'][phase_to_dir]
+            all_tool_names = json.load(file)['phase_to_ml_tools'][phase_to_dir]
 
-        if self.role == 'developer' and state.phase in ['Data Cleaning', 'Feature Engineering', 'Model Building, Validation, and Prediction']:
+        if self.role == 'developer' and state.phase in ['Data Cleaning', 'Feature Engineering', 'Model Building, Validation, and Prediction'] and len(all_tool_names) > 0:
             logger.info(f"Extracting tools' description for developer in phase: {state.phase}")
             with open(f'{state.competition_dir}/{state.dir_name}/markdown_plan.txt', 'r') as file:
                 markdown_plan = file.read()
@@ -210,7 +210,7 @@ class Agent:
             conclusion = memory.query_tools(f'Use the {tool_name} tool.', state_name)
             tools.append(conclusion)
 
-        if len(tools) > 0 and self.role == 'developer':  
+        if self.role == 'developer' and state.phase in ['Data Cleaning', 'Feature Engineering', 'Model Building, Validation, and Prediction']:  
             with open(f'{PREFIX_MULTI_AGENTS}/tools/ml_tools_doc/tools_used_in_{state.dir_name}.md', 'w') as file:
                 file.write(''.join(tools))
         
