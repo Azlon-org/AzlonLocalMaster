@@ -43,13 +43,13 @@ class TestTool:
                 result = func(state) # return 执行结果, 测试编号, 测试信息
                 if not result[0]: # if the test failed
                     not_pass_tests.append(result)
-                    logging.info(f"Test '{func_name}' failed: {result[2]}")
+                    logger.info(f"Test '{func_name}' failed: {result[2]}")
                     if func_name == 'test_document_exist': # 如果文件不存在 直接返回 不进行后续unit test
                         return not_pass_tests
                 else:
-                    logging.info(f"Test '{func_name}' succeeded") # assert result
+                    logger.info(f"Test '{func_name}' succeeded") # assert result
             else:
-                logging.info(f"Function '{func_name}' not found in TestTool class")
+                logger.info(f"Function '{func_name}' not found in TestTool class")
                 result = True, 0, f"Function '{func_name}' not found in TestTool class"
         return not_pass_tests
 
@@ -66,9 +66,9 @@ class TestTool:
         files = os.listdir(state.competition_dir)
         
         if state.phase == "Model Building, Validation, and Prediction":
-            # Check for the existence of submission.csv, the name of the submission file may be different from the submission.csv
+            # Check for the existence of submission.csv
             required_files = ["submission.csv"]
-            missing_files = [file for file in required_files if not any(file in f for f in files)]
+            missing_files = [file for file in required_files if file not in files]
             if not missing_files:
                 return True, 2, "submission.csv exists"
             else:
@@ -78,7 +78,7 @@ class TestTool:
         elif state.phase == "Data Cleaning":
             # Check for the existence of cleaned_train and cleaned_test
             required_files = ["cleaned_train.csv", "cleaned_test.csv"]
-            missing_files = [file for file in required_files if not any(file in f for f in files)]
+            missing_files = [file for file in required_files if file not in files]
             
             if not missing_files:
                 return True, 2, "cleaned_train.csv and cleaned_test.csv data exist"
@@ -88,7 +88,7 @@ class TestTool:
         elif state.phase == "Feature Engineering":
             # Check for the existence of processed_train and processed_test
             required_files = ["processed_train.csv", "processed_test.csv"]
-            missing_files = [file for file in required_files if not any(file in f for f in files)]
+            missing_files = [file for file in required_files if file not in files]
             
             if not missing_files:
                 return True, 2, "processed_train.csv and processed_test.csv data exist"

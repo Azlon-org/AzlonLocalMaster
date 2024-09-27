@@ -89,7 +89,7 @@ class Planner(Agent):
             try:
                 json_plan = self._parse_json(raw_json_plan)['final_answer']
             except Exception as e:
-                logging.info(f"Error parsing JSON: {e}")
+                logger.info(f"Error parsing JSON: {e}")
                 json_plan = self._parse_json(raw_json_plan)
             with open(f'{state.restore_dir}/json_plan.json', 'w') as f:
                 json.dump(json_plan, f, indent=4)

@@ -27,17 +27,28 @@ if __name__ == '__main__':
     start_message = ""
     new_state = start_state
 
-    # Configure logging
-    logging.basicConfig(
-        level=logging.INFO,  # Set the logging level to INFO
-        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',  # Log message format
-        handlers=[
-            logging.FileHandler(f"{PREFIX_MULTI_AGENTS}/competition/{competition}/{competition}.log"),  # Log to a file named 'project.log'
-            logging.StreamHandler(sys.stdout)  # Also log to the console
-        ]
-    )
+    # 配置根logger
+    root_logger = logging.getLogger()
+    root_logger.setLevel(logging.INFO)
+    
+    # 创建文件处理器
+    file_handler = logging.FileHandler(f"{PREFIX_MULTI_AGENTS}/competition/{competition}/{competition}.log")
+    file_handler.setLevel(logging.INFO)
+    
+    # 创建控制台处理器
+    console_handler = logging.StreamHandler(sys.stdout)
+    console_handler.setLevel(logging.INFO)
+    
+    # 创建格式化器
+    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    file_handler.setFormatter(formatter)
+    console_handler.setFormatter(formatter)
+    
+    # 将处理器添加到根logger
+    root_logger.addHandler(file_handler)
+    root_logger.addHandler(console_handler)
 
-    logging.info(f"Start SOP for competition: {competition}")
+    root_logger.info(f"Start SOP for competition: {competition}")
     while True:
         current_state = new_state
         state_info, new_state = sop.step(state=current_state)

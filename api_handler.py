@@ -17,6 +17,9 @@ RETRY_DELAY = 30
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.WARNING)
 
+# 配置 httpx 的日志级别
+logging.getLogger("httpx").setLevel(logging.WARNING)
+
 # # Load environment variables
 # from dotenv import load_dotenv
 # load_dotenv()
@@ -46,7 +49,7 @@ def load_api_config() -> Tuple[str, Optional[str]]:
 
 def generate_response(client: openai.OpenAI, engine: str, messages: List[Dict[str, str]], 
                       settings: APISettings, response_type: str) -> Any:
-    logging.info(f"Generating response for engine: {engine}")
+    logger.info(f"Generating response for engine: {engine}")
     start_time = time.time()
     
     try:
@@ -75,7 +78,7 @@ def generate_response(client: openai.OpenAI, engine: str, messages: List[Dict[st
         logging.error(f"Error during API call: {e}")
         raise
     
-    logging.info(f"Response generated in {time.time() - start_time:.2f} seconds")
+    logger.info(f"Response generated in {time.time() - start_time:.2f} seconds")
     return response
 
 class APIHandler:
@@ -95,7 +98,7 @@ class APIHandler:
             for message in messages:
                 f.write(f"Role: {message['role']}\n")
                 f.write(f"Content: {message['content']}\n\n")
-        logging.info(f"Long message saved to {filename}")
+        logger.info(f"Long message saved to {filename}")
 
     def get_output(self, messages: List[Dict[str, str]], settings: APISettings, response_type: str = 'text') -> str:
         for attempt in range(MAX_ATTEMPTS):

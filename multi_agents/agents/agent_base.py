@@ -32,7 +32,7 @@ class Agent:
         self.role = role
         self.description = description
         self.llm = LLM(model, type)
-        logging.info(f'Agent {self.role} is created.')
+        logger.info(f'Agent {self.role} is created.')
 
     def _gather_experience_with_suggestion(self, state: State) -> str:
         experience_with_suggestion = ""
@@ -105,7 +105,7 @@ class Agent:
                 return None
 
         raw_reply = raw_reply.strip()
-        logging.info(f"Attempting to extract JSON from raw reply.")
+        logger.info(f"Attempting to extract JSON from raw reply.")
         json_match = re.search(r'```json(.*)```', raw_reply, re.DOTALL) # 贪婪模式捕获
         
         if json_match:
@@ -114,7 +114,7 @@ class Agent:
             if reply is not None:
                 return reply
         
-        logging.info(f"Failed to parse JSON from raw reply, attempting reorganization.")
+        logger.info(f"Failed to parse JSON from raw reply, attempting reorganization.")
         if self.role == "planner":
             json_reply, _ = self.llm.generate(REORGANIZE_REPLY_TYPE3.format(information=raw_reply), history=[], max_tokens=4096)
         elif self.role == "reviewer":
@@ -194,7 +194,7 @@ class Agent:
             all_tool_names = json.load(file)['_phase_to_ml_tools'][phase_to_dir]
 
         if self.role == 'developer' and state.phase in ['Data Cleaning', 'Feature Engineering', 'Model Building, Validation, and Prediction']:
-            logging.info(f"Extracting tools' description for developer in phase: {state.phase}")
+            logger.info(f"Extracting tools' description for developer in phase: {state.phase}")
             with open(f'{state.competition_dir}/{state.dir_name}/markdown_plan.txt', 'r') as file:
                 markdown_plan = file.read()
             input = PROMPT_EXTRACT_TOOLS.format(document=markdown_plan, all_tool_names=all_tool_names)
@@ -285,7 +285,7 @@ class Agent:
 
     def action(self, state: State) -> Dict[str, Any]:
         # pdb.set_trace()
-        logging.info(f"State {state.phase} - Agent {self.role} is executing.")
+        logger.info(f"State {state.phase} - Agent {self.role} is executing.")
         role_prompt = AGENT_ROLE_TEMPLATE.format(agent_role=self.role)
         return self._execute(state, role_prompt)
 
