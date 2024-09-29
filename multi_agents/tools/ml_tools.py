@@ -1175,19 +1175,26 @@ from sklearn.svm import SVC, SVR
 from sklearn.neural_network import MLPClassifier, MLPRegressor
 from sklearn.metrics import f1_score, mean_squared_error, accuracy_score
 
-def select_best_model(X, y, problem_type='binary'):
+def train_and_select_the_best_model(X, y, problem_type='binary', selected_models=['XGBoost', 'SVM', 'neural network']):
     """
-    Select the best machine learning model based on training data and labels,
-    and return the performance of each model with its best hyperparameters.
+    Train and select the best machine learning model based on the training data and labels,
+    and return the best performing model along with the performance scores of each model 
+    with their best hyperparameters.
+
+    This function is designed to automate the process of model training, model selection and hyperparameter tuning.
+    It uses cross-validation to evaluate the performance of different models and selects the best one
+    for the given problem type (binary classification, multiclass classification, or regression).
     
     Args:
         X (pd.DataFrame): Features for training.
         y (pd.Series): Labels for training.
         problem_type (str): Type of problem ('binary', 'multiclass', 'regression').
+        selected_models (list, optional): List of model names to be considered for selection. 
+                                          If None, a default set of models will be used.
+                                          Default: ['XGBoost', 'SVM', 'neural network']
     
     Returns:
-        best_model: The best performing model.
-        results: A dictionary with model names as keys and their scores as values.
+        best_model: The best performing model, trained on the train dataset.
     """
     # Split data into training and validation sets
     X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=0.2, random_state=42)
@@ -1270,6 +1277,7 @@ def select_best_model(X, y, problem_type='binary'):
     best_score = float('-inf') if problem_type in ['binary', 'multiclass'] else float('inf')
     results = {}
 
+    models = {model_name: models[model_name] for model_name in selected_models}
     # Hyperparameter optimization
     for model_name, (model, param_grid) in models.items():
         optimizer = GridSearchCV(estimator=model, param_grid=param_grid, cv=5, scoring=scoring)

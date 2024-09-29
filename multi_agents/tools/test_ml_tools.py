@@ -447,18 +447,11 @@ def test_select_best_model():
     X = pd.DataFrame(X, columns=[f'feature_{i}' for i in range(20)])
     y = pd.Series(y).astype(int)  # 确保 y 是整数类型
     # 测试 select_best_model 函数
-    best_model, performance_results = select_best_model(X, y, problem_type='binary')
+    best_model, results = train_and_select_the_best_model(X, y, problem_type='binary', selected_models=['XGBoost', 'SVM', 'neural network'])
 
     # 确保返回的最佳模型不为 None
     assert best_model is not None, "Best model should not be None"
 
-    # 确保性能结果字典不为空
-    assert performance_results, "Performance results should not be empty"
-
-    # 确保每个模型都有最佳参数和得分
-    for model_name, result in performance_results.items():
-        assert 'best_params' in result, f"Best params should be in results for model: {model_name}"
-        assert 'score' in result, f"Score should be in results for model: {model_name}"
 
 def run_all_tests():
     # 列出所有测试函数

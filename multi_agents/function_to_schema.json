@@ -877,302 +877,58 @@
             "Some features may not be suitable for all types of time series data; choose features based on domain knowledge and the specific problem."
         ]
     },
-    "model_choice":{
-        "name": "model_choice",
-        "description": "Choose a machine learning model based on the input model name.",
-        "applicable_situations": "Model selection for various machine learning tasks, ensuring the use of appropriate algorithms based on the problem type.",
+    "train_and_select_the_best_model": {
+        "name": "train_and_select_the_best_model",
+        "description": "Automate model training, selection, and hyperparameter tuning for various machine learning tasks, returning the best performing model and their performance metrics.",
+        "applicable_situations": "model selection, hyperparameter tuning, automated machine learning workflows",
         "parameters": {
-            "model_name": {
-                "type": "string",
-                "description": "The name of the model to choose.",
-                "enum": ["linear regression", "logistic regression", "decision tree", "random forest", "XGBoost", "SVM", "neural network"]
-            }
-        },
-        "required": ["model_name"],
-        "result": "Model instance corresponding to the selected model name.",
-        "raises": [
-            {
-                "type": "ValueError",
-                "description": "If the model_name is not recognized."
-            }
-        ],
-        "notes": [
-            "Facilitates the selection of compatible scikit-learn models.",
-            "Ensure that the model_name is valid to avoid runtime errors."
-        ]
-    },
-    "model_train": {
-        "name": "model_train",
-        "description": "Choose a model training tool based on the input training tool name.",
-        "applicable_situations": "Model training and optimization processes, allowing users to select appropriate techniques for hyperparameter tuning.",
-        "parameters": {
-            "train_tool": {
-                "type": "string",
-                "description": "The name of the model training tool.",
-                "enum": ["cross validation", "grid search", "random search"],
-                "required": true
-            }
-        },
-        "required": ["train_tool"],
-        "result": "The corresponding training tool instance.",
-        "raises": [
-            {
-                "type": "ValueError",
-                "description": "If the train_tool is not recognized."
-            }
-        ],
-        "notes": [
-            "Supports efficient model evaluation and parameter tuning.",
-            "Choose training tools based on model complexity and data characteristics."
-        ]
-    },
-    "model_evaluation": {
-        "name": "model_evaluation",
-        "description": "Choose a model evaluation tool based on the input evaluation tool name.",
-        "applicable_situations": "Model performance assessment for classification and regression tasks.",
-        "parameters": {
-            "evaluation_tool": {
-                "type": "string",
-                "description": "The name of the evaluation tool.",
-                "enum": [
-                    "accuracy", "precision", "recall", "F1 score", "ROC AUC",
-                    "MSE", "RMSE", "MAE", "R²"
-                ],
-                "required": true
-            }
-        },
-        "required": ["evaluation_tool"],
-        "result": "Corresponding evaluation function for the selected metric.",
-        "raises": [
-            {
-                "type": "ValueError",
-                "description": "If the evaluation_tool is not recognized."
-            }
-        ],
-        "notes": [
-            "Supports both classification and regression evaluation metrics.",
-            "Ensure compatibility of the chosen metric with the model type."
-        ]
-    },
-    "model_explanation": {
-        "name": "model_explanation",
-        "description": "Choose a model explanation tool based on the input tool name.",
-        "applicable_situations": "Understanding model behavior and feature contributions in predictive models.",
-        "parameters": {
-            "explanation_tool": {
-                "type": "string",
-                "description": "The name of the explanation tool.",
-                "enum": ["feature importance", "SHAP", "partial dependence"],
-                "required": true
-            }
-        },
-        "required": ["explanation_tool"],
-        "result": "Corresponding explanation function for the selected tool.",
-        "raises": [
-            {
-                "type": "ValueError",
-                "description": "If the explanation_tool is not recognized."
-            }
-        ],
-        "notes": [
-            "Provides insights into model predictions and feature significance.",
-            "Select tools based on the model type and interpretability needs."
-        ]
-    },
-    "model_persistence": {
-        "name": "model_persistence",
-        "description": "Choose a model persistence tool for saving and loading models.",
-        "applicable_situations": "Model serialization and deserialization for long-term storage and retrieval.",
-        "parameters": {
-            "tool_name": {
-                "type": "string",
-                "description": "The name of the persistence tool.",
-                "enum": ["joblib", "pickle"],
-                "required": true
-            }
-        },
-        "required": ["tool_name"],
-        "result": "A dictionary with 'save' and 'load' functions for the chosen tool.",
-        "raises": [
-            {
-                "type": "ValueError",
-                "description": "If the tool_name is not recognized."
-            }
-        ],
-        "notes": [
-            "Select the persistence tool based on the complexity and size of the model.",
-            "Ensure compatibility with the model type when saving and loading."
-        ]
-    },
-    "prediction_tool": {
-        "name": "prediction_tool",
-        "description": "Choose a prediction tool for single or batch predictions.",
-        "applicable_situations": "Making predictions using trained models for either individual samples or multiple samples.",
-        "parameters": {
-            "tool_name": {
-                "type": "string",
-                "description": "The name of the prediction tool.",
-                "enum": ["single prediction", "batch prediction"],
-                "required": true
-            },
-            "model": {
-                "type": "object",
-                "description": "The trained model to use for predictions."
-            },
             "X": {
-                "type": "array",
-                "description": "The input data for prediction, either a single sample or batch of samples."
-            }
-        },
-        "required": ["tool_name", "model", "X"],
-        "result": "The predictions made by the model as a numpy array.",
-        "raises": [
-            {
-                "type": "ValueError",
-                "description": "If the tool_name is not recognized."
-            }
-        ],
-        "notes": [
-            "Choose the prediction tool based on the data format and requirements.",
-            "Ensure that the input data matches the model's expected input shape."
-        ]
-    },
-    "best_model_selection_tool": {
-        "name": "best_model_selection_tool",
-        "description": "Choose the best model based on a specific evaluation metric.",
-        "applicable_situations": "Model evaluation and selection based on performance metrics for classification or regression tasks.",
-        "parameters": {
-            "tool_name": {
-                "type": "string",
-                "description": "The name of the model selection tool.",
-                "enum": ["classification", "regression"],
-                "required": true
-            },
-            "model_paths": {
-                "type": "array",
-                "description": "A list of file paths to the trained models.",
-                "items": {
-                    "type": "string"
-                },
-                "required": true
-            },
-            "persistence_tool": {
-                "type": "string",
-                "description": "The model persistence tool.",
-                "enum": ["joblib", "pickle"],
-                "required": true
-            },
-            "X_test": {
-                "type": "array",
-                "description": "The test input data."
-            },
-            "y_test": {
-                "type": "array",
-                "description": "The test target labels."
-            },
-            "evaluation_tool": {
-                "type": "string",
-                "description": "The name of the evaluation metric to use."
-            }
-        },
-        "required": ["tool_name", "model_paths", "persistence_tool", "X_test", "y_test", "evaluation_tool"],
-        "result": "Tuple containing the best model and its evaluation score.",
-        "raises": [
-            {
-                "type": "ValueError",
-                "description": "If the tool_name or evaluation_tool is not recognized."
-            }
-        ],
-        "notes": [
-            "Evaluates multiple models to find the best based on the specified metric.",
-            "Ensure that models are compatible with the chosen evaluation metric."
-        ]
-    },
-    "ensemble_model_tool": {
-        "name": "ensemble_model_tool",
-        "description": "Choose an ensemble learning tool based on the input tool name.",
-        "applicable_situations": "Creating ensemble models for improved predictive performance using Bagging, Boosting, or Stacking techniques.",
-        "parameters": {
-            "tool_name": {
-                "type": "string",
-                "description": "The name of the ensemble learning tool.",
-                "enum": ["Bagging", "Boosting", "Stacking"],
-                "required": true
-            },
-            "base_estimator": {
-                "type": "object",
-                "description": "The base estimator for Bagging (default: None)."
-            },
-            "estimators": {
-                "type": "array",
-                "description": "List of estimators for Stacking (default: None).",
-                "items": {
-                    "type": "object"
-                }
-            }
-        },
-        "required": ["tool_name", "base_estimator", "estimators"],
-        "result": "An instance of the corresponding ensemble learning tool.",
-        "raises": [
-            {
-                "type": "ValueError",
-                "description": "If the tool_name is not recognized."
-            }
-        ],
-        "notes": [
-            "Select the appropriate ensemble method based on the problem context.",
-            "Consider base estimators for Bagging to improve model performance."
-        ]
-    },
-    "hyperparameter_optimization_tool": {
-        "name": "hyperparameter_optimization_tool",
-        "description": "Choose a hyperparameter optimization tool based on the input tool name.",
-        "applicable_situations": "Optimizing model parameters to improve performance using various search techniques.",
-        "parameters": {
-            "tool_name": {
-                "type": "string",
-                "description": "The name of the optimization tool.",
-                "enum": ["Grid Search", "Random Search", "Bayesian Optimization"],
-                "required": true
-            },
-            "model": {
-                "type": "object",
-                "description": "The machine learning model to optimize."
-            },
-            "param_grid": {
-                "type": "object",
-                "description": "The parameter grid to search over."
-            },
-            "X": {
-                "type": "object",
-                "description": "Training data features as a pandas DataFrame."
+                "type": "pd.DataFrame",
+                "description": "Features for training."
             },
             "y": {
-                "type": "object",
-                "description": "Training data labels as a pandas Series."
+                "type": "pd.Series",
+                "description": "Labels for training."
             },
-            "cv": {
-                "type": "integer",
-                "description": "Number of cross-validation folds.",
-                "default": 5
+            "problem_type": {
+                "type": "string",
+                "description": "Type of problem ('binary', 'multiclass', 'regression').",
+                "default": "binary"
             },
-            "n_iter": {
-                "type": "integer",
-                "description": "Number of iterations for Random Search or Bayesian Optimization.",
-                "default": 10
+            "selected_models": {
+                "type": "list",
+                "description": "List of model names to consider for selection.",
+                "default": ["XGBoost", "SVM", "neural network"]
             }
         },
-        "required": ["tool_name", "model", "param_grid", "X", "y", "cv", "n_iter"],
-        "result": "Optimized model after performing the selected hyperparameter search.",
-        "raises": [
-            {
-                "type": "ValueError",
-                "description": "If the tool_name is not recognized."
-            }
-        ],
+        "required": ["X", "y"],
+        "result": "The best performing trained model.",
+        "additionalProperties": false,
         "notes": [
-            "Select an optimization method based on the problem's complexity and the model's characteristics.",
-            "Consider the trade-off between search time and the quality of the found parameters."
-        ]
+            "Utilizes cross-validation for performance evaluation.",
+            "Supports binary, multiclass classification, and regression tasks.",
+            "Employs GridSearchCV for hyperparameter optimization.",
+            "Outputs performance scores and best hyperparameters for each model.",
+            "Requires scikit-learn and relevant model libraries."
+        ],
+        "example": {
+            "input": {
+                "X": {
+                    "feature1": [1, 2, 3, 4, 5],
+                    "feature2": [2, 4, 5, 4, 5],
+                    "feature3": [3, 6, 7, 8, 9]
+                },
+                "y": [0, 1, 0, 1, 0],
+                "problem_type": "binary",
+                "selected_models": ["XGBoost", "SVM"]
+            },
+            "output": {
+                "best_model": "XGBoost()",
+                "performance": {
+                    "XGBoost": {"best_params": {"n_estimators": 100, "learning_rate": 0.1}, "score": 0.95},
+                    "SVM": {"best_params": {"C": 1, "kernel": "rbf"}, "score": 0.90}
+                }
+            }
+        }
     }
 }

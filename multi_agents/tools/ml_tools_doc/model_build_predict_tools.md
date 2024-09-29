@@ -656,222 +656,58 @@
 - Be mindful of the computational cost, especially with a large number of input features or high max_combination_size.
 
 ---
-## model_choice
+## train_and_select_the_best_model
 
-**Name:** model_choice  
-**Description:** Choose a machine learning model based on the input model name.  
-**Applicable Situations:** Model selection for various machine learning tasks, ensuring the use of appropriate algorithms based on the problem type.
-
-**Parameters:**
-- `model_name`:
-  - **Type:** `string`
-  - **Description:** The name of the model to choose.
-  - **Enum:** `linear regression` | `logistic regression` | `decision tree` | `random forest` | `XGBoost` | `SVM` | `neural network`
-
-**Required:** `model_name`  
-**Result:** Model instance corresponding to the selected model name.  
-**Notes:**
-- Facilitates the selection of compatible scikit-learn models.
-- Ensure that the model_name is valid to avoid runtime errors.
-
----
-## model_train
-
-**Name:** model_train  
-**Description:** Choose a model training tool based on the input training tool name.  
-**Applicable Situations:** Model training and optimization processes, allowing users to select appropriate techniques for hyperparameter tuning.
+**Name:** train_and_select_the_best_model  
+**Description:** Automate model training, selection, and hyperparameter tuning for various machine learning tasks, returning the best performing model and their performance metrics.  
+**Applicable Situations:** Model selection, hyperparameter tuning, automated machine learning workflows.
 
 **Parameters:**
-- `train_tool`:
-  - **Type:** `string`
-  - **Description:** The name of the model training tool.
-  - **Enum:** `cross validation` | `grid search` | `random search`
-
-**Required:** `train_tool`  
-**Result:** The corresponding training tool instance.  
-**Notes:**
-- Supports efficient model evaluation and parameter tuning.
-- Choose training tools based on model complexity and data characteristics.
-
----
-## model_evaluation
-
-**Name:** model_evaluation  
-**Description:** Choose a model evaluation tool based on the input evaluation tool name.  
-**Applicable Situations:** Model performance assessment for classification and regression tasks.
-
-**Parameters:**
-- `evaluation_tool`:
-  - **Type:** `string`
-  - **Description:** The name of the evaluation tool.
-  - **Enum:** `accuracy` | `precision` | `recall` | `F1 score` | `ROC AUC` | `MSE` | `RMSE` | `MAE` | `R²`
-
-**Required:** `evaluation_tool`  
-**Result:** Corresponding evaluation function for the selected metric.  
-**Notes:**
-- Supports both classification and regression evaluation metrics.
-- Ensure compatibility of the chosen metric with the model type.
-
----
-## model_explanation
-
-**Name:** model_explanation  
-**Description:** Choose a model explanation tool based on the input tool name.  
-**Applicable Situations:** Understanding model behavior and feature contributions in predictive models.
-
-**Parameters:**
-- `explanation_tool`:
-  - **Type:** `string`
-  - **Description:** The name of the explanation tool.
-  - **Enum:** `feature importance` | `SHAP` | `partial dependence`
-
-**Required:** `explanation_tool`  
-**Result:** Corresponding explanation function for the selected tool.  
-**Notes:**
-- Provides insights into model predictions and feature significance.
-- Select tools based on the model type and interpretability needs.
-
----
-## model_persistence
-
-**Name:** model_persistence  
-**Description:** Choose a model persistence tool for saving and loading models.  
-**Applicable Situations:** Model serialization and deserialization for long-term storage and retrieval.
-
-**Parameters:**
-- `tool_name`:
-  - **Type:** `string`
-  - **Description:** The name of the persistence tool.
-  - **Enum:** `joblib` | `pickle`
-
-**Required:** `tool_name`  
-**Result:** A dictionary with 'save' and 'load' functions for the chosen tool.  
-**Notes:**
-- Select the persistence tool based on the complexity and size of the model.
-- Ensure compatibility with the model type when saving and loading.
-
----
-## prediction_tool
-
-**Name:** prediction_tool  
-**Description:** Choose a prediction tool for single or batch predictions.  
-**Applicable Situations:** Making predictions using trained models for either individual samples or multiple samples.
-
-**Parameters:**
-- `tool_name`:
-  - **Type:** `string`
-  - **Description:** The name of the prediction tool.
-  - **Enum:** `single prediction` | `batch prediction`
-- `model`:
-  - **Type:** `object`
-  - **Description:** The trained model to use for predictions.
 - `X`:
-  - **Type:** `array`
-  - **Description:** The input data for prediction, either a single sample or batch of samples.
-
-**Required:** `tool_name`, `model`, `X`  
-**Result:** The predictions made by the model as a numpy array.  
-**Notes:**
-- Choose the prediction tool based on the data format and requirements.
-- Ensure that the input data matches the model's expected input shape.
-
----
-## best_model_selection_tool
-
-**Name:** best_model_selection_tool  
-**Description:** Choose the best model based on a specific evaluation metric.  
-**Applicable Situations:** Model evaluation and selection based on performance metrics for classification or regression tasks.
-
-**Parameters:**
-- `tool_name`:
-  - **Type:** `string`
-  - **Description:** The name of the model selection tool.
-  - **Enum:** `classification` | `regression`
-- `model_paths`:
-  - **Type:** `array`
-  - **Description:** A list of file paths to the trained models.
-- `persistence_tool`:
-  - **Type:** `string`
-  - **Description:** The model persistence tool.
-  - **Enum:** `joblib` | `pickle`
-- `X_test`:
-  - **Type:** `array`
-  - **Description:** The test input data.
-- `y_test`:
-  - **Type:** `array`
-  - **Description:** The test target labels.
-- `evaluation_tool`:
-  - **Type:** `string`
-  - **Description:** The name of the evaluation metric to use.
-
-**Required:** `tool_name`, `model_paths`, `persistence_tool`, `X_test`, `y_test`, `evaluation_tool`  
-**Result:** Tuple containing the best model and its evaluation score.  
-**Notes:**
-- Evaluates multiple models to find the best based on the specified metric.
-- Ensure that models are compatible with the chosen evaluation metric.
-
----
-## ensemble_model_tool
-
-**Name:** ensemble_model_tool  
-**Description:** Choose an ensemble learning tool based on the input tool name.  
-**Applicable Situations:** Creating ensemble models for improved predictive performance using Bagging, Boosting, or Stacking techniques.
-
-**Parameters:**
-- `tool_name`:
-  - **Type:** `string`
-  - **Description:** The name of the ensemble learning tool.
-  - **Enum:** `Bagging` | `Boosting` | `Stacking`
-- `base_estimator`:
-  - **Type:** `object`
-  - **Description:** The base estimator for Bagging (default: None).
-- `estimators`:
-  - **Type:** `array`
-  - **Description:** List of estimators for Stacking (default: None).
-
-**Required:** `tool_name`, `base_estimator`, `estimators`  
-**Result:** An instance of the corresponding ensemble learning tool.  
-**Notes:**
-- Select the appropriate ensemble method based on the problem context.
-- Consider base estimators for Bagging to improve model performance.
-
----
-## hyperparameter_optimization_tool
-
-**Name:** hyperparameter_optimization_tool  
-**Description:** Choose a hyperparameter optimization tool based on the input tool name.  
-**Applicable Situations:** Optimizing model parameters to improve performance using various search techniques.
-
-**Parameters:**
-- `tool_name`:
-  - **Type:** `string`
-  - **Description:** The name of the optimization tool.
-  - **Enum:** `Grid Search` | `Random Search` | `Bayesian Optimization`
-- `model`:
-  - **Type:** `object`
-  - **Description:** The machine learning model to optimize.
-- `param_grid`:
-  - **Type:** `object`
-  - **Description:** The parameter grid to search over.
-- `X`:
-  - **Type:** `object`
-  - **Description:** Training data features as a pandas DataFrame.
+  - **Type:** `pd.DataFrame`
+  - **Description:** Features for training.
 - `y`:
-  - **Type:** `object`
-  - **Description:** Training data labels as a pandas Series.
-- `cv`:
-  - **Type:** `integer`
-  - **Description:** Number of cross-validation folds.
-  - **Default:** `5`
-- `n_iter`:
-  - **Type:** `integer`
-  - **Description:** Number of iterations for Random Search or Bayesian Optimization.
-  - **Default:** `10`
+  - **Type:** `pd.Series`
+  - **Description:** Labels for training.
+- `problem_type`:
+  - **Type:** `string`
+  - **Description:** Type of problem ('binary', 'multiclass', 'regression').
+  - **Default:** `binary`
+- `selected_models`:
+  - **Type:** `list`
+  - **Description:** List of model names to consider for selection.
+  - **Default:** `["XGBoost", "SVM", "neural network"]`
 
-**Required:** `tool_name`, `model`, `param_grid`, `X`, `y`, `cv`, `n_iter`  
-**Result:** Optimized model after performing the selected hyperparameter search.  
+**Required:** `X`, `y`  
+**Result:** The best performing trained model.  
+**Additional Properties:** false  
 **Notes:**
-- Select an optimization method based on the problem's complexity and the model's characteristics.
-- Consider the trade-off between search time and the quality of the found parameters.
+- Utilizes cross-validation for performance evaluation.
+- Supports binary, multiclass classification, and regression tasks.
+- Employs GridSearchCV for hyperparameter optimization.
+- Outputs performance scores and best hyperparameters for each model.
+- Requires scikit-learn and relevant model libraries.
 
+**Example:**
+- **Input:**
+  ```json
+  {
+    "X": {
+      "feature1": [1, 2, 3, 4, 5],
+      "feature2": [2, 4, 5, 4, 5],
+      "feature3": [3, 6, 7, 8, 9]
+    },
+    "y": [0, 1, 0, 1, 0],
+    "problem_type": "binary",
+    "selected_models": ["XGBoost", "SVM"]
+  }
+- **Output:**
+  ```json
+    {
+    "best_model": "XGBoost()",
+    "performance": {
+      "XGBoost": {"best_params": {"n_estimators": 100, "learning_rate": 0.1}, "score": 0.95},
+      "SVM": {"best_params": {"C": 1, "kernel": "rbf"}, "score": 0.90}
+    }
+  }
 ---
