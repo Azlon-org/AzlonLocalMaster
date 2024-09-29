@@ -1,11 +1,11 @@
 #!/bin/bash
 
 # Default values
-# "titanic" "spaceship_titanic" 
-competitions=("titanic" "spaceship_titanic" "ghouls_goblins_and_ghosts_boo" "bank_churn" "classification_with_an_academic_success_dataset")
-start_run=1
+# "titanic" "spaceship_titanic" "ghouls_goblins_and_ghosts_boo" "bank_churn" "house_prices" "classification_with_an_academic_success_dataset"
+competitions=("house_prices")
+start_run=3
 end_run=3
-dest_dir_param="tool_data_cleaning_and_feature_engineering"
+dest_dir_param="tool_data_cleaning"
 
 # Function to run a single experiment
 run_experiment() {

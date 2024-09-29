@@ -22,7 +22,7 @@ class LLM:
         return multi_chat(self.model, prompt, history, max_tokens)
     
 class OpenaiEmbeddings:
-    def __init__(self, api_key: str, base_url: str = None, model: str = 'text-embedding-3-small'):
+    def __init__(self, api_key: str, base_url: str = None, model: str = 'text-embedding-3-large'):
         self.client = OpenAI(api_key=api_key, base_url=base_url)
         self.model = model
 
