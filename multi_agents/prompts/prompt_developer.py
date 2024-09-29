@@ -56,6 +56,7 @@ PROMPT_DEVELOPER_CONSTRAINTS = '''
    - Save image files in the `{restore_path}/images/` directory.
    - Save data files in the `{competition_path}/` directory.
    - Use clear, meaningful names for image files that reflect their content.
+   - Do NOT use special characters like `/` or spaces in file names.
    - Save specific files for each phase:
      - Data Cleaning: `cleaned_train.csv` and `cleaned_test.csv`
      - Feature Engineering: `processed_train.csv` and `processed_test.csv`

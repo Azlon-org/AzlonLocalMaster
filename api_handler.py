@@ -100,21 +100,38 @@ class APIHandler:
                 f.write(f"Content: {message['content']}\n\n")
         logger.info(f"Long message saved to {filename}")
 
+    def _truncate_messages(self, messages: List[Dict[str, str]], max_length: int = 1000000) -> List[Dict[str, str]]:
+        """Truncate messages to fit within the maximum length."""
+        truncated = []
+        current_length = 0
+        for message in reversed(messages):
+            message_length = len(message['content'])
+            if current_length + message_length <= max_length:
+                truncated.insert(0, message)
+                current_length += message_length
+            else:
+                available_length = max_length - current_length
+                if available_length > 100:  # Ensure we have enough space for a meaningful truncation
+                    truncated_content = message['content'][:available_length-3] + "..."
+                    truncated.insert(0, {"role": message['role'], "content": truncated_content})
+                break
+        return truncated
+
     def get_output(self, messages: List[Dict[str, str]], settings: APISettings, response_type: str = 'text') -> str:
         for attempt in range(MAX_ATTEMPTS):
             try:
                 response = generate_response(self.client, self.engine, messages, settings, response_type)
-                # import pdb; pdb.set_trace()
                 if response.choices and response.choices[0].message and hasattr(response.choices[0].message, 'content'):
                     return response.choices[0].message.content
                 else:
                     return "Error: Wrong response format."
             except openai.BadRequestError as error:
-                if "maximum context length" in str(error):
-                    logging.error(f"Message too long.")
-                    # 保存过长的消息
+                error_message = str(error)
+                if "string too long" in error_message or "maximum context length" in error_message:
+                    logging.error(f"Message too long. Attempting to truncate.")
                     self._save_long_message(messages)
-                    return f"Error: Message content too long."
+                    messages = self._truncate_messages(messages)
+                    continue
                 else:
                     logging.error(f'Attempt {attempt + 1} of {MAX_ATTEMPTS} failed with error: {error}')
             except (TimeoutError, openai.APIError, openai.APIConnectionError, openai.RateLimitError) as error:
