@@ -542,13 +542,13 @@ Here is the information about the features of processed_test.csv:
         # Save the modified submission.csv
         df_submission.to_csv(path_submission, index=False)
 
-        unique_values = df_sample.iloc[:, 1].unique()
+        unique_values = df_submission.iloc[:, 1].unique()
         if set(unique_values) == {0, 1} or set(unique_values) == {False, True} or set(unique_values) == {0.0, 1.0}:
             result = "Valid"
             return True, 29, "submission.csv is valid."
 
         # If the data type of the second column is numeric
-        if pd.api.types.is_numeric_dtype(df_sample.iloc[:, 1]):
+        if pd.api.types.is_numeric_dtype(df_sample.iloc[:, 1]) and not pd.api.types.is_bool_dtype(df_submission.iloc[:, 1]):
             # Calculate mean of first 100 values in the second column
             # Check if submission mean is within the range of 1/10 to 10 times the sample mean
             sample_mean = df_sample.iloc[:100, 1].mean()
