@@ -31,35 +31,6 @@
 - Consider the impact of filling missing values on your analysis and model performance.
 
 
-## remove_columns_with_missing_data
-
-**Name:** remove_columns_with_missing_data  
-**Description:** Remove columns containing excessive missing values from a DataFrame based on a threshold. This tool provides a flexible way to clean datasets by removing columns with too many missing values, adaptable to different dataset sizes.  
-**Applicable Situations:** remove columns with excessive missing values from a dataset
-
-**Parameters:**
-- `data`:
-  - **Type:** `pd.DataFrame`
-  - **Description:** A pandas DataFrame object representing the dataset.
-- `thresh`:
-  - **Type:** `number`
-  - **Description:** The minimum proportion of missing values required to drop a column. Should be between 0 and 1.
-  - **Default:** `0.5`
-- `columns`:
-  - **Type:** ``string` | `array` | `null``
-  - **Description:** Labels of columns to consider. If not specified, all columns will be considered.
-  - **Default:** `None`
-
-**Required:** `data`  
-**Result:** Successfully remove columns containing excessive missing values from the DataFrame  
-**Notes:**
-- This method modifies the structure of your dataset by removing entire columns.
-- Setting a low threshold might result in loss of important features.
-- Setting a high threshold might retain columns with too many missing values.
-- Consider the impact of removing columns on your analysis and model performance.
-- It's often better to understand why data is missing before deciding to remove it.
-
-
 ## detect_and_handle_outliers_iqr
 
 **Name:** detect_and_handle_outliers_iqr  

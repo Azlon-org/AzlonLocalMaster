@@ -77,6 +77,42 @@
     - `fruit_encoded`: [0, 1, 0, 2]
 
 
+## create_feature_combinations
+
+**Name:** create_feature_combinations  
+**Description:** Create feature combinations from specified numerical columns of a DataFrame.  
+**Applicable Situations:** Capturing interactions between features that may be important for the target variable. Useful for both linear and non-linear models to learn from feature interactions.
+
+**Parameters:**
+- `data`:
+  - **Type:** `pd.DataFrame`
+  - **Description:** The input DataFrame containing numerical columns for feature combination.
+- `columns`:
+  - **Type:** ``string` | `array``
+  - **Description:** Column label or list of column labels to use for creating feature combinations.
+- `combination_type`:
+  - **Type:** `string`
+  - **Description:** Type of combination to create.
+  - **Enum:** `multiplication` | `addition`
+  - **Default:** `multiplication`
+- `max_combination_size`:
+  - **Type:** `integer`
+  - **Description:** Maximum number of features to combine.
+  - **Default:** `2`
+
+**Required:** `data`, `columns`  
+**Result:** DataFrame with original and new combined features  
+**Notes:**
+- Only works with numerical features. Will raise an error if non-numeric columns are specified.
+- Can significantly increase the number of features, potentially leading to overfitting or computational issues.
+- Multiplication combinations are useful for capturing non-linear interactions.
+- Addition combinations can be useful for creating aggregate features.
+- The function will warn if the resulting DataFrame has over 1000 columns.
+- Consider the interpretability of the resulting features, especially with high-order combinations.
+- Feature combinations can help in discovering complex patterns that individual features might not capture.
+- Be mindful of the computational cost, especially with a large number of input features or high max_combination_size.
+
+
 ## scale_features
 
 **Name:** scale_features  

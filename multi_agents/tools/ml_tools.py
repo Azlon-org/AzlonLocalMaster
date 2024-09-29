@@ -1161,3 +1161,144 @@ def hyperparameter_optimization_tool(tool_name: str, model, param_grid, X, y, cv
     optimizer = optimization_tools[tool_name]()
     optimizer.fit(X, y)
     return optimizer.best_estimator_
+
+
+
+
+import pandas as pd
+import numpy as np
+from sklearn.model_selection import train_test_split, GridSearchCV
+from sklearn.linear_model import LinearRegression, LogisticRegression
+from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor
+from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor, GradientBoostingClassifier, GradientBoostingRegressor
+from sklearn.svm import SVC, SVR
+from sklearn.neural_network import MLPClassifier, MLPRegressor
+from sklearn.metrics import f1_score, mean_squared_error, accuracy_score
+
+def select_best_model(X, y, problem_type='binary'):
+    """
+    Select the best machine learning model based on training data and labels,
+    and return the performance of each model with its best hyperparameters.
+    
+    Args:
+        X (pd.DataFrame): Features for training.
+        y (pd.Series): Labels for training.
+        problem_type (str): Type of problem ('binary', 'multiclass', 'regression').
+    
+    Returns:
+        best_model: The best performing model.
+        results: A dictionary with model names as keys and their scores as values.
+    """
+    # Split data into training and validation sets
+    X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=0.2, random_state=42)
+
+    # Define models and their hyperparameter grids
+    if problem_type in ['binary', 'multiclass']:
+        models = {
+            'logistic regression': (LogisticRegression(max_iter=1000), {
+                'C': [0.01, 0.1, 1, 10, 100],
+                'solver': ['saga'],
+                'penalty': ['l1', 'l2', 'elasticnet'],
+                'l1_ratio': [0.5],
+            }),
+            'decision tree': (DecisionTreeClassifier(), {
+                'max_depth': [None, 5, 10, 15, 20],
+                'min_samples_split': [2, 5, 10],
+                'min_samples_leaf': [1, 2, 4]
+            }),
+            'random forest': (RandomForestClassifier(), {
+                'n_estimators': [10, 50, 100],
+                'max_depth': [None, 5, 10, 20],
+                'min_samples_split': [2, 5, 10]
+            }),
+            'XGBoost': (GradientBoostingClassifier(), {
+                'n_estimators': [50, 100],
+                'learning_rate': [0.01, 0.1],
+                'max_depth': [3, 5, 7]
+            }),
+            'SVM': (SVC(), {
+                'C': [0.1, 1, 10],
+                'kernel': ['linear', 'rbf'],
+                'gamma': ['scale', 'auto']
+            }),
+            'neural network': (MLPClassifier(max_iter=1000), {
+                'hidden_layer_sizes': [(50,), (100,)],
+                'activation': ['relu', 'tanh'],
+                'alpha': [0.0001, 0.001],
+                'learning_rate': ['constant', 'adaptive']
+            })
+        }
+        scoring = 'accuracy' if problem_type == 'binary' else 'f1_weighted'
+    elif problem_type == 'regression':
+        models = {
+            'linear regression': (LinearRegression(), {
+                'fit_intercept': [True, False],
+                'copy_X': [True, False]
+            }),
+            'decision tree': (DecisionTreeRegressor(), {
+                'max_depth': [None, 5, 10, 15, 20],
+                'min_samples_split': [2, 5, 10],
+                'min_samples_leaf': [1, 2, 4]
+            }),
+            'random forest': (RandomForestRegressor(), {
+                'n_estimators': [10, 50, 100],
+                'max_depth': [None, 5, 10, 20],
+                'min_samples_split': [2, 5, 10]
+            }),
+            'XGBoost': (GradientBoostingRegressor(), {
+                'n_estimators': [50, 100],
+                'learning_rate': [0.01, 0.1],
+                'max_depth': [3, 5, 7]
+            }),
+            'SVM': (SVR(), {
+                'C': [0.1, 1, 10],
+                'kernel': ['linear', 'rbf'],
+                'gamma': ['scale', 'auto']
+            }),
+            'neural network': (MLPRegressor(max_iter=1000), {
+                'hidden_layer_sizes': [(50,), (100,)],
+                'activation': ['relu', 'tanh'],
+                'alpha': [0.0001, 0.001],
+                'learning_rate': ['constant', 'adaptive']
+            })
+        }
+        scoring = 'neg_mean_squared_error'
+    else:
+        raise ValueError("Invalid problem_type. Choose from 'binary', 'multiclass', or 'regression'.")
+
+    best_model = None
+    best_score = float('-inf') if problem_type in ['binary', 'multiclass'] else float('inf')
+    results = {}
+
+    # Hyperparameter optimization
+    for model_name, (model, param_grid) in models.items():
+        optimizer = GridSearchCV(estimator=model, param_grid=param_grid, cv=5, scoring=scoring)
+        optimizer.fit(X_train, y_train)
+        
+        # Evaluate the model on the validation set
+        y_pred = optimizer.predict(X_val)
+        if problem_type in ['binary', 'multiclass']:
+            score = accuracy_score(y_val, y_pred) if problem_type == 'binary' else f1_score(y_val, y_pred, average='weighted')
+        else:
+            score = -mean_squared_error(y_val, y_pred)
+
+        # Store the results
+        results[model_name] = {
+            'best_params': optimizer.best_params_,
+            'score': score
+        }
+
+        if (problem_type in ['binary', 'multiclass'] and score > best_score) or \
+           (problem_type == 'regression' and score < best_score):
+            best_score = score
+            best_model = optimizer.best_estimator_
+
+    # Output results
+    for model_name, result in results.items():
+        print(f"Model: {model_name}, Best Params: {result['best_params']}, Score: {result['score']}")
+
+    return best_model, results
+
+
+# Example usage:
+# best_model, performance_results = select_best_model(X, y, problem_type='classification')
