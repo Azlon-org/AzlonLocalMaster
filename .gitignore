@@ -37,4 +37,11 @@ test.txt
 api_key.txt
 long_message_**.txt
 
-**/ml_tools_doc/
+**tools_*.md
+**.csv
+**.out
+**.sh
+**.bin
+
+framework.py
+config.json

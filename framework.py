@@ -3,7 +3,7 @@ import sys
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 from multi_agents.state import State
-from multi_agents.SOP import SOP
+from multi_agents.sop import SOP
 from utils import PREFIX_MULTI_AGENTS, load_config
 import pdb
 import argparse

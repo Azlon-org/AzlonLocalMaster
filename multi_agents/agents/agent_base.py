@@ -180,7 +180,7 @@ class Agent:
         md_output += "\n---\n"
         return md_output
 
-    def _get_tools(self, state: State) -> Tuple[str, List[str]]:
+    def _get_tools(self, state: State) -> Tuple[str, List[str]]:            
         embeddings = OpenaiEmbeddings(api_key=load_api_config()[0], base_url=load_api_config()[1])
         memory = RetrieveTool(self.llm, embeddings, doc_path='multi_agents/tools/ml_tools_doc', collection_name='tools')
         # update the memory

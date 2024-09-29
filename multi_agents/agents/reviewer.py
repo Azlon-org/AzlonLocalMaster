@@ -106,7 +106,7 @@ class Reviewer(Agent):
             try:
                 all_reply.append(reply['final_answer'])
             except KeyError:
-                pdb.set_trace()
+                # pdb.set_trace()
                 all_reply.append(reply)
 
         # 保存history
