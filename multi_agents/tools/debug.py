@@ -49,8 +49,8 @@ class DebugTool:
             f.write(locate_reply)
 
         if debug_times >= 3:
+            all_error_info = ""
             for i, error_message in enumerate(all_error_messages):
-                all_error_info = ""
                 all_error_info += f"This is the {i}-th error message:\n{error_message}\n ------------\n"
             input = PROMPT_DEVELOPER_DEBUG_ASK_FOR_HELP.format(i=debug_times, all_error_messages=all_error_info)
             help_reply, help_history = self.llm.generate(input, [], max_tokens=4096)
