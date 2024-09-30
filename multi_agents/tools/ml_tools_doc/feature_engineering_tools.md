@@ -33,12 +33,12 @@
 - Consider using other encoding methods for high-cardinality features to avoid dimensionality issues.
 **Example:**
   - **Input:**
-    - `data`: {'color': ['red', 'blue', 'green', 'red']}
+    - `data`: {'color': ['red', 'blue', 'green']}
     - `columns`: color
   - **Output:**
-    - `color_blue`: [0, 1, 0, 0]
-    - `color_green`: [0, 0, 1, 0]
-    - `color_red`: [1, 0, 0, 1]
+    - `color_blue`: [0, 1, 0]
+    - `color_green`: [0, 0, 1]
+    - `color_red`: [1, 0, 0]
 
 ---
 ## label_encode

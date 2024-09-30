@@ -273,34 +273,55 @@ def one_hot_encode(data: pd.DataFrame,
     Returns:
         pd.DataFrame: DataFrame with one-hot encoded columns.
 
-    Raises:
-        ValueError: If specified columns are not categorical or if unknown categories are encountered (when handle_unknown='error').
-    
     Example:
-        >>> df = pd.DataFrame({'color': ['red', 'blue', 'green', 'red']})
+        >>> df = pd.DataFrame({'color': ['red', 'blue', 'green']})
         >>> one_hot_encode(df, 'color')
            color_blue  color_green  color_red
         0           0            0          1
         1           1            0          0
         2           0            1          0
         3           0            0          1
+
+    Raises:
+        ValueError: If specified columns are not found in the DataFrame, if duplicate columns are not identical,
+                    or if unknown categories are encountered (when handle_unknown='error').
     """
     if isinstance(columns, str):
         columns = [columns]
 
-    # Check if specified columns exist and are categorical
+    # Check if specified columns exist
+    missing_columns = set(columns) - set(data.columns)
+    if missing_columns:
+        raise ValueError(f"Columns {missing_columns} not found in the DataFrame.")
+
+    # Handle duplicate columns
+    unique_columns = []
     for col in columns:
-        if col not in data.columns:
-            raise ValueError(f"Column '{col}' not found in the DataFrame.")
-        if not pd.api.types.is_categorical_dtype(data[col]) and not pd.api.types.is_object_dtype(data[col]):
-            warnings.warn(f"Column '{col}' is {data[col].dtype}, which is not categorical. One-hot encoding may not be appropriate.")
+        if col in unique_columns:
+            continue
+        col_data = data[col]
+        if isinstance(col_data, pd.DataFrame):
+            # Check if all duplicate columns are identical
+            if col_data.nunique().eq(1).all():
+                print(f"Warning: Duplicate identical columns found for '{col}'. Only one instance will be encoded.")
+                unique_columns.append(col)
+            else:
+                raise ValueError(f"Duplicate non-identical columns found for '{col}'. Please resolve this before encoding.")
+        else:
+            unique_columns.append(col)
+
+    # Check data types and warn for non-categorical columns
+    for col in unique_columns:
+        col_data = data[col]
+        if not pd.api.types.is_categorical_dtype(col_data) and not pd.api.types.is_object_dtype(col_data):
+            warnings.warn(f"Column '{col}' is {col_data.dtype}, which is not categorical. One-hot encoding may not be appropriate.")
 
     # Perform one-hot encoding
     encoder = OneHotEncoder(sparse_output=False, handle_unknown=handle_unknown)
-    encoded = encoder.fit_transform(data[columns])
+    encoded = encoder.fit_transform(data[unique_columns])
     
     # Create new column names
-    new_columns = [f"{col}_{val}" for col, vals in zip(columns, encoder.categories_) for val in vals]
+    new_columns = [f"{col}_{val}" for col, vals in zip(unique_columns, encoder.categories_) for val in vals]
     
     # Create a new DataFrame with encoded values
     encoded_df = pd.DataFrame(encoded, columns=new_columns, index=data.index)
@@ -310,7 +331,7 @@ def one_hot_encode(data: pd.DataFrame,
     
     # Drop original columns if specified
     if drop_original:
-        result = result.drop(columns, axis=1)
+        result = result.drop(unique_columns, axis=1)
     
     return result
 
@@ -329,7 +350,7 @@ def label_encode(data: pd.DataFrame,
         pd.DataFrame: DataFrame with label encoded columns
 
     Raises:
-        ValueError: If specified columns are not found in the DataFrame.
+        ValueError: If specified columns are not found in the DataFrame or if duplicate columns are not identical.
 
     Example:
         >>> df = pd.DataFrame({'fruit': ['apple', 'banana', 'apple', 'cherry']})
@@ -345,14 +366,34 @@ def label_encode(data: pd.DataFrame,
 
     result = data.copy()
 
+    # Check if specified columns exist
+    missing_columns = set(columns) - set(data.columns)
+    if missing_columns:
+        raise ValueError(f"Columns {missing_columns} not found in the DataFrame.")
+
+    # Handle duplicate columns
+    unique_columns = []
     for col in columns:
-        if col not in data.columns:
-            raise ValueError(f"Column '{col}' not found in the DataFrame.")
-        if not pd.api.types.is_categorical_dtype(data[col]) and not pd.api.types.is_object_dtype(data[col]):
-            warnings.warn(f"Column '{col}' is {data[col].dtype}, which is not categorical. Label encoding may not be appropriate.")
+        if col in unique_columns:
+            continue
+        col_data = data[col]
+        if isinstance(col_data, pd.DataFrame):
+            # Check if all duplicate columns are identical
+            if col_data.nunique().eq(1).all():
+                print(f"Warning: Duplicate identical columns found for '{col}'. Only one instance will be encoded.")
+                unique_columns.append(col)
+            else:
+                raise ValueError(f"Duplicate non-identical columns found for '{col}'. Please resolve this before encoding.")
+        else:
+            unique_columns.append(col)
+
+    for col in unique_columns:
+        col_data = data[col]
+        if not pd.api.types.is_categorical_dtype(col_data) and not pd.api.types.is_object_dtype(col_data):
+            warnings.warn(f"Column '{col}' is {col_data.dtype}, which is not categorical. Label encoding may not be appropriate.")
 
         encoder = LabelEncoder()
-        result[f"{col}_encoded"] = encoder.fit_transform(data[col].astype(str))
+        result[f"{col}_encoded"] = encoder.fit_transform(col_data.astype(str))
 
         if drop_original:
             result = result.drop(col, axis=1)
@@ -374,7 +415,7 @@ def frequency_encode(data: pd.DataFrame,
         pd.DataFrame: DataFrame with frequency encoded columns
 
     Raises:
-        ValueError: If specified columns are not found in the DataFrame.
+        ValueError: If specified columns are not found in the DataFrame or if duplicate columns are not identical.
 
     Example:
         >>> df = pd.DataFrame({'city': ['New York', 'London', 'Paris', 'New York', 'London', 'New York']})
@@ -392,14 +433,34 @@ def frequency_encode(data: pd.DataFrame,
 
     result = data.copy()
 
-    for col in columns:
-        if col not in data.columns:
-            raise ValueError(f"Column '{col}' not found in the DataFrame.")
-        if not pd.api.types.is_categorical_dtype(data[col]) and not pd.api.types.is_object_dtype(data[col]):
-            warnings.warn(f"Column '{col}' is {data[col].dtype}, which is not categorical. Frequency encoding may not be appropriate.")
+    # Check if specified columns exist
+    missing_columns = set(columns) - set(data.columns)
+    if missing_columns:
+        raise ValueError(f"Columns {missing_columns} not found in the DataFrame.")
 
-        frequency = data[col].value_counts(normalize=True)
-        result[f"{col}_freq"] = data[col].map(frequency)
+    # Handle duplicate columns
+    unique_columns = []
+    for col in columns:
+        if col in unique_columns:
+            continue
+        col_data = data[col]
+        if isinstance(col_data, pd.DataFrame):
+            # Check if all duplicate columns are identical
+            if col_data.nunique().eq(1).all():
+                print(f"Warning: Duplicate identical columns found for '{col}'. Only one instance will be encoded.")
+                unique_columns.append(col)
+            else:
+                raise ValueError(f"Duplicate non-identical columns found for '{col}'. Please resolve this before encoding.")
+        else:
+            unique_columns.append(col)
+
+    for col in unique_columns:
+        col_data = data[col]
+        if not pd.api.types.is_categorical_dtype(col_data) and not pd.api.types.is_object_dtype(col_data):
+            warnings.warn(f"Column '{col}' is {col_data.dtype}, which is not categorical. Frequency encoding may not be appropriate.")
+
+        frequency = col_data.value_counts(normalize=True)
+        result[f"{col}_freq"] = col_data.map(frequency)
 
         if drop_original:
             result = result.drop(col, axis=1)
@@ -427,8 +488,9 @@ def target_encode(data: pd.DataFrame,
         pd.DataFrame: DataFrame with target encoded columns
 
     Raises:
-        ValueError: If specified columns are not found in the DataFrame or if the target column is not found.
-    
+        ValueError: If specified columns are not found in the DataFrame, if the target column is not found,
+                    or if duplicate columns are not identical.
+
     Example:
         >>> df = pd.DataFrame({'category': ['A', 'B', 'A', 'C', 'B', 'A'], 'target': [1, 0, 1, 1, 0, 0]})
         >>> target_encode(df, 'category', 'target')
@@ -449,16 +511,36 @@ def target_encode(data: pd.DataFrame,
     result = data.copy()
     prior = data[target].mean()
 
+    # Check if specified columns exist
+    missing_columns = set(columns) - set(data.columns)
+    if missing_columns:
+        raise ValueError(f"Columns {missing_columns} not found in the DataFrame.")
+
+    # Handle duplicate columns
+    unique_columns = []
     for col in columns:
-        if col not in data.columns:
-            raise ValueError(f"Column '{col}' not found in the DataFrame.")
-        if not pd.api.types.is_categorical_dtype(data[col]) and not pd.api.types.is_object_dtype(data[col]):
-            warnings.warn(f"Column '{col}' is {data[col].dtype}, which is not categorical. Target encoding may not be appropriate.")
+        if col in unique_columns:
+            continue
+        col_data = data[col]
+        if isinstance(col_data, pd.DataFrame):
+            # Check if all duplicate columns are identical
+            if col_data.nunique().eq(1).all():
+                print(f"Warning: Duplicate identical columns found for '{col}'. Only one instance will be encoded.")
+                unique_columns.append(col)
+            else:
+                raise ValueError(f"Duplicate non-identical columns found for '{col}'. Please resolve this before encoding.")
+        else:
+            unique_columns.append(col)
+
+    for col in unique_columns:
+        col_data = data[col]
+        if not pd.api.types.is_categorical_dtype(col_data) and not pd.api.types.is_object_dtype(col_data):
+            warnings.warn(f"Column '{col}' is {col_data.dtype}, which is not categorical. Target encoding may not be appropriate.")
 
         averages = data.groupby(col)[target].agg(["count", "mean"])
         smoothing = 1 / (1 + np.exp(-(averages["count"] - min_samples_leaf) / smoothing))
         averages["smooth"] = prior * (1 - smoothing) + averages["mean"] * smoothing
-        result[f"{col}_target_enc"] = data[col].map(averages["smooth"])
+        result[f"{col}_target_enc"] = col_data.map(averages["smooth"])
 
         if drop_original:
             result = result.drop(col, axis=1)
@@ -568,13 +650,34 @@ def scale_features(data: pd.DataFrame,
         pd.DataFrame: DataFrame with scaled features
 
     Raises:
-        ValueError: If any of the specified columns are not numerical.
+        ValueError: If any of the specified columns are not numerical or if duplicate columns are not identical.
     """
     if isinstance(columns, str):
         columns = [columns]
 
+    # Check if specified columns exist
+    missing_columns = set(columns) - set(data.columns)
+    if missing_columns:
+        raise ValueError(f"Columns {missing_columns} not found in the DataFrame.")
+
+    # Handle duplicate columns
+    unique_columns = []
+    for col in columns:
+        if col in unique_columns:
+            continue
+        col_data = data[col]
+        if isinstance(col_data, pd.DataFrame):
+            # Check if all duplicate columns are identical
+            if col_data.nunique().eq(1).all():
+                print(f"Warning: Duplicate identical columns found for '{col}'. Only one instance will be scaled.")
+                unique_columns.append(col)
+            else:
+                raise ValueError(f"Duplicate non-identical columns found for '{col}'. Please resolve this before scaling.")
+        else:
+            unique_columns.append(col)
+
     # Check if all specified columns are numerical
-    non_numeric_cols = [col for col in columns if not pd.api.types.is_numeric_dtype(data[col])]
+    non_numeric_cols = [col for col in unique_columns if not pd.api.types.is_numeric_dtype(data[col])]
     if non_numeric_cols:
         raise ValueError(f"The following columns are not numerical: {non_numeric_cols}. "
                          "Please only specify numerical columns for scaling.")
@@ -594,10 +697,10 @@ def scale_features(data: pd.DataFrame,
         data = data.copy()
 
     # Fit and transform the selected columns
-    scaled_data = scaler.fit_transform(data[columns])
+    scaled_data = scaler.fit_transform(data[unique_columns])
 
     # Replace the original columns with scaled data
-    data[columns] = scaled_data
+    data[unique_columns] = scaled_data
 
     return data
 
@@ -760,21 +863,40 @@ def create_polynomial_features(data: pd.DataFrame,
     if isinstance(columns, str):
         columns = [columns]
 
-    # Check if specified columns exist and are numeric
-    for col in columns:
-        if col not in data.columns:
-            raise ValueError(f"Column '{col}' not found in the DataFrame.")
-        if not pd.api.types.is_numeric_dtype(data[col]):
-            raise ValueError(f"Column '{col}' is {data[col].dtype}, which is not numeric. Polynomial features require numeric data.")
-
     if degree < 1:
         raise ValueError("Degree must be at least 1.")
 
-    X = data[columns]
+    # Check if specified columns exist
+    missing_columns = set(columns) - set(data.columns)
+    if missing_columns:
+        raise ValueError(f"Columns {missing_columns} not found in the DataFrame.")
+
+    # Handle duplicate columns
+    unique_columns = []
+    for col in columns:
+        if col in unique_columns:
+            continue
+        col_data = data[col]
+        if isinstance(col_data, pd.DataFrame):
+            # Check if all duplicate columns are identical
+            if col_data.nunique().eq(1).all():
+                print(f"Warning: Duplicate identical columns found for '{col}'. Only one instance will be used for polynomial features.")
+                unique_columns.append(col)
+            else:
+                raise ValueError(f"Duplicate non-identical columns found for '{col}'. Please resolve this before creating polynomial features.")
+        else:
+            unique_columns.append(col)
+
+    # Check if all specified columns are numeric
+    for col in unique_columns:
+        if not pd.api.types.is_numeric_dtype(data[col]):
+            raise ValueError(f"Column '{col}' is {data[col].dtype}, which is not numeric. Polynomial features require numeric data.")
+
+    X = data[unique_columns]
     poly = PolynomialFeatures(degree=degree, interaction_only=interaction_only, include_bias=include_bias)
     poly_features = poly.fit_transform(X)
 
-    feature_names = poly.get_feature_names_out(columns)
+    feature_names = poly.get_feature_names_out(unique_columns)
     poly_df = pd.DataFrame(poly_features, columns=feature_names, index=data.index)
 
     # Remove duplicate columns (original features)
@@ -810,12 +932,31 @@ def create_feature_combinations(data: pd.DataFrame,
     if isinstance(columns, str):
         columns = [columns]
 
-    # Check if specified columns exist and are numeric
+    # Check if specified columns exist
+    missing_columns = set(columns) - set(data.columns)
+    if missing_columns:
+        raise ValueError(f"Columns {missing_columns} not found in the DataFrame.")
+
+    # Handle duplicate columns
+    unique_columns = []
     for col in columns:
-        if col not in data.columns:
-            raise ValueError(f"Column '{col}' not found in the DataFrame.")
+        if col in unique_columns:
+            continue
+        col_data = data[col]
+        if isinstance(col_data, pd.DataFrame):
+            # Check if all duplicate columns are identical
+            if col_data.nunique().eq(1).all():
+                print(f"Warning: Duplicate identical columns found for '{col}'. Only one instance will be used for feature combinations.")
+                unique_columns.append(col)
+            else:
+                raise ValueError(f"Duplicate non-identical columns found for '{col}'. Please resolve this before creating feature combinations.")
+        else:
+            unique_columns.append(col)
+
+    # Check if all specified columns are numeric
+    for col in unique_columns:
         if not pd.api.types.is_numeric_dtype(data[col]):
-            raise ValueError(f"Column '{col}' is {data[col].dtype} , which is not numeric. Feature combinations require numeric data.")
+            raise ValueError(f"Column '{col}' is {data[col].dtype}, which is not numeric. Feature combinations require numeric data.")
 
     if max_combination_size < 2:
         raise ValueError("max_combination_size must be at least 2.")
@@ -825,8 +966,8 @@ def create_feature_combinations(data: pd.DataFrame,
 
     result = data.copy()
 
-    for r in range(2, min(len(columns), max_combination_size) + 1):
-        for combo in combinations(columns, r):
+    for r in range(2, min(len(unique_columns), max_combination_size) + 1):
+        for combo in combinations(unique_columns, r):
             if combination_type == 'multiplication':
                 new_col = result[list(combo)].prod(axis=1)
                 new_col_name = ' * '.join(combo)
@@ -1175,9 +1316,9 @@ from sklearn.svm import SVC, SVR
 from sklearn.neural_network import MLPClassifier, MLPRegressor
 from sklearn.metrics import f1_score, mean_squared_error, accuracy_score
 
-def train_and_select_the_best_model(X, y, problem_type='binary', selected_models=['XGBoost', 'SVM', 'neural network']):
+def train_and_validation_and_select_the_best_model(X, y, problem_type='binary', selected_models=['XGBoost', 'SVM', 'random forest']):
     """
-    Train and select the best machine learning model based on the training data and labels,
+    Train, validation and select the best machine learning model based on the training data and labels,
     and return the best performing model along with the performance scores of each model 
     with their best hyperparameters.
 
@@ -1191,7 +1332,7 @@ def train_and_select_the_best_model(X, y, problem_type='binary', selected_models
         problem_type (str): Type of problem ('binary', 'multiclass', 'regression').
         selected_models (list, optional): List of model names to be considered for selection. 
                                           If None, a default set of models will be used.
-                                          Default: ['XGBoost', 'SVM', 'neural network']
+                                          Default: ['XGBoost', 'SVM', 'random forest']
     
     Returns:
         best_model: The best performing model, trained on the train dataset.
@@ -1227,12 +1368,6 @@ def train_and_select_the_best_model(X, y, problem_type='binary', selected_models
                 'C': [0.1, 1, 10],
                 'kernel': ['linear', 'rbf'],
                 'gamma': ['scale', 'auto']
-            }),
-            'neural network': (MLPClassifier(max_iter=1000), {
-                'hidden_layer_sizes': [(50,), (100,)],
-                'activation': ['relu', 'tanh'],
-                'alpha': [0.0001, 0.001],
-                'learning_rate': ['constant', 'adaptive']
             })
         }
         scoring = 'accuracy' if problem_type == 'binary' else 'f1_weighted'
@@ -1261,12 +1396,6 @@ def train_and_select_the_best_model(X, y, problem_type='binary', selected_models
                 'C': [0.1, 1, 10],
                 'kernel': ['linear', 'rbf'],
                 'gamma': ['scale', 'auto']
-            }),
-            'neural network': (MLPRegressor(max_iter=1000), {
-                'hidden_layer_sizes': [(50,), (100,)],
-                'activation': ['relu', 'tanh'],
-                'alpha': [0.0001, 0.001],
-                'learning_rate': ['constant', 'adaptive']
             })
         }
         scoring = 'neg_mean_squared_error'
@@ -1282,6 +1411,7 @@ def train_and_select_the_best_model(X, y, problem_type='binary', selected_models
     for model_name, (model, param_grid) in models.items():
         optimizer = GridSearchCV(estimator=model, param_grid=param_grid, cv=5, scoring=scoring)
         optimizer.fit(X_train, y_train)
+        print(f"Finished model training: {model_name}")
         
         # Evaluate the model on the validation set
         y_pred = optimizer.predict(X_val)
@@ -1305,7 +1435,7 @@ def train_and_select_the_best_model(X, y, problem_type='binary', selected_models
     for model_name, result in results.items():
         print(f"Model: {model_name}, Best Params: {result['best_params']}, Score: {result['score']}")
 
-    return best_model, results
+    return best_model
 
 
 # Example usage:

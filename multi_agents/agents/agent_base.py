@@ -211,7 +211,7 @@ class Agent:
             tools.append(conclusion)
 
         if self.role == 'developer' and state.phase in ['Data Cleaning', 'Feature Engineering', 'Model Building, Validation, and Prediction']:  
-            with open(f'{PREFIX_MULTI_AGENTS}/tools/ml_tools_doc/tools_used_in_{state.dir_name}.md', 'w') as file:
+            with open(f'{state.competition_dir}/{state.dir_name}/tools_used_in_{state.dir_name}.md', 'w') as file:
                 file.write(''.join(tools))
         
         tools = ''.join(tools) if len(tool_names) > 0 else "There is no pre-defined tools used in this phase."

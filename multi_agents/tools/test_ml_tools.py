@@ -447,7 +447,7 @@ def test_select_best_model():
     X = pd.DataFrame(X, columns=[f'feature_{i}' for i in range(20)])
     y = pd.Series(y).astype(int)  # 确保 y 是整数类型
     # 测试 select_best_model 函数
-    best_model, results = train_and_select_the_best_model(X, y, problem_type='binary', selected_models=['XGBoost', 'SVM', 'neural network'])
+    best_model, results = train_and_validation_and_select_the_best_model(X, y, problem_type='binary', selected_models=['XGBoost', 'SVM', 'neural network'])
 
     # 确保返回的最佳模型不为 None
     assert best_model is not None, "Best model should not be None"

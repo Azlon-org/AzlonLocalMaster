@@ -327,14 +327,14 @@
         "example": {
             "input": {
                 "data": {
-                    "color": ["red", "blue", "green", "red"]
+                    "color": ["red", "blue", "green"]
                 },
                 "columns": "color"
             },
             "output": {
-                "color_blue": [0, 1, 0, 0],
-                "color_green": [0, 0, 1, 0],
-                "color_red": [1, 0, 0, 1]
+                "color_blue": [0, 1, 0],
+                "color_green": [0, 0, 1],
+                "color_red": [1, 0, 0]
             }
         }
     },
@@ -877,9 +877,9 @@
             "Some features may not be suitable for all types of time series data; choose features based on domain knowledge and the specific problem."
         ]
     },
-    "train_and_select_the_best_model": {
-        "name": "train_and_select_the_best_model",
-        "description": "Automate model training, selection, and hyperparameter tuning for various machine learning tasks, returning the best performing model and their performance metrics.",
+    "train_and_validation_and_select_the_best_model": {
+        "name": "train_and_validation_and_select_the_best_model",
+        "description": "Automate model training, validation, selection, and hyperparameter tuning for various machine learning tasks, returning the best performing model and their performance metrics.",
         "applicable_situations": "model selection, hyperparameter tuning, automated machine learning workflows",
         "parameters": {
             "X": {
@@ -898,7 +898,9 @@
             "selected_models": {
                 "type": "list",
                 "description": "List of model names to consider for selection.",
-                "default": ["XGBoost", "SVM", "neural network"]
+                "default": ["XGBoost", "SVM", "random forest"],
+                "enum (for binary and multiclass problems)": ["XGBoost", "SVM", "random forest", "decision tree", "logistic regression"],
+                "enum (for regression problems)": ["linear regression", "decision tree", "random forest", "XGBoost", "SVM"]
             }
         },
         "required": ["X", "y"],
@@ -923,11 +925,7 @@
                 "selected_models": ["XGBoost", "SVM"]
             },
             "output": {
-                "best_model": "XGBoost()",
-                "performance": {
-                    "XGBoost": {"best_params": {"n_estimators": 100, "learning_rate": 0.1}, "score": 0.95},
-                    "SVM": {"best_params": {"C": 1, "kernel": "rbf"}, "score": 0.90}
-                }
+                "best_model (The best performing trained model)": "XGBoost()"
             }
         }
     }

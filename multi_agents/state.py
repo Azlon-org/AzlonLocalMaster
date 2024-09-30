@@ -48,6 +48,14 @@ class State:
             return "In Data Cleaning, you already have file `train.csv' and `test.csv`. In this phase, the overall goal is to do data cleaning to them to get `cleaned_train.csv` and `cleaned_test.csv`"
         elif self.phase == 'Feature Engineering':
             return "After Data Cleaning, you already have file `cleaned_train.csv' and `cleaned_test.csv`. In this phase, the overall goal is to do feature engineering to them to get `processed_train.csv` and `processed_test.csv`"
+        elif self.phase == 'Model Building, Validation, and Prediction':
+            return ("In this phase, you have `processed_train.csv` and `processed_test.csv`. "
+                    "Before training the model:\n"
+                    "1. For the training set, separate the target column as y.\n"
+                    "2. Remove the target column and any non-numeric columns (e.g., String-type columns) that cannot be used in model training from the training set.\n"
+                    "Before making predictions:\n"
+                    "1. For the test set, remove the same columns that were removed from the training set (except the target column, which is not present in the test set).\n"
+                    "2. Ensure consistency between the columns used in training and prediction.")
         return ""
 
     def get_current_agent(self) -> str:
