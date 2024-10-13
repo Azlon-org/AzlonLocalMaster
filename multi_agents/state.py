@@ -55,7 +55,8 @@ class State:
                     "2. Remove the target column and any non-numeric columns (e.g., String-type columns) that cannot be used in model training from the training set.\n"
                     "Before making predictions:\n"
                     "1. For the test set, remove the same columns that were removed from the training set (except the target column, which is not present in the test set).\n"
-                    "2. Ensure consistency between the columns used in training and prediction.")
+                    "2. Ensure consistency between the columns used in training and prediction.\n"
+                    "Due to computational resource limitations, you are allowed to train a maximum of **three** models")
         return ""
 
     def get_current_agent(self) -> str:

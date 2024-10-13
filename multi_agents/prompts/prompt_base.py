@@ -28,7 +28,7 @@ PROMPT_FEATURE_INFO = '''# FEATURE INFO
 '''
 
 PROMPT_EXTRACT_TOOLS = '''
-Please extract the alltools involved in the following document.
+Please extract the all tools involved in the following document.
 {document}
 All available tools are as follows:
 {all_tool_names}

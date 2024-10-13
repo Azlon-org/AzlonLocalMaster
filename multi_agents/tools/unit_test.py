@@ -380,22 +380,25 @@ Here is the information about the features of processed_test.csv:
         path_test = f"{state.competition_dir}/test.csv"
         path_cleaned_train = f"{state.competition_dir}/cleaned_train.csv"
         path_cleaned_test = f"{state.competition_dir}/cleaned_test.csv"
+        path_sample_submission = f"{state.competition_dir}/sample_submission.csv"
 
         train_columns = pd.read_csv(path_train).columns
         test_columns = pd.read_csv(path_test).columns
-        target_column = [col for col in train_columns if col not in test_columns]
+        target_columns = [col for col in train_columns if col not in test_columns]
 
         df_train = pd.read_csv(path_cleaned_train)
         df_test = pd.read_csv(path_cleaned_test)
-        
+        sample_submission = pd.read_csv(path_sample_submission)
+        target_length = len(sample_submission.columns) - 1
+
         # Find the differences in columns
         train_only_columns = set(df_train.columns) - set(df_test.columns)
         test_only_columns = set(df_test.columns) - set(df_train.columns)
         
-        if len(df_train.columns) == len(df_test.columns) + 1 and target_column[0] in df_train.columns and len(target_column) == 1:
+        if len(df_train.columns) == len(df_test.columns) + target_length and all(col in df_train.columns for col in target_columns):
             return True, 21, "The cleaned_train.csv file has one more column than cleaned_test.csv, which is the target column, please continue to the next step of the process"
         else:
-            error_message = f"The cleaned_train.csv file has different columns from cleaned_test.csv, please find the difference between the two files and find out the reason. cleaned_train.csv should only have one more column than cleaned_test.csv, which is the target column {target_column[0]}.\n"
+            error_message = f"The cleaned_train.csv file has different columns from cleaned_test.csv, please find the difference between the two files and find out the reason. cleaned_train.csv should only have {target_length} columns than cleaned_test.csv, which are the target columns {target_columns}.\n"
             # error_message += f"Features in cleaned_train.csv: {df_train.columns}.\n"
             # error_message += f"Features in cleaned_test.csv: {df_test.columns}.\n"
             error_message += f"Columns only in cleaned_train.csv: {train_only_columns}\n"
