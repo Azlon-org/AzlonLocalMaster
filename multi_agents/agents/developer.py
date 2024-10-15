@@ -237,7 +237,7 @@ class Developer(Agent):
         return error_flag
 
     def _conduct_unit_test(self, state: State) -> None:
-        test_tool = TestTool(memory=None, model='gpt-4o', type='api')
+        test_tool = TestTool(memory=None, model=self.model, type='api')
         not_pass_flag = False
         not_pass_tests = test_tool.execute_tests(state) # [(test1_number, test1_information), ...] 全通过返回[]
         logger.info(f"There are {len(not_pass_tests)} not pass tests.")
@@ -288,7 +288,7 @@ class Developer(Agent):
             output_messages = ""
 
         logger.info("Start debugging the code.")
-        debug_tool = DebugTool(model='gpt-4o', type='api')
+        debug_tool = DebugTool(model=self.model, type='api')
         if error_flag:
             tools, tool_names = self._get_tools(state)
             reply, single_round_debug_history = debug_tool.debug_code_with_error(state, copy.deepcopy(self.all_error_messages), output_messages, previous_code, wrong_code, error_messages, tools, tool_names)
@@ -338,12 +338,19 @@ class Developer(Agent):
         plan = state.memory[-1]["planner"]["plan"] # 这里plan的格式是markdown
 
         if len(state.memory) == 1: # 如果之前没有memory，说明是第一次执行
-            history.append({"role": "system", "content": f"{role_prompt}{self.description}\n when you are writing code, you should follow the plan and the following constraints.\n{constraints}"})
+            if self.model == 'gpt-4o':
+                history.append({"role": "system", "content": f"{role_prompt}{self.description}\n when you are writing code, you should follow the plan and the following constraints.\n{constraints}"})
+            elif self.model == 'o1-mini':
+                history.append({"role": "user", "content": f"{role_prompt}{self.description}\n when you are writing code, you should follow the plan and the following constraints.\n{constraints}"})
         else:
             self.description = "You are skilled at writing and implementing code according to plan." \
                             "You have advanced reasoning abilities and can improve your answers through reflection."
             experience_with_suggestion = self._gather_experience_with_suggestion(state)
-            history.append({"role": "system", "content": f"{role_prompt}{self.description}\n when you are writing code, you should follow the plan and the following constraints.\n{constraints}"})
+            if self.model == 'gpt-4o':
+                history.append({"role": "system", "content": f"{role_prompt}{self.description}\n when you are writing code, you should follow the plan and the following constraints.\n{constraints}"})
+            elif self.model == 'o1-mini':
+                history.append({"role": "user", "content": f"{role_prompt}{self.description}\n when you are writing code, you should follow the plan and the following constraints.\n{constraints}"})
+
 
         while round <= max_tries:
             if round == 0 or retry_flag or no_code_flag:
@@ -351,20 +358,20 @@ class Developer(Agent):
                     input = PROMPT_DEVELOPER.format(phases_in_context=state.context, phase_name=state.phase, state_info=state.get_state_info(), competition_info=competition_info, plan=plan,task=task)
                     if retry_flag or no_code_flag: # Reset history to initial system message if retrying or no code was generated
                         history = history[:1]
-                    raw_reply, history = self.llm.generate(input, history, max_tokens=4096)
+                    raw_reply, history = self.llm.generate(input, history, max_completion_tokens=4096)
                     prompt_round0 = self._generate_prompt_round0(state)
                     input = prompt_round0
-                    raw_reply, history = self.llm.generate(input, history, max_tokens=4096)
+                    raw_reply, history = self.llm.generate(input, history, max_completion_tokens=4096)
                 else:
                     input = PROMPT_DEVELOPER_WITH_EXPERIENCE_ROUND0_0.format(phases_in_context=state.context, phase_name=state.phase, state_info=state.get_state_info(), competition_info=competition_info, plan=plan, task=task, experience_with_suggestion=experience_with_suggestion)
-                    raw_reply, history = self.llm.generate(input, history, max_tokens=4096)
+                    raw_reply, history = self.llm.generate(input, history, max_completion_tokens=4096)
                     prompt_round0 = self._generate_prompt_round0(state)
                     input = prompt_round0
-                    raw_reply, history = self.llm.generate(input, history, max_tokens=4096)
+                    raw_reply, history = self.llm.generate(input, history, max_completion_tokens=4096)
                     with open(f'{state.restore_dir}/{self.role}_first_mid_reply.txt', 'w') as f:
                         f.write(raw_reply)
                     input = PROMPT_DEVELOPER_WITH_EXPERIENCE_ROUND0_2
-                    raw_reply, history = self.llm.generate(input, history, max_tokens=4096)
+                    raw_reply, history = self.llm.generate(input, history, max_completion_tokens=4096)
                 if retry_flag:
                     self.all_error_messages = [] # retry后清空error messages
                     logger.info("The developer asks for help when debugging the code. Regenerating the code.")

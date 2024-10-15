@@ -30,7 +30,7 @@ def read_file(file_path: str):
         with open(file_path, 'r', encoding='utf-8') as f:
             return f.readlines()
     
-def multi_chat(model: APIHandler, prompt, history=None, max_tokens=4096):
+def multi_chat(api_handler: APIHandler, prompt, history=None, max_completion_tokens=4096):
     """
     Multi-round chat with the assistant.
     """
@@ -39,8 +39,8 @@ def multi_chat(model: APIHandler, prompt, history=None, max_tokens=4096):
 
     messages = history + [{'role': 'user', 'content': prompt}]
 
-    settings = APISettings(max_tokens=max_tokens)
-    reply = model.get_output(messages=messages, settings=settings)
+    settings = APISettings(max_completion_tokens=max_completion_tokens)
+    reply = api_handler.get_output(messages=messages, settings=settings)
     history.append({'role': 'user', 'content': prompt})
     history.append({'role': 'assistant', 'content': reply})
     
@@ -68,7 +68,7 @@ def read_image(prompt, image_path):
             ]
         }
     ]
-    settings = APISettings(max_tokens=4096)
+    settings = APISettings(max_completion_tokens=4096)
     reply = api_handler.get_output(messages=messages, settings=settings, response_type='image')
     return reply
 

@@ -37,82 +37,103 @@ Each tool name MUST be in the available tool names.
 Your response should be in the following format:
 ```json
 {{
-    "tool_names": list=[
-        "tool_name 1",
-        "tool_name 2",
-        "tool_name 3",
+    "tool_names": [
+        "<tool_name 1>",
+        "<tool_name 2>",
+        "<tool_name 3>",
         ...
     ]
 }}
 ```
 '''
 
-REORGANIZE_REPLY_TYPE1 = '''
+
+REORGANIZE_EXTRACT_TOOLS = '''
 # TASK #
-Please extract essential information and reorganize into a JSON format. You need to organize the information in a clear and concise manner, ensuring that the content is logically structured and easy to understand. You must ensure that the essential information is complete and accurate.
-#############
+Try to reorganize the following information into a JSON format.
+
 # INFORMATION #
 {information}
-#############
+
 # RESPONSE: JSON FORMAT #
 ```json
 {{
-    "final_thought": str="Summarize your understanding and confirm that you now have the final answer.",
-    "final_answer": str="Provide the final answer to the original task."
-}}
-```
-#############
-# START REORGANIZING #
-'''
-
-REORGANIZE_REPLY_TYPE2 = '''
-# TASK #
-Please extract essential information and reorganize into a JSON format. You need to organize the information in a clear and concise manner, ensuring that the content is logically structured and easy to understand. You must ensure that the essential information is complete and accurate.
-#############
-# INFORMATION #
-{information}
-#############
-# RESPONSE: JSON FORMAT #
-```json
-{{
-    "final_thought": str="Summarize your understanding and confirm that you now have the final answer.",
-    "final_answer": {{
-	    "final_suggestion": {{
-            str="agent name": str="Specific suggestions for improving the agent's performance"
-        }},
-        "final_score": {{
-            str="agent name": int="The final score you assign to the evaluated agent, only one score in range 1-5"
-        }}
-    }}
-}}
-```
-#############
-# START REORGANIZING #
-'''
-
-
-REORGANIZE_REPLY_TYPE3 = '''
-# TASK #
-Please extract essential information and reorganize into a JSON format. You need to organize the information in a clear and concise manner, ensuring that the content is logically structured and easy to understand. You must ensure that the essential information is complete and accurate.
-#############
-# INFORMATION #
-{information}
-#############
-# RESPONSE: JSON FORMAT #
-```json
-{{
-    "final_thought": str="Summarize your understanding and confirm that you now have the final answer.",
-    "final_answer": list=[
-        {{
-            "task": str="The specific task to be performed",
-            "method": list=["Methods to be used"],
-        }}
+    "tool_names": [
+        "<tool_name 1>",
+        "<tool_name 2>",
+        "<tool_name 3>",
+        ...
     ]
 }}
 ```
-#############
-# START REORGANIZING #
 '''
+
+# REORGANIZE_REPLY_TYPE1 = '''
+# # TASK #
+# Please extract essential information and reorganize into a JSON format. You need to organize the information in a clear and concise manner, ensuring that the content is logically structured and easy to understand. You must ensure that the essential information is complete and accurate.
+# #############
+# # INFORMATION #
+# {information}
+# #############
+# # RESPONSE: JSON FORMAT #
+# ```json
+# {{
+#     "final_thought": str="Summarize your understanding and confirm that you now have the final answer.",
+#     "final_answer": str="Provide the final answer to the original task."
+# }}
+# ```
+# #############
+# # START REORGANIZING #
+# '''
+
+# REORGANIZE_REPLY_TYPE2 = '''
+# # TASK #
+# Please extract essential information and reorganize into a JSON format. You need to organize the information in a clear and concise manner, ensuring that the content is logically structured and easy to understand. You must ensure that the essential information is complete and accurate.
+# #############
+# # INFORMATION #
+# {information}
+# #############
+# # RESPONSE: JSON FORMAT #
+# ```json
+# {{
+#     "final_thought": str="Summarize your understanding and confirm that you now have the final answer.",
+#     "final_answer": {{
+# 	    "final_suggestion": {{
+#             str="agent name": str="Specific suggestions for improving the agent's performance"
+#         }},
+#         "final_score": {{
+#             str="agent name": int="The final score you assign to the evaluated agent, only one score in range 1-5"
+#         }}
+#     }}
+# }}
+# ```
+# #############
+# # START REORGANIZING #
+# '''
+
+
+# REORGANIZE_REPLY_TYPE3 = '''
+# # TASK #
+# Please extract essential information and reorganize into a JSON format. You need to organize the information in a clear and concise manner, ensuring that the content is logically structured and easy to understand. You must ensure that the essential information is complete and accurate.
+# #############
+# # INFORMATION #
+# {information}
+# #############
+# # RESPONSE: JSON FORMAT #
+# ```json
+# {{
+#     "final_thought": str="Summarize your understanding and confirm that you now have the final answer.",
+#     "final_answer": list=[
+#         {{
+#             "task": str="The specific task to be performed",
+#             "method": list=["Methods to be used"],
+#         }}
+#     ]
+# }}
+# ```
+# #############
+# # START REORGANIZING #
+# '''
 
 # ## Thought Process ##
 # (This Thought/Action/Observation sequence may repeat as needed.)

@@ -14,10 +14,12 @@ import sys
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Run SOP for a competition.')
     parser.add_argument('--competition', type=str, default='titanic', help='Competition name')
+    parser.add_argument('--model', type=str, default='gpt_4o', help='Model name')
     args = parser.parse_args()
     competition = args.competition
+    model = args.model
 
-    sop = SOP(competition)
+    sop = SOP(competition, model)
     start_state = State(phase="Understand Background", competition=competition)
     # start_state = State(phase="Preliminary Exploratory Data Analysis", competition=competition)
     # start_state = State(phase="Data Cleaning", competition=competition)

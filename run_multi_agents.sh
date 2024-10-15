@@ -2,10 +2,12 @@
 
 # Default values
 # "titanic" "spaceship_titanic" "ghouls_goblins_and_ghosts_boo" "bank_churn" "house_prices" "classification_with_an_academic_success_dataset"
-competitions=("titanic" "bank_churn" "house_prices" "classification_with_an_academic_success_dataset")
-start_run=1
-end_run=3
-dest_dir_param="tool_data_cleaning_and_feature_engineering1"
+# "obesity_risks"
+competition=("titanic")
+start_run=2
+end_run=2
+model="o1_mini"
+dest_dir_param="tool_dc"
 
 # Function to run a single experiment
 run_experiment() {
@@ -15,11 +17,11 @@ run_experiment() {
     echo "Running $competition - Experiment $run_number"
 
     # Run framework.py
-    python framework.py --competition "$competition"
+    python framework.py --competition "$competition" --model "$model"
 
     # Define source and destination directories
     source_dir="multi_agents/competition/$competition"
-    dest_dir="multi_agents/experiments_history/$competition/$dest_dir_param/$run_number"
+    dest_dir="multi_agents/experiments_history/$competition/$model/$dest_dir_param/$run_number"
 
     # Create destination directory if it doesn't exist
     mkdir -p "$dest_dir"
@@ -43,7 +45,7 @@ run_experiment() {
 # Run experiments for each competition
 for competition in "${competitions[@]}"; do
     for ((run=start_run; run<=end_run; run++)); do
-        run_experiment "$competition" "$run" "$dest_dir_param"
+        run_experiment "$competition" "$run" "$model" "$dest_dir_param"
     done
 done
 
