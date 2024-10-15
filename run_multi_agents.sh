@@ -2,10 +2,10 @@
 
 # Default values
 # "titanic" "spaceship_titanic" "ghouls_goblins_and_ghosts_boo" "bank_churn" "house_prices" "classification_with_an_academic_success_dataset"
-competitions=("house_prices")
-start_run=3
+competitions=("titanic" "bank_churn" "house_prices" "classification_with_an_academic_success_dataset")
+start_run=1
 end_run=3
-dest_dir_param="tool_data_cleaning"
+dest_dir_param="tool_data_cleaning_and_feature_engineering1"
 
 # Function to run a single experiment
 run_experiment() {
