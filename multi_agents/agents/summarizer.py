@@ -81,6 +81,22 @@ class Summarizer(Agent):
 
         return insight_from_visualization
 
+    def _generate_research_report(self, state: State) -> str:
+        previous_dirs = ['pre_eda', 'data_cleaning', 'deep_eda', 'feature_engineering', 'model_build_predict']
+        previous_report = ""
+        for dir in previous_dirs:
+            if os.path.exists(f'{state.competition_dir}/{dir}/report.txt'):
+                with open(f'{state.competition_dir}/{dir}/report.txt', 'r') as f:
+                    report = f.read()
+                    previous_report += f"## {dir.replace('_', ' ').upper()} ##\n{report}\n"
+
+        _, research_report_history = self.llm.generate(PROMPT_SUMMARIZER_RESEARCH_REPORT, [], max_completion_tokens=4096)
+        raw_research_report, research_report_history = self.llm.generate(previous_report, research_report_history, max_completion_tokens=4096)
+        try:
+            research_report = self._parse_markdown(raw_research_report)
+        except Exception as e:
+            research_report = raw_research_report
+        return research_report
 
     def _execute(self, state: State, role_prompt: str) -> Dict[str, Any]:
         # 实现总结功能 阅读当前state的memory 生成report
@@ -120,6 +136,8 @@ class Summarizer(Agent):
             code = f.read()
         with open(f'{state.restore_dir}/{state.dir_name}_output.txt', 'r') as f:
             output = f.read()
+            if len(output) > 1000: # 如果output太长，则截断
+                output = output[:1000]
         with open(f'{state.restore_dir}/review.json', 'r') as f:
             review = json.load(f)
 
@@ -141,6 +159,11 @@ class Summarizer(Agent):
         with open(f'{state.restore_dir}/report.txt', 'w') as f:
             f.write(report)
         history.append(answer_questions_history)
+
+        if state.phase == 'Model Building, Validation, and Prediction':
+            research_report = self._generate_research_report(state)
+            with open(f'{state.competition_dir}/research_report.md', 'w') as f:
+                f.write(research_report)
 
         # 保存history
         with open(f'{state.restore_dir}/{self.role}_history.json', 'w') as f:

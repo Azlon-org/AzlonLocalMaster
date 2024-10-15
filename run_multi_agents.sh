@@ -3,11 +3,11 @@
 # Default values
 # "titanic" "spaceship_titanic" "ghouls_goblins_and_ghosts_boo" "bank_churn" "house_prices" "classification_with_an_academic_success_dataset"
 # "obesity_risks"
-competition=("titanic")
-start_run=2
-end_run=2
+competitions=("titanic" "spaceship_titanic" "ghouls_goblins_and_ghosts_boo" "bank_churn" "house_prices" "classification_with_an_academic_success_dataset" "obesity_risks")
+start_run=1
+end_run=3
 model="o1_mini"
-dest_dir_param="tool_dc"
+dest_dir_param="tool_dc_and_model"
 
 # Function to run a single experiment
 run_experiment() {

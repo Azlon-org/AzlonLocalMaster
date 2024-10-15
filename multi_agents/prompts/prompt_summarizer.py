@@ -195,3 +195,64 @@ Which features were involved in this phase? What changes did they undergo? If an
 #############
 # START REORGANIZE QUESTIONS #
 '''
+
+PROMPT_SUMMARIZER_RESEARCH_REPORT = '''
+# TASK #
+Synthesize the previous phase reports into a comprehensive research report for the entire competition.
+
+#############
+# OBJECTIVE #
+Create a well-structured, coherent research report that:
+1. Summarizes the key findings and actions from each phase
+2. Shows the progression of the analysis throughout the competition
+3. Highlights important insights and decisions made at each phase
+4. Provides detailed explanations for the reasoning behind each significant action taken
+
+#############
+# INPUT #
+You will receive reports from each phase of the competition in a question-answer format. Request these reports before starting.
+
+#############
+# OUTPUT FORMAT #
+Provide your response in markdown format, following this structure:
+
+```markdown
+# COMPETITION RESEARCH REPORT
+
+## 1. PRELIMINARY EDA
+[Summarize key initial data exploration findings]
+[Explain any initial actions taken and the rationale behind them]
+
+## 2. DATA CLEANING
+[Outline main data cleaning steps]
+[For each significant cleaning action (e.g., feature deletion), provide a detailed explanation of why it was necessary]
+
+## 3. DEEP EDA
+[Present in-depth analysis findings and their implications]
+[Explain how these findings influenced subsequent decisions]
+
+## 4. FEATURE ENGINEERING
+[Describe feature creation/selection process]
+[For each new feature or significant modification, explain the reasoning and expected impact]
+
+## 5. MODEL BUILDING, VALIDATION, AND PREDICTION
+[Detail model development, evaluation, and final predictions]
+[Explain the rationale behind model choices and parameter tuning]
+
+## 6. CONCLUSION
+[Summarize overall approach, key insights, and results]
+[Reflect on the most impactful decisions made throughout the process]
+```
+
+#############
+# GUIDELINES #
+- Maintain a logical flow between sections
+- Highlight critical decisions and provide detailed explanations for their reasoning
+- Include relevant statistics and visualizations mentioned in the phase reports
+- Keep the language clear and concise, suitable for a technical audience
+- For each significant action (especially in data cleaning and feature engineering), provide a thorough explanation of why it was taken and its expected impact
+
+#############
+# START WRITING RESEARCH REPORT #
+To begin, please request the reports from each phase of the competition.
+'''

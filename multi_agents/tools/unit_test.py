@@ -316,14 +316,14 @@ Here is the information about the features of processed_test.csv:
         
         train_columns = pd.read_csv(path_train).columns
         test_columns = pd.read_csv(path_test).columns
-        target_column = [col for col in train_columns if col not in test_columns]
+        target_columns = [col for col in train_columns if col not in test_columns]
 
         # check if the target column is in the cleaned_train.csv
         df = pd.read_csv(path_cleaned_train)
-        if target_column[0] in df.columns:
-            return True, 17, "The target column is in the cleaned_train.csv file, please continue to the next step of the process"
+        if all(col in df.columns for col in target_columns):
+            return True, 17, "The target columns are in the cleaned_train.csv file, please continue to the next step of the process"
         else:
-            return False, 17, f"The target column {target_column[0]} is not in the cleaned_train.csv file, please reprocess it"
+            return False, 17, f"The target columns {target_columns} are not in the cleaned_train.csv file, please reprocess it"
         
     def test_cleaned_test_no_target_column(self, state: State):
         # read train.csv and test.csv
@@ -333,13 +333,15 @@ Here is the information about the features of processed_test.csv:
         
         train_columns = pd.read_csv(path_train).columns
         test_columns = pd.read_csv(path_test).columns
-        target_column = [col for col in train_columns if col not in test_columns]
+        target_columns = [col for col in train_columns if col not in test_columns]
 
         df = pd.read_csv(path_cleaned_test)
-        if target_column[0] in df.columns:
-            return False, 18, f"The target column {target_column[0]} is in the cleaned_test.csv file, please reprocess it"
+        target_columns_in_cleaned_test = [col for col in target_columns if col in df.columns]
+
+        if len(target_columns_in_cleaned_test) > 0:
+            return False, 18, f"The target columns {target_columns_in_cleaned_test} are in the cleaned_test.csv file, please reprocess it"
         else:
-            return True, 18, "The target column is not in the cleaned_test.csv file, please continue to the next step of the process"
+            return True, 18, "The target columns are not in the cleaned_test.csv file, please continue to the next step of the process"
         
     def test_processed_train_no_missing_target(self, state: State):
         # read train.csv and test.csv
@@ -349,14 +351,14 @@ Here is the information about the features of processed_test.csv:
         
         train_columns = pd.read_csv(path_train).columns
         test_columns = pd.read_csv(path_test).columns
-        target_column = [col for col in train_columns if col not in test_columns]
+        target_columns = [col for col in train_columns if col not in test_columns]
 
         # check if the target column is in the processed_train.csv
         df = pd.read_csv(path_processed_train)
-        if target_column[0] in df.columns:
-            return True, 19, "The target column is in the processed_train.csv file, please continue to the next step of the process"
+        if all(col in df.columns for col in target_columns):
+            return True, 19, "The target columns are in the processed_train.csv file, please continue to the next step of the process"
         else:
-            return False, 19, f"The target column {target_column[0]} is not in the processed_train.csv file, please reprocess it"
+            return False, 19, f"The target columns {target_columns} are not in the processed_train.csv file, please reprocess it"
 
     def test_processed_test_no_target_column(self, state: State):
         # read train.csv and test.csv
@@ -366,13 +368,15 @@ Here is the information about the features of processed_test.csv:
         
         train_columns = pd.read_csv(path_train).columns
         test_columns = pd.read_csv(path_test).columns
-        target_column = [col for col in train_columns if col not in test_columns]
+        target_columns = [col for col in train_columns if col not in test_columns]
 
         df = pd.read_csv(path_processed_test)
-        if target_column[0] in df.columns:
-            return False, 20, f"The target column {target_column[0]} is in the processed_test.csv file, please reprocess it"
+        target_columns_in_processed_test = [col for col in target_columns if col in df.columns]
+
+        if len(target_columns_in_processed_test) > 0:
+            return False, 20, f"The target columns {target_columns_in_processed_test} are in the processed_test.csv file, please reprocess it"
         else:
-            return True, 20, "The target column is not in the processed_test.csv file, please continue to the next step of the process"
+            return True, 20, "The target columns are not in the processed_test.csv file, please continue to the next step of the process"
         
     def test_cleaned_difference_train_test_columns(self, state: State):
         # test if the columns in cleaned_train.csv only has one more column than cleaned_test.csv, which is the target column
@@ -396,7 +400,7 @@ Here is the information about the features of processed_test.csv:
         test_only_columns = set(df_test.columns) - set(df_train.columns)
         
         if len(df_train.columns) == len(df_test.columns) + target_length and all(col in df_train.columns for col in target_columns):
-            return True, 21, "The cleaned_train.csv file has one more column than cleaned_test.csv, which is the target column, please continue to the next step of the process"
+            return True, 21, f"The cleaned_train.csv file has {target_length} more columns than cleaned_test.csv, which are the target columns {target_columns}, please continue to the next step of the process"
         else:
             error_message = f"The cleaned_train.csv file has different columns from cleaned_test.csv, please find the difference between the two files and find out the reason. cleaned_train.csv should only have {target_length} columns than cleaned_test.csv, which are the target columns {target_columns}.\n"
             # error_message += f"Features in cleaned_train.csv: {df_train.columns}.\n"
@@ -410,22 +414,25 @@ Here is the information about the features of processed_test.csv:
         path_test = f"{state.competition_dir}/test.csv"
         path_processed_train = f"{state.competition_dir}/processed_train.csv"
         path_processed_test = f"{state.competition_dir}/processed_test.csv"
+        path_sample_submission = f"{state.competition_dir}/sample_submission.csv"
 
         train_columns = pd.read_csv(path_train).columns
         test_columns = pd.read_csv(path_test).columns
-        target_column = [col for col in train_columns if col not in test_columns]
+        target_columns = [col for col in train_columns if col not in test_columns]
 
         df_train = pd.read_csv(path_processed_train)
         df_test = pd.read_csv(path_processed_test)
+        sample_submission = pd.read_csv(path_sample_submission)
+        target_length = len(sample_submission.columns) - 1
 
         # Find the differences in columns
         train_only_columns = set(df_train.columns) - set(df_test.columns)
         test_only_columns = set(df_test.columns) - set(df_train.columns)
 
-        if len(df_train.columns) == len(df_test.columns) + 1 and target_column[0] in df_train.columns and len(target_column) == 1:
-            return True, 22, "The processed_train.csv file has one more column than processed_test.csv, which is the target column, please continue to the next step of the process"
+        if len(df_train.columns) == len(df_test.columns) + target_length and all(col in df_train.columns for col in target_columns):
+            return True, 22, f"The processed_train.csv file has {target_length} more columns than processed_test.csv, which are the target columns {target_columns}, please continue to the next step of the process"
         else:
-            error_message = f"The processed_train.csv file has different columns from processed_test.csv, please find the difference between the two files and find out the reason. processed_train.csv should only have one more column than processed_test.csv, which is the target column {target_column[0]}.\n"
+            error_message = f"The processed_train.csv file has different columns from processed_test.csv, please find the difference between the two files and find out the reason. processed_train.csv should only have {target_length} more columns than processed_test.csv, which are the target columns {target_columns}.\n"
             # error_message += f"Features in processed_train.csv: {df_train.columns}.\n"
             # error_message += f"Features in processed_test.csv: {df_test.columns}.\n"
             error_message += f"Columns only in processed_train.csv: {train_only_columns}\n"
