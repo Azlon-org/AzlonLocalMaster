@@ -27,7 +27,7 @@ PROMPT_AVAILABLE_TOOLS = '''
 You have access to the following tools:
 {tool_names}
 ## USAGE INSTRUCTIONS ##
-1. These tools are pre-defined and pre-imported in the system. You do NOT need to implement them or import them again.
+1. These tools are pre-defined and pre-imported in the system. You do NOT need import them or implement them again.
 2. Use these tools by calling them with the correct parameters.
 3. Example: To drop specific columns, use the `remove_columns_with_missing_data` tool with appropriate parameters.
 ## ADDITIONAL RESOURCES ##
@@ -56,6 +56,7 @@ PROMPT_DEVELOPER_CONSTRAINTS = '''
    - Save image files in the `{restore_path}/images/` directory.
    - Save data files in the `{competition_path}/` directory.
    - Use clear, meaningful names for image files that reflect their content.
+   - Do NOT use special characters like `/` or spaces in file names.
    - Save specific files for each phase:
      - Data Cleaning: `cleaned_train.csv` and `cleaned_test.csv`
      - Feature Engineering: `processed_train.csv` and `processed_test.csv`
@@ -302,6 +303,7 @@ Please correct the error code snippet according to the error messages, output me
 1. Analyze why the error code snippet causes the error according to the error messages and output messages of code.
 2. Think about how to correct the error code snippet.
 3. Correct the error code snippet.
+NOTE that if the error occurs when trying to import the provided tool, remember you do NOT import tool, they are pre-defined and pre-imported in the system.
 NOTE that the **last** code snippet in your response should be the **code snippet after correction** that I ask you to output.
 
 #############

@@ -176,13 +176,13 @@ class Developer(Agent):
         result = {}
         # timeout
         if 'Analysis' in state.phase:
-            timeout = 300
+            timeout = 600
             timeout_info = "Your code is running out of time, please consider resource availability and reduce the number of data analysis plots drawn."
         elif 'Model' in state.phase:
-            timeout = 600
+            timeout = 1200
             timeout_info = "Your code is running out of time, please consider resource availability and try fewer models."
         else:
-            timeout = 180
+            timeout = 300
             timeout_info = "Your code is running out of time, please consider resource availability or other factors."
         try:
             result = subprocess.run(['python3', '-W', 'ignore', path_to_run_code], 

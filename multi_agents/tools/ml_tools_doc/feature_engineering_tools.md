@@ -11,10 +11,6 @@
 - `columns`:
   - **Type:** ``string` | `array``
   - **Description:** Column label or list of column labels to encode.
-- `drop_original`:
-  - **Type:** `boolean`
-  - **Description:** Whether to drop the original columns after encoding.
-  - **Default:** `True`
 - `handle_unknown`:
   - **Type:** `string`
   - **Description:** How to handle unknown categories during transform.
@@ -33,12 +29,13 @@
 - Consider using other encoding methods for high-cardinality features to avoid dimensionality issues.
 **Example:**
   - **Input:**
-    - `data`: {'color': ['red', 'blue', 'green', 'red']}
+    - `data`: {'color': ['red', 'blue', 'green']}
     - `columns`: color
   - **Output:**
-    - `color_blue`: [0, 1, 0, 0]
-    - `color_green`: [0, 0, 1, 0]
-    - `color_red`: [1, 0, 0, 1]
+    - `color`: ['red', 'blue', 'green']
+    - `color_blue`: [0, 1, 0]
+    - `color_green`: [0, 0, 1]
+    - `color_red`: [1, 0, 0]
 
 ---
 ## label_encode
@@ -54,10 +51,6 @@
 - `columns`:
   - **Type:** ``string` | `array``
   - **Description:** Column label or list of column labels to encode.
-- `drop_original`:
-  - **Type:** `boolean`
-  - **Description:** Whether to drop the original columns after encoding.
-  - **Default:** `True`
 
 **Required:** `data`, `columns`  
 **Result:** DataFrame with label encoded columns  
@@ -74,6 +67,7 @@
     - `data`: {'fruit': ['apple', 'banana', 'apple', 'cherry']}
     - `columns`: fruit
   - **Output:**
+    - `fruit`: ['apple', 'banana', 'apple', 'cherry']
     - `fruit_encoded`: [0, 1, 0, 2]
 
 ---
@@ -90,10 +84,6 @@
 - `columns`:
   - **Type:** ``string` | `array``
   - **Description:** Column label or list of column labels to encode.
-- `drop_original`:
-  - **Type:** `boolean`
-  - **Description:** Whether to drop the original columns after encoding.
-  - **Default:** `True`
 
 **Required:** `data`, `columns`  
 **Result:** DataFrame with frequency encoded columns  
@@ -110,6 +100,7 @@
     - `data`: {'city': ['New York', 'London', 'Paris', 'New York', 'London', 'New York']}
     - `columns`: city
   - **Output:**
+    - `city`: ['New York', 'London', 'Paris', 'New York', 'London', 'New York']
     - `city_freq`: [0.5, 0.33, 0.17, 0.5, 0.33, 0.5]
 
 ---
@@ -129,10 +120,6 @@
 - `target`:
   - **Type:** `string`
   - **Description:** The name of the target column in the DataFrame.
-- `drop_original`:
-  - **Type:** `boolean`
-  - **Description:** Whether to drop the original columns after encoding.
-  - **Default:** `True`
 - `min_samples_leaf`:
   - **Type:** `integer`
   - **Description:** Minimum samples to take category average into account.
@@ -159,6 +146,8 @@
     - `columns`: category
     - `target`: target
   - **Output:**
+    - `category`: ['A', 'B', 'A', 'C', 'B', 'A']
+    - `target`: [1, 0, 1, 1, 0, 0]
     - `category_target_enc`: [0.5, 0.0, 0.5, 1.0, 0.0, 0.5]
 
 ---

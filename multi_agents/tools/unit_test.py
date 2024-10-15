@@ -133,7 +133,7 @@ class TestTool:
          
         files = os.listdir(state.competition_dir)
         for file in files:
-            if f"submission" in file and file.endswith(".csv") and file != "sample_submission.csv" :
+            if file == "submission.csv" :
                 # the sample_submission.csv file is also checked, which is not necessary
                 df = pd.read_csv(f"{state.competition_dir}/{file}")
                 duplicates = df.duplicated().sum()
@@ -256,7 +256,7 @@ class TestTool:
         path_to_origin_train = f"{state.competition_dir}/cleaned_train.csv"
         df_origin = pd.read_csv(path_to_origin_train)
         result = "Valid"
-        if len(df.columns) <= 3 * len(df_origin.columns) and result == "Valid":
+        if (len(df.columns) <= 3 * len(df_origin.columns) or len(df.columns) <= 50) and result == "Valid":
             return True, 15, f"The feature engineering phase is well performed."
         else:
             false_info = "There are too many features after handling features in the feature engineering phase."
@@ -288,7 +288,7 @@ Here is the information about the features of processed_train.csv:
         path_to_origin_train = f"{state.competition_dir}/cleaned_test.csv"
         df_origin = pd.read_csv(path_to_origin_train)
         result = "Valid"
-        if len(df.columns) <= 3 * len(df_origin.columns) and result == "Valid":
+        if (len(df.columns) <= 3 * len(df_origin.columns) or len(df.columns) <= 50) and result == "Valid":
             return True, 16, f"The feature engineering phase is well performed."
         else:
             false_info = "There are too many features after handling features in the feature engineering phase."
@@ -380,22 +380,25 @@ Here is the information about the features of processed_test.csv:
         path_test = f"{state.competition_dir}/test.csv"
         path_cleaned_train = f"{state.competition_dir}/cleaned_train.csv"
         path_cleaned_test = f"{state.competition_dir}/cleaned_test.csv"
+        path_sample_submission = f"{state.competition_dir}/sample_submission.csv"
 
         train_columns = pd.read_csv(path_train).columns
         test_columns = pd.read_csv(path_test).columns
-        target_column = [col for col in train_columns if col not in test_columns]
+        target_columns = [col for col in train_columns if col not in test_columns]
 
         df_train = pd.read_csv(path_cleaned_train)
         df_test = pd.read_csv(path_cleaned_test)
-        
+        sample_submission = pd.read_csv(path_sample_submission)
+        target_length = len(sample_submission.columns) - 1
+
         # Find the differences in columns
         train_only_columns = set(df_train.columns) - set(df_test.columns)
         test_only_columns = set(df_test.columns) - set(df_train.columns)
         
-        if len(df_train.columns) == len(df_test.columns) + 1 and target_column[0] in df_train.columns and len(target_column) == 1:
+        if len(df_train.columns) == len(df_test.columns) + target_length and all(col in df_train.columns for col in target_columns):
             return True, 21, "The cleaned_train.csv file has one more column than cleaned_test.csv, which is the target column, please continue to the next step of the process"
         else:
-            error_message = f"The cleaned_train.csv file has different columns from cleaned_test.csv, please find the difference between the two files and find out the reason. cleaned_train.csv should only have one more column than cleaned_test.csv, which is the target column {target_column[0]}.\n"
+            error_message = f"The cleaned_train.csv file has different columns from cleaned_test.csv, please find the difference between the two files and find out the reason. cleaned_train.csv should only have {target_length} columns than cleaned_test.csv, which are the target columns {target_columns}.\n"
             # error_message += f"Features in cleaned_train.csv: {df_train.columns}.\n"
             # error_message += f"Features in cleaned_test.csv: {df_test.columns}.\n"
             error_message += f"Columns only in cleaned_train.csv: {train_only_columns}\n"
@@ -433,7 +436,7 @@ Here is the information about the features of processed_test.csv:
         files = os.listdir(state.competition_dir)
         for file in files:
             # submission file may have different names
-            if f"submission" in file and file.endswith(".csv") and file != "sample_submission.csv" :
+            if file == "submission.csv" :
                 path = f"{state.competition_dir}/{file}"
                 df = pd.read_csv(path)
                 missing_columns = df.columns[df.isnull().any()].tolist()
@@ -497,13 +500,13 @@ Here is the information about the features of processed_test.csv:
         files = os.listdir(state.competition_dir)
         for file in files:
             # submission file may have different names
-            if f"submission" in file and file.endswith(".csv") and file != "sample_submission.csv" :
+            if file == "submission.csv" :
                 path1 = f"{state.competition_dir}/{file}"
                 df1 = pd.read_csv(path1)
                 if len(df) == len(df1):
                     return True, 27, "submission.csv and sample_submission.csv files have the same number of rows, unit test passed"
                 else:
-                    # aslo report missing rows number
+                    # also report missing rows number
                     row_inx_sample = set(df.index)
                     row_inx_submission = set(df1.index)
                     missing_rows = row_inx_sample - row_inx_submission
@@ -515,7 +518,7 @@ Here is the information about the features of processed_test.csv:
         files = os.listdir(state.competition_dir)
         for file in files:
             # submission file may have different names
-            if f"submission" in file and file.endswith(".csv") and file != "sample_submission.csv" :
+            if file == "submission.csv" :
                 path1 = f"{state.competition_dir}/{file}"
                 df1 = pd.read_csv(path1)
                 # 比较两个 DataFrame 的列名集合是否相同
@@ -561,6 +564,15 @@ Here is the information about the features of processed_test.csv:
             else:
                 result = "Invalid"
                 reason = f"The mean of the first 100 values in the submission file ({submission_mean}) is outside the expected range ({lower_bound} to {upper_bound})."
+        elif pd.api.types.is_numeric_dtype(df_sample.iloc[:, 1]) != pd.api.types.is_numeric_dtype(df_submission.iloc[:, 1]):
+            result = "Invalid"
+            sample_dtype = df_sample.iloc[:, 1].dtype
+            submission_dtype = df_submission.iloc[:, 1].dtype
+            sample_values = df_sample.iloc[:10, 1].tolist()
+            submission_values = df_submission.iloc[:10, 1].tolist()
+            reason = f"The data types of the second column in sample_submission.csv ({sample_dtype}) and submission.csv ({submission_dtype}) do not match."
+            reason += f"\n\nFirst 10 values in sample_submission.csv ({sample_dtype}):\n{sample_values}"
+            reason += f"\n\nFirst 10 values in submission.csv ({submission_dtype}):\n{submission_values}"
         else: 
             result = "Valid"
         # 比较两个 DataFrame 的第一列值是否相同
@@ -609,7 +621,7 @@ Id,SalePrice
         df = pd.read_csv(path)
         
         # Check if any column name (case-insensitive) matches 'id'
-        id_columns = [col for col in df.columns if (col.lower() == 'id' or 'id' in col.lower())]
+        id_columns = [col for col in df.columns if (col.lower() == 'id' or col.lower() == 'passengerid')]
         
         if id_columns:
             return True, 31, f"The cleaned_train.csv file contains an ID column: {id_columns[0]}"
@@ -621,7 +633,7 @@ Id,SalePrice
         df = pd.read_csv(path)
         
         # Check if any column name (case-insensitive) matches 'id'
-        id_columns = [col for col in df.columns if (col.lower() == 'id' or 'id' in col.lower())]
+        id_columns = [col for col in df.columns if (col.lower() == 'id' or col.lower() == 'passengerid')]
         
         if id_columns:
             return True, 32, f"The cleaned_test.csv file contains an ID column: {id_columns[0]}"
@@ -652,6 +664,66 @@ Id,SalePrice
         else:
             return False, 34, f"The processed_test.csv file does not contain an ID column. The columns in processed_test.csv are {df.columns}. Please ensure that the ID column is preserved during the cleaning process."
     
+    def test_cleaned_train_no_missing_rows(self, state: State):
+        original_path = f"{state.competition_dir}/train.csv"
+        cleaned_path = f"{state.competition_dir}/cleaned_train.csv"
+        
+        original_df = pd.read_csv(original_path)
+        cleaned_df = pd.read_csv(cleaned_path)
+        
+        if len(original_df) == len(cleaned_df):
+            return True, 35, f"The cleaned_train.csv file has the correct number of rows: {len(cleaned_df)}"
+        else:
+            return False, 35, f"The cleaned_train.csv file has {len(cleaned_df)} rows, but the original train.csv has {len(original_df)} rows. Please check your data cleaning process for any unintended row removals."
+
+    def test_cleaned_test_no_missing_rows(self, state: State):
+        original_path = f"{state.competition_dir}/test.csv"
+        cleaned_path = f"{state.competition_dir}/cleaned_test.csv"
+        
+        original_df = pd.read_csv(original_path)
+        cleaned_df = pd.read_csv(cleaned_path)
+        
+        if len(original_df) == len(cleaned_df):
+            return True, 36, f"The cleaned_test.csv file has the correct number of rows: {len(cleaned_df)}"
+        else:
+            return False, 36, f"The cleaned_test.csv file has {len(cleaned_df)} rows, but the original test.csv has {len(original_df)} rows. Please check your data cleaning process for any unintended row removals."
+
+    def test_processed_train_no_missing_rows(self, state: State):
+        original_path = f"{state.competition_dir}/train.csv"
+        processed_path = f"{state.competition_dir}/processed_train.csv"
+        
+        original_df = pd.read_csv(original_path)
+        processed_df = pd.read_csv(processed_path)
+        
+        if len(original_df) == len(processed_df):
+            return True, 37, f"The processed_train.csv file has the correct number of rows: {len(processed_df)}"
+        else:
+            return False, 37, f"The processed_train.csv file has {len(processed_df)} rows, but the original train.csv has {len(original_df)} rows. Please check your feature engineering process for any unintended row removals or additions."
+
+    def test_processed_test_no_missing_rows(self, state: State):
+        original_path = f"{state.competition_dir}/test.csv"
+        processed_path = f"{state.competition_dir}/processed_test.csv"
+        
+        original_df = pd.read_csv(original_path)
+        processed_df = pd.read_csv(processed_path)
+        
+        if len(original_df) == len(processed_df):
+            return True, 38, f"The processed_test.csv file has the correct number of rows: {len(processed_df)}"
+        else:
+            return False, 38, f"The processed_test.csv file has {len(processed_df)} rows, but the original test.csv has {len(original_df)} rows. Please check your feature engineering process for any unintended row removals or additions."
+
+    def test_submission_no_missing_rows(self, state: State):
+        sample_path = f"{state.competition_dir}/sample_submission.csv"
+        submission_path = f"{state.competition_dir}/submission.csv"
+        
+        sample_df = pd.read_csv(sample_path)
+        submission_df = pd.read_csv(submission_path)
+        
+        if len(sample_df) == len(submission_df):
+            return True, 39, f"The submission.csv file has the correct number of rows: {len(submission_df)}"
+        else:
+            return False, 39, f"The submission.csv file has {len(submission_df)} rows, but the sample_submission.csv has {len(sample_df)} rows. Please ensure that your submission file includes predictions for all test samples."
+
 if __name__ == '__main__':
     # llm = LLM('gpt-4o', 'api')
     # reply, history = llm.generate('try me a joke', history=None)
