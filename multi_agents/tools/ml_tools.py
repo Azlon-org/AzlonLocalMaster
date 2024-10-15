@@ -259,7 +259,7 @@ def format_datetime(data: pd.DataFrame, columns: Union[str, List[str]], format: 
 
 def one_hot_encode(data: pd.DataFrame, 
                    columns: Union[str, List[str]], 
-                   drop_original: bool = True, 
+                   drop_original: bool = False, 
                    handle_unknown: str = 'error') -> pd.DataFrame:
     """
     Perform one-hot encoding on specified categorical columns.
@@ -267,7 +267,6 @@ def one_hot_encode(data: pd.DataFrame,
     Args:
         data (pd.DataFrame): The input DataFrame.
         columns (str or List[str]): Column label or list of column labels to encode.
-        drop_original (bool, optional): Whether to drop the original columns. Defaults to True.
         handle_unknown (str, optional): How to handle unknown categories. Options are 'error' or 'ignore'. Defaults to 'error'.
 
     Returns:
@@ -329,148 +328,113 @@ def one_hot_encode(data: pd.DataFrame,
     # Combine with original DataFrame
     result = pd.concat([data, encoded_df], axis=1)
     
-    # Drop original columns if specified
-    if drop_original:
-        result = result.drop(unique_columns, axis=1)
+    # # Drop original columns only if new columns were successfully created and drop_original is True
+    # if drop_original and not encoded_df.empty:
+    #     result = result.drop(unique_columns, axis=1)
     
     return result
 
+
+from typing import Tuple
+
 def label_encode(data: pd.DataFrame, 
-                 columns: Union[str, List[str]], 
-                 drop_original: bool = True) -> pd.DataFrame:
+                 columns: Union[str, List[str]]) -> Tuple[pd.DataFrame, List[str]]:
     """
     Perform label encoding on specified categorical columns.
 
     Args:
         data (pd.DataFrame): The input DataFrame.
         columns (str or List[str]): Column label or list of column labels to encode.
-        drop_original (bool, optional): Whether to drop the original columns. Defaults to True.
-
-    Returns:
-        pd.DataFrame: DataFrame with label encoded columns
-
-    Raises:
-        ValueError: If specified columns are not found in the DataFrame or if duplicate columns are not identical.
-
+        
     Example:
         >>> df = pd.DataFrame({'fruit': ['apple', 'banana', 'apple', 'cherry']})
         >>> label_encode(df, 'fruit')
-           fruit_encoded
-        0              0
-        1              1
-        2              0
-        3              2
+           fruit  fruit_encoded
+        0  apple              0
+        1  banana             1
+        2  apple              0
+        3  cherry             2
+        
+    Returns:
+        tuple: (DataFrame with label encoded columns, List of new encoded column names)
     """
     if isinstance(columns, str):
         columns = [columns]
 
     result = data.copy()
+    new_encoded_columns = []
 
     # Check if specified columns exist
     missing_columns = set(columns) - set(data.columns)
     if missing_columns:
         raise ValueError(f"Columns {missing_columns} not found in the DataFrame.")
 
-    # Handle duplicate columns
-    unique_columns = []
     for col in columns:
-        if col in unique_columns:
-            continue
         col_data = data[col]
-        if isinstance(col_data, pd.DataFrame):
-            # Check if all duplicate columns are identical
-            if col_data.nunique().eq(1).all():
-                print(f"Warning: Duplicate identical columns found for '{col}'. Only one instance will be encoded.")
-                unique_columns.append(col)
-            else:
-                raise ValueError(f"Duplicate non-identical columns found for '{col}'. Please resolve this before encoding.")
+
+        # Only encode columns of type 'category' or 'object'
+        if pd.api.types.is_categorical_dtype(col_data) or pd.api.types.is_object_dtype(col_data):
+            encoder = LabelEncoder()
+            encoded_col_name = f"{col}_encoded"
+            result[encoded_col_name] = encoder.fit_transform(col_data.astype(str))
+            new_encoded_columns.append(encoded_col_name)
         else:
-            unique_columns.append(col)
+            warnings.warn(f"Column '{col}' is {col_data.dtype}, which is not categorical. Skipping encoding.")
 
-    for col in unique_columns:
-        col_data = data[col]
-        if not pd.api.types.is_categorical_dtype(col_data) and not pd.api.types.is_object_dtype(col_data):
-            warnings.warn(f"Column '{col}' is {col_data.dtype}, which is not categorical. Label encoding may not be appropriate.")
-
-        encoder = LabelEncoder()
-        result[f"{col}_encoded"] = encoder.fit_transform(col_data.astype(str))
-
-        if drop_original:
-            result = result.drop(col, axis=1)
+    # # Drop the original columns only if new columns were successfully created
+    # if drop_original and new_encoded_columns:
+    #     result.drop(columns=columns, inplace=True)
 
     return result
 
+
 def frequency_encode(data: pd.DataFrame, 
                      columns: Union[str, List[str]], 
-                     drop_original: bool = True) -> pd.DataFrame:
+                     drop_original: bool = False) -> pd.DataFrame:
     """
     Perform frequency encoding on specified categorical columns.
 
     Args:
         data (pd.DataFrame): The input DataFrame.
         columns (str or List[str]): Column label or list of column labels to encode.
-        drop_original (bool, optional): Whether to drop the original columns. Defaults to True.
-
-    Returns:
-        pd.DataFrame: DataFrame with frequency encoded columns
-
-    Raises:
-        ValueError: If specified columns are not found in the DataFrame or if duplicate columns are not identical.
 
     Example:
-        >>> df = pd.DataFrame({'city': ['New York', 'London', 'Paris', 'New York', 'London', 'New York']})
-        >>> frequency_encode(df, 'city')
-           city_freq
-        0       0.50
-        1       0.33
-        2       0.17
-        3       0.50
-        4       0.33
-        5       0.50
+        >>> df = pd.DataFrame({'fruit': ['apple', 'banana', 'apple', 'cherry']})
+        >>> frequency_encode(df, 'fruit')
+           fruit  fruit_freq
+        0  apple        0.50
+        1  banana       0.25
+        2  apple        0.50
+        3  cherry       0.25
+        
+    Returns:
+        pd.DataFrame: DataFrame with frequency encoded columns.
     """
     if isinstance(columns, str):
         columns = [columns]
 
     result = data.copy()
+    new_encoded_columns = []
 
     # Check if specified columns exist
     missing_columns = set(columns) - set(data.columns)
     if missing_columns:
         raise ValueError(f"Columns {missing_columns} not found in the DataFrame.")
 
-    # Handle duplicate columns
-    unique_columns = []
     for col in columns:
-        if col in unique_columns:
-            continue
         col_data = data[col]
-        if isinstance(col_data, pd.DataFrame):
-            # Check if all duplicate columns are identical
-            if col_data.nunique().eq(1).all():
-                print(f"Warning: Duplicate identical columns found for '{col}'. Only one instance will be encoded.")
-                unique_columns.append(col)
-            else:
-                raise ValueError(f"Duplicate non-identical columns found for '{col}'. Please resolve this before encoding.")
-        else:
-            unique_columns.append(col)
-
-    for col in unique_columns:
-        col_data = data[col]
-        if not pd.api.types.is_categorical_dtype(col_data) and not pd.api.types.is_object_dtype(col_data):
-            warnings.warn(f"Column '{col}' is {col_data.dtype}, which is not categorical. Frequency encoding may not be appropriate.")
-
         frequency = col_data.value_counts(normalize=True)
-        result[f"{col}_freq"] = col_data.map(frequency)
+        encoded_col_name = f"{col}_freq"
+        result[encoded_col_name] = col_data.map(frequency)
+        new_encoded_columns.append(encoded_col_name)
 
-        if drop_original:
-            result = result.drop(col, axis=1)
 
     return result
+
 
 def target_encode(data: pd.DataFrame, 
                   columns: Union[str, List[str]], 
                   target: str, 
-                  drop_original: bool = True, 
                   min_samples_leaf: int = 1, 
                   smoothing: float = 1.0) -> pd.DataFrame:
     """
@@ -480,27 +444,22 @@ def target_encode(data: pd.DataFrame,
         data (pd.DataFrame): The input DataFrame.
         columns (str or List[str]): Column label or list of column labels to encode.
         target (str): The name of the target column.
-        drop_original (bool, optional): Whether to drop the original columns. Defaults to True.
         min_samples_leaf (int, optional): Minimum samples to take category average into account. Defaults to 1.
         smoothing (float, optional): Smoothing effect to balance categorical average vs prior. Defaults to 1.0.
 
-    Returns:
-        pd.DataFrame: DataFrame with target encoded columns
-
-    Raises:
-        ValueError: If specified columns are not found in the DataFrame, if the target column is not found,
-                    or if duplicate columns are not identical.
 
     Example:
-        >>> df = pd.DataFrame({'category': ['A', 'B', 'A', 'C', 'B', 'A'], 'target': [1, 0, 1, 1, 0, 0]})
-        >>> target_encode(df, 'category', 'target')
-           category_target_enc
-        0              0.5000
-        1              0.0000
-        2              0.5000
-        3              1.0000
-        4              0.0000
-        5              0.5000
+        >>> df = pd.DataFrame({'fruit': ['apple', 'banana', 'apple', 'cherry'], 'target': [1, 0, 1, 0]})
+        >>> target_encode(df, 'fruit', 'target', min_samples_leaf=1, smoothing=1.0)
+           fruit  target  fruit_target_enc
+        0  apple       1               0.865529  
+        1  banana      0               0.250000  
+        2  apple       1               0.865529
+        3  cherry      0               0.250000 
+        
+        
+    Returns:
+        pd.DataFrame: DataFrame with target encoded columns.
     """
     if isinstance(columns, str):
         columns = [columns]
@@ -510,40 +469,21 @@ def target_encode(data: pd.DataFrame,
 
     result = data.copy()
     prior = data[target].mean()
+    new_encoded_columns = []
 
     # Check if specified columns exist
     missing_columns = set(columns) - set(data.columns)
     if missing_columns:
         raise ValueError(f"Columns {missing_columns} not found in the DataFrame.")
 
-    # Handle duplicate columns
-    unique_columns = []
     for col in columns:
-        if col in unique_columns:
-            continue
         col_data = data[col]
-        if isinstance(col_data, pd.DataFrame):
-            # Check if all duplicate columns are identical
-            if col_data.nunique().eq(1).all():
-                print(f"Warning: Duplicate identical columns found for '{col}'. Only one instance will be encoded.")
-                unique_columns.append(col)
-            else:
-                raise ValueError(f"Duplicate non-identical columns found for '{col}'. Please resolve this before encoding.")
-        else:
-            unique_columns.append(col)
-
-    for col in unique_columns:
-        col_data = data[col]
-        if not pd.api.types.is_categorical_dtype(col_data) and not pd.api.types.is_object_dtype(col_data):
-            warnings.warn(f"Column '{col}' is {col_data.dtype}, which is not categorical. Target encoding may not be appropriate.")
-
         averages = data.groupby(col)[target].agg(["count", "mean"])
-        smoothing = 1 / (1 + np.exp(-(averages["count"] - min_samples_leaf) / smoothing))
-        averages["smooth"] = prior * (1 - smoothing) + averages["mean"] * smoothing
-        result[f"{col}_target_enc"] = col_data.map(averages["smooth"])
-
-        if drop_original:
-            result = result.drop(col, axis=1)
+        smoothing_factor = 1 / (1 + np.exp(-(averages["count"] - min_samples_leaf) / smoothing))
+        averages["smooth"] = prior * (1 - smoothing_factor) + averages["mean"] * smoothing_factor
+        encoded_col_name = f"{col}_target_enc"
+        result[encoded_col_name] = col_data.map(averages["smooth"])
+        new_encoded_columns.append(encoded_col_name)
 
     return result
 

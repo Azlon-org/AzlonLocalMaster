@@ -300,11 +300,6 @@
                 },
                 "description": "Column label or list of column labels to encode."
             },
-            "drop_original": {
-                "type": "boolean",
-                "description": "Whether to drop the original columns after encoding.",
-                "default": true
-            },
             "handle_unknown": {
                 "type": "string",
                 "description": "How to handle unknown categories during transform.",
@@ -332,6 +327,7 @@
                 "columns": "color"
             },
             "output": {
+                "color": ["red", "blue", "green"],
                 "color_blue": [0, 1, 0],
                 "color_green": [0, 0, 1],
                 "color_red": [1, 0, 0]
@@ -353,11 +349,6 @@
                     "type": "string"
                 },
                 "description": "Column label or list of column labels to encode."
-            },
-            "drop_original": {
-                "type": "boolean",
-                "description": "Whether to drop the original columns after encoding.",
-                "default": true
             }
         },
         "required": ["data", "columns"],
@@ -380,6 +371,7 @@
                 "columns": "fruit"
             },
             "output": {
+                "fruit": ["apple", "banana", "apple", "cherry"],
                 "fruit_encoded": [0, 1, 0, 2]
             }
         }
@@ -399,11 +391,6 @@
                     "type": "string"
                 },
                 "description": "Column label or list of column labels to encode."
-            },
-            "drop_original": {
-                "type": "boolean",
-                "description": "Whether to drop the original columns after encoding.",
-                "default": true
             }
         },
         "required": ["data", "columns"],
@@ -449,11 +436,6 @@
             "target": {
                 "type": "string",
                 "description": "The name of the target column in the DataFrame."
-            },
-            "drop_original": {
-                "type": "boolean",
-                "description": "Whether to drop the original columns after encoding.",
-                "default": true
             },
             "min_samples_leaf": {
                 "type": "integer",
