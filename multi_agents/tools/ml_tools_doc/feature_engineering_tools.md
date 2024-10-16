@@ -1,7 +1,7 @@
 ## one_hot_encode
 
 **Name:** one_hot_encode  
-**Description:** Perform one-hot encoding on specified categorical columns of a DataFrame.  
+**Description:** Perform one-hot encoding on specified categorical columns. The resulting columns will follow the format 'original_column_value'
 **Applicable Situations:** Encoding categorical variables with no ordinal relationship, especially useful for machine learning models that cannot handle categorical data directly (e.g., linear regression, neural networks). Best for categorical variables with relatively few unique categories.
 
 **Parameters:**
@@ -32,16 +32,18 @@
     - `data`: {'color': ['red', 'blue', 'green']}
     - `columns`: color
   - **Output:**
-    - `color`: ['red', 'blue', 'green']
-    - `color_blue`: [0, 1, 0]
-    - `color_green`: [0, 0, 1]
-    - `color_red`: [1, 0, 0]
+    - `data`: {'color': ['red', 'blue', 'green'],
+              'color_blue': [0, 1, 0],
+              'color_green': [0, 0, 1],
+              'color_red': [1, 0, 0]
+            }
+    - `columns`: ['color', 'color_blue', 'color_green', 'color_red']
 
 ---
 ## label_encode
 
 **Name:** label_encode  
-**Description:** Perform label encoding on specified categorical columns of a DataFrame.  
+**Description:** Perform label encoding on specified categorical columns. The resulting columns will follow the format 'original_column_encoded'.  
 **Applicable Situations:** Encoding categorical variables with an ordinal relationship, or when the number of categories is large and one-hot encoding would lead to too many features. Useful for tree-based models that can handle categorical data.
 
 **Parameters:**
@@ -67,14 +69,16 @@
     - `data`: {'fruit': ['apple', 'banana', 'apple', 'cherry']}
     - `columns`: fruit
   - **Output:**
-    - `fruit`: ['apple', 'banana', 'apple', 'cherry']
-    - `fruit_encoded`: [0, 1, 0, 2]
+    - `data`: {'fruit': ['apple', 'banana', 'apple', 'cherry'],
+              'fruit_encoded': [0, 1, 0, 2]
+            }
+    - `columns`: ['fruit', 'fruit_encoded']
 
 ---
 ## frequency_encode
 
 **Name:** frequency_encode  
-**Description:** Perform frequency encoding on specified categorical columns of a DataFrame.  
+**Description:** Perform frequency encoding on specified categorical columns. The resulting columns will follow the format 'original_column_freq'.  
 **Applicable Situations:** Encoding high-cardinality categorical variables, especially when the frequency of categories is informative. Useful for both tree-based and linear models.
 
 **Parameters:**
@@ -100,14 +104,16 @@
     - `data`: {'city': ['New York', 'London', 'Paris', 'New York', 'London', 'New York']}
     - `columns`: city
   - **Output:**
-    - `city`: ['New York', 'London', 'Paris', 'New York', 'London', 'New York']
-    - `city_freq`: [0.5, 0.33, 0.17, 0.5, 0.33, 0.5]
+    - `data`: {'city': ['New York', 'London', 'Paris', 'New York', 'London', 'New York'],
+              'city_freq': [0.5, 0.33, 0.17, 0.5, 0.33, 0.5]
+            }
+    - `columns`: ['city', 'city_freq']
 
 ---
 ## target_encode
 
 **Name:** target_encode  
-**Description:** Perform target encoding on specified categorical columns of a DataFrame.  
+**Description:** Perform frequency encoding on specified categorical columns. The resulting columns will follow the format 'original_column_freq'.  
 **Applicable Situations:** Encoding categorical variables in supervised learning tasks, especially effective for high-cardinality features. Useful when there's a clear relationship between categories and the target variable.
 
 **Parameters:**
@@ -129,7 +135,7 @@
   - **Description:** Smoothing effect to balance categorical average vs prior.
   - **Default:** `1.0`
 
-**Required:** `data`, `columns`, `target`  
+**Required:** `data`, `columns`
 **Result:** DataFrame with target encoded columns  
 **Notes:**
 - Target encoding replaces a categorical value with the mean of the target variable for that value.
@@ -142,13 +148,11 @@
 - Consider the impact of target encoding on model interpretability.
 **Example:**
   - **Input:**
-    - `data`: {'category': ['A', 'B', 'A', 'C', 'B', 'A'], 'target': [1, 0, 1, 1, 0, 0]}
-    - `columns`: category
-    - `target`: target
+    - `data`: {'fruit': ['apple', 'banana', 'apple', 'cherry', 'banana', 'apple', 'cherry', 'banana', 'apple', 'cherry', 'kiwi'], 'region': ['north', 'north', 'south', 'south', 'north', 'south', 'north', 'south', 'north', 'north', 'south'], 'price': [1, 0, 1, 0, 2, 3, 1, 0, 1, 2, 3] }
+    - `columns`: ['fruit', 'region', 'price']
   - **Output:**
-    - `category`: ['A', 'B', 'A', 'C', 'B', 'A']
-    - `target`: [1, 0, 1, 1, 0, 0]
-    - `category_target_enc`: [0.5, 0.0, 0.5, 1.0, 0.0, 0.5]
+    - `data`:  {'fruit': ['apple', 'banana', 'apple', 'cherry', 'banana', 'apple', 'cherry', 'banana', 'apple', 'cherry', 'kiwi'], 'region': ['north', 'north', 'south', 'south', 'north', 'south', 'north', 'south', 'north', 'north', 'south'], 'price': [1, 0, 1, 0, 2, 3, 1, 0, 1, 2, 3], 'fruit_target_enc': [1.437566, 0.912568, 1.437566, 0.796902, 0.912568, 1.437566, 0.796902, 0.912568, 1.437566, 0.796902, 1.750000], 'region_target_enc': [1.509699, 1.509699, 1.250000, 1.250000, 1.509699, 1.250000, 1.509699, 1.250000, 1.509699, 1.509699, 1.250000] }
+    - `columns`: ['fruit', 'region', 'price', 'fruit_price_enc', 'region_price_enc']
 
 ---
 ## correlation_feature_selection
