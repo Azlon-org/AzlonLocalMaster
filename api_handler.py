@@ -5,7 +5,9 @@ from typing import List, Dict, Optional, Any, Tuple
 from dataclasses import dataclass
 
 import openai
+import json
 import httpx
+import pdb
 
 # Constants
 DIR = os.path.dirname(os.path.abspath(__file__))
@@ -26,7 +28,7 @@ logging.getLogger("httpx").setLevel(logging.WARNING)
 
 @dataclass
 class APISettings:
-    max_tokens: int
+    max_completion_tokens: int
     temperature: float = 0.7
     top_p: float = 1.0
     frequency_penalty: float = 0.0
@@ -35,7 +37,7 @@ class APISettings:
 
     @property
     def timeout(self) -> int:
-        return (self.max_tokens // 1000 + 1) * 30
+        return (self.max_completion_tokens // 1000 + 1) * 30
 
 def load_api_config() -> Tuple[str, Optional[str]]:
     try:
@@ -47,18 +49,21 @@ def load_api_config() -> Tuple[str, Optional[str]]:
     except FileNotFoundError:
         raise ValueError(f"API key file not found: {API_KEY_FILE}")
 
-def generate_response(client: openai.OpenAI, engine: str, messages: List[Dict[str, str]], 
+def generate_response(client: openai.OpenAI, model: str, messages: List[Dict[str, str]], 
                       settings: APISettings, response_type: str) -> Any:
-    logger.info(f"Generating response for engine: {engine}")
+    logger.info(f"Generating response for model: {model}")
     start_time = time.time()
     
+    if model == 'o1-mini':
+        settings.temperature = 1.0
+
     try:
         if response_type == 'text':
             response = client.chat.completions.create(
                 messages=messages,
-                model=engine,
+                model=model,
                 temperature=settings.temperature,
-                max_tokens=settings.max_tokens,
+                max_completion_tokens=settings.max_completion_tokens,
                 top_p=settings.top_p,
                 frequency_penalty=settings.frequency_penalty,
                 presence_penalty=settings.presence_penalty,
@@ -68,7 +73,7 @@ def generate_response(client: openai.OpenAI, engine: str, messages: List[Dict[st
         elif response_type == 'image':
             response = client.chat.completions.create(
                 messages=messages,
-                model=engine,
+                model=model,
                 temperature=settings.temperature,
                 timeout=settings.timeout,
             )
@@ -83,7 +88,7 @@ def generate_response(client: openai.OpenAI, engine: str, messages: List[Dict[st
 
 class APIHandler:
     def __init__(self, model: str):
-        self.engine = model
+        self.model = model
         self.api_key, self.base_url = load_api_config()
         self.client = openai.OpenAI(
             api_key=self.api_key, 
@@ -120,7 +125,7 @@ class APIHandler:
     def get_output(self, messages: List[Dict[str, str]], settings: APISettings, response_type: str = 'text') -> str:
         for attempt in range(MAX_ATTEMPTS):
             try:
-                response = generate_response(self.client, self.engine, messages, settings, response_type)
+                response = generate_response(self.client, self.model, messages, settings, response_type)
                 if response.choices and response.choices[0].message and hasattr(response.choices[0].message, 'content'):
                     return response.choices[0].message.content
                 else:
@@ -148,6 +153,6 @@ if __name__ == '__main__':
         {"role": "system", "content": "You are a helpful assistant."},
         {"role": "user", "content": "How are you today?"}
     ]
-    settings = APISettings(max_tokens=50)
+    settings = APISettings(max_completion_tokens=50)
     output_text = handler.get_output(messages=messages, settings=settings)
     print(output_text)

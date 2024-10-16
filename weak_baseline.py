@@ -13,9 +13,11 @@ PROMPT_WEAK_BASELINE = '''
 # CONTEXT #
 {steps_in_context}
 This is the {i}-th time I ask you to complete the competition.
+
 #############
 # OVERVIEW #
 {overview}
+
 #############
 # TASK #
 I will provide you with [OVERVIEW] and all the files you need ({files_str}). Please complete this competition for me. You must write the code and give proper explanations, but do not run the code.
@@ -28,6 +30,7 @@ I will provide you with [OVERVIEW] and all the files you need ({files_str}). Ple
     - Note that the test dataset does not have the target variable.
 - Always copy the DataFrame before processing it and use the copy to process.
 - Always write some `assert` statements to check the correctness of the code.
+
 #############
 # RESPONSE: BLOCK (CODE & EXPLANATION) #
 BLOCK 1:
@@ -37,6 +40,7 @@ BLOCK 2:
 CODE
 EXPLANATION
 ...
+
 #############
 # START ANALYSIS #
 If you understand, let's work this out in a step-by-step way.

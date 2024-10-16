@@ -12,8 +12,9 @@ from agents import Reader, Planner, Developer, Reviewer, Summarizer
 from state import State
 
 class SOP:
-    def __init__(self, competition: str):
+    def __init__(self, competition: str, model: str):
         self.competition = competition
+        self.model = model.replace("_", "-")
         self.state_records = []
         self.current_state = None
         self.config = self._load_configuration()
@@ -30,9 +31,9 @@ class SOP:
         if agent_name == "Reader":
             agent = Reader('gpt-4o-mini', 'api')
         elif agent_name == "Planner":
-            agent = Planner('gpt-4o', 'api')
+            agent = Planner(self.model, 'api')
         elif agent_name == "Developer":
-            agent = Developer('gpt-4o', 'api')
+            agent = Developer(self.model, 'api')
         elif agent_name == "Reviewer":
             agent = Reviewer('gpt-4o-mini', 'api')
         elif agent_name == "Summarizer":

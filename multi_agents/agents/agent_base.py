@@ -32,7 +32,8 @@ class Agent:
         self.role = role
         self.description = description
         self.llm = LLM(model, type)
-        logger.info(f'Agent {self.role} is created.')
+        self.model = model
+        logger.info(f'Agent {self.role} is created with model {model}.')
 
     def _gather_experience_with_suggestion(self, state: State) -> str:
         experience_with_suggestion = ""
@@ -116,11 +117,11 @@ class Agent:
         
         logger.info(f"Failed to parse JSON from raw reply, attempting reorganization.")
         if self.role == "planner":
-            json_reply, _ = self.llm.generate(REORGANIZE_REPLY_TYPE3.format(information=raw_reply), history=[], max_tokens=4096)
+            json_reply, _ = self.llm.generate(REORGANIZE_REPLY_TYPE3.format(information=raw_reply), history=[], max_completion_tokens=4096)
         elif self.role == "reviewer":
-            json_reply, _ = self.llm.generate(REORGANIZE_REPLY_TYPE2.format(information=raw_reply), history=[], max_tokens=4096)
+            json_reply, _ = self.llm.generate(REORGANIZE_REPLY_TYPE2.format(information=raw_reply), history=[], max_completion_tokens=4096)
         else:
-            json_reply, _ = self.llm.generate(REORGANIZE_REPLY_TYPE1.format(information=raw_reply), history=[], max_tokens=4096)
+            json_reply, _ = self.llm.generate(REORGANIZE_REPLY_TYPE1.format(information=raw_reply), history=[], max_completion_tokens=4096)
         
         json_match = re.search(r'```json(.*?)```', json_reply, re.DOTALL)
         if json_match:
@@ -198,7 +199,7 @@ class Agent:
             with open(f'{state.competition_dir}/{state.dir_name}/markdown_plan.txt', 'r') as file:
                 markdown_plan = file.read()
             input = PROMPT_EXTRACT_TOOLS.format(document=markdown_plan, all_tool_names=all_tool_names)
-            raw_reply, _ = self.llm.generate(input, history=[], max_tokens=4096)
+            raw_reply, _ = self.llm.generate(input, history=[], max_completion_tokens=4096)
             with open(f'{state.competition_dir}/{state.dir_name}/extract_tools_reply.txt', 'w') as file:
                 file.write(raw_reply)
             tool_names = self._parse_json(raw_reply)['tool_names']

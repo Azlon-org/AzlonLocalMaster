@@ -15,11 +15,11 @@ run_experiment() {
     echo "Running $competition - Experiment $run_number"
 
     # Run framework.py
-    python framework.py --competition "$competition"
+    python framework.py --competition "$competition" --model "$model"
 
     # Define source and destination directories
     source_dir="multi_agents/competition/$competition"
-    dest_dir="multi_agents/experiments_history/$competition/$dest_dir_param/$run_number"
+    dest_dir="multi_agents/experiments_history/$competition/$model/$dest_dir_param/$run_number"
 
     # Create destination directory if it doesn't exist
     mkdir -p "$dest_dir"
@@ -43,7 +43,7 @@ run_experiment() {
 # Run experiments for each competition
 for competition in "${competitions[@]}"; do
     for ((run=start_run; run<=end_run; run++)); do
-        run_experiment "$competition" "$run" "$dest_dir_param"
+        run_experiment "$competition" "$run" "$model" "$dest_dir_param"
     done
 done
 

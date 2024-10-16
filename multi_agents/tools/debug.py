@@ -41,9 +41,10 @@ class DebugTool:
             error_messages=error_messages,
             output_messages=output_messages
         )
-        _, locate_history = self.llm.generate(input, [], max_tokens=4096)
+        # import pdb;pdb.set_trace()
+        _, locate_history = self.llm.generate(input, [], max_completion_tokens=4096)
         input = f"# TOOL DESCRIPTIONS #\n{tools}"
-        locate_reply, locate_history = self.llm.generate(input, locate_history, max_tokens=4096)
+        locate_reply, locate_history = self.llm.generate(input, locate_history, max_completion_tokens=4096)
         single_round_debug_history.append(locate_history)
         with open(f'{state.restore_dir}/debug_locate_error.txt', 'w') as f:
             f.write(locate_reply)
@@ -53,7 +54,7 @@ class DebugTool:
             for i, error_message in enumerate(all_error_messages):
                 all_error_info += f"This is the {i}-th error message:\n{error_message}\n ------------\n"
             input = PROMPT_DEVELOPER_DEBUG_ASK_FOR_HELP.format(i=debug_times, all_error_messages=all_error_info)
-            help_reply, help_history = self.llm.generate(input, [], max_tokens=4096)
+            help_reply, help_history = self.llm.generate(input, [], max_completion_tokens=4096)
             single_round_debug_history.append(help_history)
             with open(f'{state.restore_dir}/debug_ask_for_help.txt', 'w') as f:
                 f.write(help_reply)
@@ -75,7 +76,7 @@ class DebugTool:
             output_messages=output_messages,
             tools=tools
         )
-        fix_reply, fix_bug_history = self.llm.generate(input, [], max_tokens=4096)
+        fix_reply, fix_bug_history = self.llm.generate(input, [], max_completion_tokens=4096)
         single_round_debug_history.append(fix_bug_history)
         with open(f'{state.restore_dir}/debug_fix_bug.txt', 'w') as f:
             f.write(fix_reply)
@@ -90,7 +91,7 @@ class DebugTool:
             most_relevant_code_snippet=most_relevant_code_snippet,
             code_snippet_after_correction=code_snippet_after_correction
         )
-        merge_reply, merge_code_history = self.llm.generate(input, [], max_tokens=4096)
+        merge_reply, merge_code_history = self.llm.generate(input, [], max_completion_tokens=4096)
         single_round_debug_history.append(merge_code_history)
         with open(f'{state.restore_dir}/debug_merge_code.txt', 'w') as f:
             f.write(merge_reply)
@@ -109,9 +110,9 @@ class DebugTool:
             not_pass_information=not_pass_information,
             output_messages=output_messages
         )
-        raw_reply, test_locate_history = self.llm.generate(input, [], max_tokens=4096)
+        raw_reply, test_locate_history = self.llm.generate(input, [], max_completion_tokens=4096)
         input = PROMPT_DEVELOPER_TEST_REORGANIZE_LOCATE_ANSWER
-        code_snippets_with_problem, test_locate_history = self.llm.generate(input, test_locate_history, max_tokens=4096)
+        code_snippets_with_problem, test_locate_history = self.llm.generate(input, test_locate_history, max_completion_tokens=4096)
         single_round_test_history.append(test_locate_history)
         with open(f'{state.restore_dir}/test_locate_problem.txt', 'w') as f:
             f.write(code_snippets_with_problem)
@@ -122,12 +123,12 @@ class DebugTool:
             output_messages=output_messages,
             not_pass_information=not_pass_information
         )
-        raw_reply, test_fix_history = self.llm.generate(input, [], max_tokens=4096)
+        raw_reply, test_fix_history = self.llm.generate(input, [], max_completion_tokens=4096)
         with open(f'{state.restore_dir}/thought_to_test_fix_problem.txt', 'w') as f:
             f.write(raw_reply)
         single_round_test_history.append(test_fix_history)
         input = PROMPT_DEVELOPER_TEST_REORGANIZE_FIX_ANSWER
-        code_snippets_after_correction, test_fix_history = self.llm.generate(input, test_fix_history, max_tokens=4096)
+        code_snippets_after_correction, test_fix_history = self.llm.generate(input, test_fix_history, max_completion_tokens=4096)
         with open(f'{state.restore_dir}/test_fix_problem.txt', 'w') as f:
             f.write(code_snippets_after_correction)
 
@@ -138,7 +139,7 @@ class DebugTool:
             code_snippets_with_problem=code_snippets_with_problem,
             code_snippets_after_correction=code_snippets_after_correction
         )
-        raw_reply, merge_code_history = self.llm.generate(input, [], max_tokens=4096)
+        raw_reply, merge_code_history = self.llm.generate(input, [], max_completion_tokens=4096)
         single_round_test_history.append(merge_code_history)
         with open(f'{state.restore_dir}/test_merge_code.txt', 'w') as f:
             f.write(raw_reply)
