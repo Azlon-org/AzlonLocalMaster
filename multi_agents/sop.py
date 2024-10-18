@@ -33,7 +33,7 @@ class SOP:
         elif agent_name == "Planner":
             agent = Planner(self.model, 'api')
         elif agent_name == "Developer":
-            agent = Developer(self.model, 'api')
+            agent = Developer('gpt-4o', 'api')
         elif agent_name == "Reviewer":
             agent = Reviewer('gpt-4o-mini', 'api')
         elif agent_name == "Summarizer":
@@ -63,11 +63,11 @@ class SOP:
 
             if state.check_finished():
                 state.set_score()
-                state_info, new_state = self.update_state(state)
-                if state_info == 'Success':
+                exec_state_info, new_state = self.update_state(state)
+                if exec_state_info == 'Success':
                     state.restore_memory()
         
-        return state_info, new_state
+        return exec_state_info, new_state
 
     def update_state(self, state: State) -> Tuple[str, Optional[State]]:
         self.state_records.append(copy.deepcopy(state))

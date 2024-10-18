@@ -53,10 +53,10 @@ if __name__ == '__main__':
     root_logger.info(f"Start SOP for competition: {competition}")
     while True:
         current_state = new_state
-        state_info, new_state = sop.step(state=current_state)
-        if state_info == 'Fail':
+        exec_state_info, new_state = sop.step(state=current_state)
+        if exec_state_info == 'Fail':
             logging.error("Failed to update state.")
             exit()
-        if state_info == 'Complete':
+        if exec_state_info == 'Complete':
             logging.info(f"Competition {competition} SOP is completed.")
             break  

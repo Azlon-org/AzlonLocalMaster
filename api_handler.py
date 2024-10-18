@@ -106,6 +106,7 @@ class APIHandler:
         logger.info(f"Long message saved to {filename}")
 
     def _truncate_messages(self, messages: List[Dict[str, str]], max_length: int = 1000000) -> List[Dict[str, str]]:
+        pdb.set_trace()
         """Truncate messages to fit within the maximum length."""
         truncated = []
         current_length = 0

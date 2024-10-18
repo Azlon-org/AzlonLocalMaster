@@ -70,19 +70,11 @@ class Agent:
                     sample_lines.append(line)
             return "".join(sample_lines)
         
-        result = ""
+        submission_columns = pd.read_csv(f'{state.competition_dir}/sample_submission.csv').columns.tolist()
+        target_columns = submission_columns[1:]
+        result = f"\n#############\n# TARGET VARIABLE #\n{target_columns}"
         if state.phase in ["Understand Background", "Preliminary Exploratory Data Analysis", "Data Cleaning"]:
-            # train_data_sample = read_sample(f'{state.competition_dir}/train.csv', num_lines)
-            # 包含train的文件路径 过滤掉包含 'cleaned_train' 和 'processed_train' 的文件 选择第一个符合条件的
-            all_train_files = glob.glob(os.path.join(state.competition_dir, '*train*.csv'))
-            filtered_train_files = [f for f in all_train_files if 'cleaned_train' not in f and 'processed_train' not in f]
-            if filtered_train_files:
-                train_file_path = filtered_train_files[0]
-                train_data_sample = read_sample(train_file_path, num_lines)
-            else:
-                print("没有找到符合条件的文件")
-                exit()
-            train_data_sample = read_sample(train_file_path, num_lines)
+            train_data_sample = read_sample(f'{state.competition_dir}/train.csv', num_lines)
             test_data_sample = read_sample(f'{state.competition_dir}/test.csv', num_lines)
             result += f"\n#############\n# TRAIN DATA WITH FEATURES #\n{train_data_sample}\n#############\n# TEST DATA WITH FEATURES #\n{test_data_sample}"
         elif state.phase in ["In-depth Exploratory Data Analysis", "Feature Engineering"]:
@@ -92,10 +84,25 @@ class Agent:
         elif state.phase in ["Model Building, Validation, and Prediction"]:
             processed_train_data_sample = read_sample(f'{state.competition_dir}/processed_train.csv', num_lines)
             processed_test_data_sample = read_sample(f'{state.competition_dir}/processed_test.csv', num_lines)
-            result += f"\n#############\n# PROCESSED TRAIN DATA WITH FEATURES #\n{processed_train_data_sample}\n#############\n# PROCESSED TEST DATA WITH FEATURES #\n{processed_test_data_sample}"
-
+            submission_sample = read_sample(f'{state.competition_dir}/sample_submission.csv', num_lines)
+            result += f"\n#############\n# PROCESSED TRAIN DATA WITH FEATURES #\n{processed_train_data_sample}\n#############\n# PROCESSED TEST DATA WITH FEATURES #\n{processed_test_data_sample}\n#############\n# SUBMISSION FORMAT #\n{submission_sample}"
+            with open(f'{state.competition_dir}/competition_info.txt', 'r') as f:
+                competition_info = f.read()
+            prompt_extract_metric = f"# TASK #\nPlease extract the evaluation metric from the competition information: {competition_info}\n#############\n# RESPONSE: MARKDOWN FORMAT #\n```markdown\n# Evaluation Metric\n[evaluation metric for the competition]\n```"
+            raw_reply, _ = self.llm.generate(prompt_extract_metric, history=[], max_completion_tokens=4096)
+            metric = self._parse_markdown(raw_reply)
+            result += f"\n#############\n# EVALUATION METRIC #\n{metric}"
         return result
 
+    def _data_preview(self, state: State, num_lines: int) -> str:
+        data_used_in_preview = self._read_data(state, num_lines=num_lines)
+        input = PROMPT_DATA_PREVIEW.format(data=data_used_in_preview)
+        raw_reply, _ = self.llm.generate(input, [], max_completion_tokens=4096)
+        data_preview = self._parse_markdown(raw_reply)
+
+        with open(f'{state.competition_dir}/{state.dir_name}/data_preview.txt', 'w') as f:
+            f.write(data_preview)
+        return data_preview
 
     def _parse_json(self, raw_reply: str) -> Dict[str, Any]:
         def try_json_loads(data: str) -> Dict[str, Any]:
@@ -116,12 +123,11 @@ class Agent:
                 return reply
         
         logger.info(f"Failed to parse JSON from raw reply, attempting reorganization.")
-        if self.role == "planner":
-            json_reply, _ = self.llm.generate(REORGANIZE_REPLY_TYPE3.format(information=raw_reply), history=[], max_completion_tokens=4096)
-        elif self.role == "reviewer":
-            json_reply, _ = self.llm.generate(REORGANIZE_REPLY_TYPE2.format(information=raw_reply), history=[], max_completion_tokens=4096)
+        if self.role == 'developer':
+            json_reply, _ = self.llm.generate(PROMPT_REORGANIZE_EXTRACT_TOOLS.format(information=raw_reply), history=[], max_completion_tokens=4096)
         else:
-            json_reply, _ = self.llm.generate(REORGANIZE_REPLY_TYPE1.format(information=raw_reply), history=[], max_completion_tokens=4096)
+            pdb.set_trace()
+            json_reply, _ = self.llm.generate(PROMPT_REORGANIZE_EXTRACT_TOOLS.format(information=raw_reply), history=[], max_completion_tokens=4096)
         
         json_match = re.search(r'```json(.*?)```', json_reply, re.DOTALL)
         if json_match:

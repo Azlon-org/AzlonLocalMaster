@@ -107,9 +107,9 @@ class Summarizer(Agent):
         history = []
         history.append({"role": "system", "content": f"{role_prompt} {self.description}"})
 
-        # 读取competition_info和plan
-        with open(f'{state.competition_dir}/competition_info.txt', 'r') as f:
-            competition_info = f.read()
+        # 读取background_info和plan
+        background_info = state.background_info
+        state_info = state.get_state_info()
         with open(f'{state.restore_dir}/markdown_plan.txt', 'r') as f:
             plan = f.read()
 
@@ -119,7 +119,7 @@ class Summarizer(Agent):
         input = PROMPT_SUMMARIZER_DESIGN_QUESITONS.format(phases_in_context=state.context, phase_name=state.phase, next_phase_name=next_phase_name)
         _, design_questions_history = self.llm.generate(input, design_questions_history, max_completion_tokens=4096)
 
-        input = f"# COMPETITION INFO #\n{competition_info}\n#############\n# PLAN #\n{plan}"
+        input = f"# INFO #\n{background_info}\n{state_info}\n#############\n# PLAN #\n{plan}"
         design_questions_reply, design_questions_history = self.llm.generate(input, design_questions_history, max_completion_tokens=4096)
         with open(f'{state.restore_dir}/design_questions_reply.txt', 'w') as f:
             f.write(design_questions_reply)
@@ -146,7 +146,7 @@ class Summarizer(Agent):
         _, answer_questions_history = self.llm.generate(input, answer_questions_history, max_completion_tokens=4096)
         
         insight_from_visualization = self._get_insight_from_visualization(state)
-        input = PROMPT_INFORMATION_FOR_ANSWER.format(competition_info=competition_info, plan=plan, code=code, output=output, insight_from_visualization=insight_from_visualization, review=review)
+        input = PROMPT_INFORMATION_FOR_ANSWER.format(background_info=background_info, state_info=state_info, plan=plan, code=code, output=output, insight_from_visualization=insight_from_visualization, review=review)
         answer_questions_reply, answer_questions_history = self.llm.generate(input, answer_questions_history, max_completion_tokens=4096)
         with open(f'{state.restore_dir}/answer_questions_reply.txt', 'w') as f:
             f.write(answer_questions_reply)

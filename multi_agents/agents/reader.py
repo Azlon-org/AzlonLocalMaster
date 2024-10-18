@@ -42,7 +42,7 @@ class Reader(Agent):
                     input = PROMPT_READER.format(phases_in_context=state.context, task=task)
                 elif round == 1: 
                     input = f"\n#############\n# OVERVIEW #\n{overview}"
-                    input += self._read_data(state, num_lines=1)
+                    input += self._data_preview(state, num_lines=11)
                 elif round == 2: 
                     reader_mid_reply = raw_reply
                     input = PROMPT_READER_ROUND2
@@ -61,7 +61,7 @@ class Reader(Agent):
                     input = PROMPT_READER_WITH_EXPERIENCE_ROUND0.format(phases_in_context=state.context, task=task, experience_with_suggestion=experience_with_suggestion)
                 elif round == 1: 
                     input = f"# OVERVIEW #\n{overview}\n############# "
-                    input += self._read_data(state, num_lines=1)
+                    input += self._data_preview(state, num_lines=11)
                 elif round == 2:
                     reader_mid_reply = raw_reply
                     input = PROMPT_READER_WITH_EXPERIENCE_ROUND2

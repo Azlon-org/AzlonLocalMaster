@@ -42,7 +42,7 @@ Your task is to design a series of questions that will be used to summarize the 
 The current competition phase is: {phase_name}  
 The next phase is: {next_phase_name}
 
-I will provide the competition information (COMPETITION INFO), the plan given by the planner for this phase (PLAN).
+I will provide the necessary information (INFO), the plan given by the planner for this phase (PLAN).
 
 Based on this information, design 6 key questions that are most worth focusing on and will be most helpful for the next phase. These questions should:
 1. Be targeted, specifically designed for the transition from {phase_name} to {next_phase_name}.
@@ -68,7 +68,7 @@ Let's work this out in a step by step way.
 
 #############
 # START DESIGN QUESTIONS #
-If you are ready, please request from me the COMPETITION INFO, PLAN.
+If you are ready, please request from me the INFO, PLAN.
 '''
 
 PROMPT_SUMMARIZER_REORGAINZE_QUESTIONS = '''
@@ -111,7 +111,7 @@ Currently, I am at phase: {phase_name}.
 # TASK #
 Please answer a series of questions that will help summarize the current phase.
 Your answer should be concise and detailed, for example, if the question is about how to clean data, your answer should be specific to each feature.
-I will provide the competition information (COMPETITION INFO), the plan given by the planner for this phase (PLAN), the code written by the developer in this phase and the output of the code execution (CODE AND OUTPUT), insight from images you generated (INSIGHT FROM VISUALIZATION), as well as the reviewer's evaluation of the planner's and developer's task completion for this phase (REVIEW).
+I will provide the necessary information (INFO), the plan given by the planner for this phase (PLAN), the code written by the developer in this phase and the output of the code execution (CODE AND OUTPUT), insight from images you generated (INSIGHT FROM VISUALIZATION), as well as the reviewer's evaluation of the planner's and developer's task completion for this phase (REVIEW).
 When answering each question, you can first consider which information you need to use, and then answer the question based on this information.
 
 #############
@@ -124,12 +124,14 @@ Let's work this out in a step by step way.
 
 #############
 # START ANSWER QUESTIONS #
-If you are ready, please request from me the COMPETITION INFO, PLAN, CODE AND OUTPUT, INSIGHT FROM VISUALIZATION, REVIEW.
+If you are ready, please request from me the INFO, PLAN, CODE AND OUTPUT, INSIGHT FROM VISUALIZATION, REVIEW.
 '''
 
 PROMPT_INFORMATION_FOR_ANSWER = '''
-# COMPETITION INFO #
-{competition_info}
+# INFO #
+{background_info}
+
+{state_info}
 
 #############
 # PLAN #

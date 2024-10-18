@@ -48,7 +48,7 @@ Your response should be in the following format:
 '''
 
 
-REORGANIZE_EXTRACT_TOOLS = '''
+PROMPT_REORGANIZE_EXTRACT_TOOLS = '''
 # TASK #
 Try to reorganize the following information into a JSON format.
 
@@ -66,6 +66,50 @@ Try to reorganize the following information into a JSON format.
     ]
 }}
 ```
+'''
+
+PROMPT_DATA_PREVIEW = '''
+# TASK #
+Please carefully review the following data and provide a summary of its basic information. Use the specified MARKDOWN format for your summary.
+Instructions:
+1. Analyze the provided data thoroughly.
+2. Summarize the key information.
+3. Format your response using the MARKDOWN template below.
+
+#############
+# DATA #
+{data}
+
+#############
+# RESPONSE: MARKDOWN FORMAT #
+```markdown
+# Data Information
+## Data Type
+### ID type
+[List features that are unique identifiers for each data point, which will NOT be used in model training.]
+
+### Numerical type
+[List features that are numerical values.]
+
+### Categorical type
+[List features that are categorical values.]
+
+### Datetime type
+[List features that are datetime values.]
+
+## Detailed data description
+[Provide a comprehensive description of the data, including any notable patterns, distributions, or characteristics.]
+
+## Target Variable
+[Provide the target variable and its description.]
+
+# Submission format (if applicable)
+[Provide the format of the submission file, including the required columns and their types.]
+```
+
+#############
+# START ANALYSIS #
+Let's work out this task in a step by step way.
 '''
 
 # REORGANIZE_REPLY_TYPE1 = '''

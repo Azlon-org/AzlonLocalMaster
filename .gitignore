@@ -32,7 +32,9 @@
 
 **/ghouls_goblins_and_ghosts_boo/
 
-**/obesity_risks/
+# **/obesity_risks/
+
+**/plate_defect/
 
 test.py
 test.txt
@@ -40,7 +42,7 @@ api_key.txt
 long_message_**.txt
 
 **tools_*.md
-**.csv
+# **.csv
 **.out
 **.sh
 **.bin

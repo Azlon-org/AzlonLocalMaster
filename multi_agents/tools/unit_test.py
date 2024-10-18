@@ -652,7 +652,7 @@ Id,SalePrice
         df = pd.read_csv(path)
         
         # Check if any column name (case-insensitive) matches 'id'
-        id_columns = [col for col in df.columns if (col.lower() == 'id' or 'id' in col.lower())]
+        id_columns = [col for col in df.columns if (col.lower() == 'id' or col.lower() == 'passengerid')]
         
         if id_columns:
             return True, 33, f"The processed_train.csv file contains an ID column: {id_columns[0]}"
@@ -664,7 +664,7 @@ Id,SalePrice
         df = pd.read_csv(path)
         
         # Check if any column name (case-insensitive) matches 'id'
-        id_columns = [col for col in df.columns if (col.lower() == 'id' or 'id' in col.lower())]
+        id_columns = [col for col in df.columns if (col.lower() == 'id' or col.lower() == 'passengerid')]
         
         if id_columns:
             return True, 34, f"The processed_test.csv file contains an ID column: {id_columns[0]}"

@@ -176,13 +176,13 @@ class Developer(Agent):
         result = {}
         # timeout
         if 'Analysis' in state.phase:
-            timeout = 600
+            timeout = 1200
             timeout_info = "Your code is running out of time, please consider resource availability and reduce the number of data analysis plots drawn."
         elif 'Model' in state.phase:
-            timeout = 1200
+            timeout = 2400
             timeout_info = "Your code is running out of time, please consider resource availability and try fewer models."
         else:
-            timeout = 300
+            timeout = 600
             timeout_info = "Your code is running out of time, please consider resource availability or other factors."
         try:
             result = subprocess.run(['python3', '-W', 'ignore', path_to_run_code], 
@@ -333,8 +333,9 @@ class Developer(Agent):
         competition_path = state.competition_dir
         task = PROMPT_DEVELOPER_TASK
         constraints = PROMPT_DEVELOPER_CONSTRAINTS.format(restore_path=restore_path, competition_path=competition_path, phase_name=state.phase)
-        with open(f'{state.competition_dir}/competition_info.txt', 'r') as f:
-            competition_info = f.read()
+        background_info = state.background_info
+        state_info = state.get_state_info()
+
         plan = state.memory[-1]["planner"]["plan"] # 这里plan的格式是markdown
 
         if len(state.memory) == 1: # 如果之前没有memory，说明是第一次执行
@@ -355,7 +356,7 @@ class Developer(Agent):
         while round <= max_tries:
             if round == 0 or retry_flag or no_code_flag:
                 if len(state.memory) == 1:
-                    input = PROMPT_DEVELOPER.format(phases_in_context=state.context, phase_name=state.phase, state_info=state.get_state_info(), competition_info=competition_info, plan=plan,task=task)
+                    input = PROMPT_DEVELOPER.format(phases_in_context=state.context, phase_name=state.phase, state_info=state_info, background_info=background_info, plan=plan,task=task)
                     if retry_flag or no_code_flag: # Reset history to initial system message if retrying or no code was generated
                         history = history[:1]
                     raw_reply, history = self.llm.generate(input, history, max_completion_tokens=4096)
@@ -363,7 +364,7 @@ class Developer(Agent):
                     input = prompt_round0
                     raw_reply, history = self.llm.generate(input, history, max_completion_tokens=4096)
                 else:
-                    input = PROMPT_DEVELOPER_WITH_EXPERIENCE_ROUND0_0.format(phases_in_context=state.context, phase_name=state.phase, state_info=state.get_state_info(), competition_info=competition_info, plan=plan, task=task, experience_with_suggestion=experience_with_suggestion)
+                    input = PROMPT_DEVELOPER_WITH_EXPERIENCE_ROUND0_0.format(phases_in_context=state.context, phase_name=state.phase, state_info=state_info, background_info=background_info, plan=plan, task=task, experience_with_suggestion=experience_with_suggestion)
                     raw_reply, history = self.llm.generate(input, history, max_completion_tokens=4096)
                     prompt_round0 = self._generate_prompt_round0(state)
                     input = prompt_round0
@@ -440,7 +441,7 @@ class Developer(Agent):
             else:
                 logger.info(f"State {state.phase} - Agent {self.role} finishes working.")
 
-        input_used_in_review = f"   <competition_info>\n{competition_info}\n    </competition_info>\n   <plan>\n{plan}\n    </plan>"
+        input_used_in_review = f"   <background_info>\n{background_info}\n    </background_info>\n   <plan>\n{plan}\n    </plan>"
         return {
             self.role: {
                 "history": history,

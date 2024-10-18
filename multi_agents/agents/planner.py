@@ -51,10 +51,11 @@ class Planner(Agent):
     def _execute(self, state: State, role_prompt: str) -> Dict[str, Any]:
         # 实现规划功能
         history = []
-        round = 0
-        with open(f'{state.competition_dir}/competition_info.txt', 'r') as f:
-            competition_info = f.read()
+        data_preview = self._data_preview(state, num_lines=11)
+        background_info = f"Data preview:\n{data_preview}"
+        state.set_background_info(background_info)
         state_info = state.get_state_info()
+
         if len(state.memory) == 1: # 如果之前没有memory，说明是第一次执行
             if self.model == 'gpt-4o':
                 history.append({"role": "system", "content": f"{role_prompt}{self.description}"})
@@ -64,7 +65,7 @@ class Planner(Agent):
             task = PROMPT_PLANNER_TASK.format(phase_name=state.phase)
             user_rules = state.generate_rules()
             input = PROMPT_PLANNER.format(phases_in_context=state.context, phase_name=state.phase, state_info=state_info, 
-                                          user_rules=user_rules, competition_info=competition_info, task=task)
+                                          user_rules=user_rules, background_info=background_info, task=task)
             _, history = self.llm.generate(input, history, max_completion_tokens=4096)
 
             # Round 1
@@ -108,7 +109,7 @@ class Planner(Agent):
         with open(f'{state.restore_dir}/{self.role}_history.json', 'w') as f:
             json.dump(history, f, indent=4)
 
-        input_used_in_review = f"   <competition_info>\n{competition_info}\n    </competition_info>"
+        input_used_in_review = f"   <background_info>\n{background_info}\n    </background_info>"
 
         print(f"State {state.phase} - Agent {self.role} finishes working.")
 

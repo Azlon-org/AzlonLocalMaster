@@ -1,7 +1,7 @@
 PROMPT_PLANNER_TASK = '''
 Please design plan that is clear and specific to each FEATURE for the current development phase: {phase_name}. 
 The developer will execute tasks based on your plan. 
-I will provide you with COMPETITION INFORMATION, RESOURCE CONSTRAINTS, and previous reports and plans.
+I will provide you with INFORMATION, RESOURCE CONSTRAINTS, and previous reports and plans.
 You can use the following reasoning pattern to design the plan:
 1. Break down the task into smaller steps.
 2. For each step, ask yourself and answer:
@@ -33,11 +33,12 @@ PROMPT_PLANNER = '''
 # CONTEXT #
 {phases_in_context}
 Currently, I am at phase: {phase_name}.
-{state_info}
 
 #############
-# COMPETITION INFORMATION #
-{competition_info}
+# INFORMATION #
+{background_info}
+
+{state_info}
 
 #############
 # NOTE #
