@@ -218,6 +218,7 @@ class Developer(Agent):
                 error_flag = True
             else:
                 logger.info("Code executed successfully without errors.")
+                self._save_all_error_messages(state)
                 self.all_error_messages = []
                 try:
                     os.remove(path_to_error)
@@ -235,6 +236,22 @@ class Developer(Agent):
 
         # 在这里如果error信息太长 可以读取做去重
         return error_flag
+    
+    def _save_all_error_messages(self, state: State):
+        if self.all_error_messages:
+            base_filename = f'{state.restore_dir}/all_error_messages.txt'
+            filename = base_filename
+            counter = 1
+
+            while os.path.exists(filename):
+                filename = f'{state.restore_dir}/all_error_messages_{counter}.txt'
+                counter += 1
+
+            with open(filename, 'w', encoding='utf-8') as f:
+                for i, message in enumerate(self.all_error_messages):
+                    f.write(f"Message {i+1}:\n{message}\n\n\n")
+            
+            logger.info(f"All error messages saved to {filename}")
 
     def _conduct_unit_test(self, state: State) -> None:
         test_tool = TestTool(memory=None, model=self.model, type='api')
@@ -280,6 +297,11 @@ class Developer(Agent):
         path_to_output = f'{state.restore_dir}/{state.dir_name}_output.txt'
         if os.path.exists(path_to_error):
             error_messages = read_file(path_to_error)
+            if len(error_messages) > 10000:
+                error_messages = error_messages[:10000] # truncate the error messages
+                logger.info(f"The error messages are truncated to 10000 characters.")
+                with open(f'{state.restore_dir}/{state.dir_name}_error_truncated.txt', 'w') as f:
+                    f.write(error_messages)
         else:
             error_messages = "There is no error message in the previous phase."
         if state.phase in ['Feature Engineering', 'Model Building, Validation, and Prediction']:
@@ -288,7 +310,7 @@ class Developer(Agent):
             output_messages = ""
 
         logger.info("Start debugging the code.")
-        debug_tool = DebugTool(model=self.model, type='api')
+        debug_tool = DebugTool(model='gpt-4o', type='api')
         if error_flag:
             tools, tool_names = self._get_tools(state)
             reply, single_round_debug_history = debug_tool.debug_code_with_error(state, copy.deepcopy(self.all_error_messages), output_messages, previous_code, wrong_code, error_messages, tools, tool_names)
@@ -374,11 +396,13 @@ class Developer(Agent):
                     input = PROMPT_DEVELOPER_WITH_EXPERIENCE_ROUND0_2
                     raw_reply, history = self.llm.generate(input, history, max_completion_tokens=4096)
                 if retry_flag:
+                    self._save_all_error_messages(state)
                     self.all_error_messages = [] # retry后清空error messages
                     logger.info("The developer asks for help when debugging the code. Regenerating the code.")
                     with open(f'{state.restore_dir}/{self.role}_retry_reply.txt', 'w') as f:
                         f.write(raw_reply)
                 elif no_code_flag:
+                    self._save_all_error_messages(state)
                     self.all_error_messages = [] # 清空error messages
                     logger.info("Last reply has no code. Regenerating the code.")
                     with open(f'{state.restore_dir}/{self.role}_no_code_reply.txt', 'w') as f:

@@ -68,6 +68,18 @@ Try to reorganize the following information into a JSON format.
 ```
 '''
 
+PROMPT_REORGANIZE_JSON = '''
+# TASK #
+Please reorganize the following information into a JSON format.
+{information}
+
+# RESPONSE: JSON FORMAT #
+```json
+[json_format]
+```
+'''
+
+
 PROMPT_DATA_PREVIEW = '''
 # TASK #
 Please carefully review the following data and provide a summary of its basic information. Use the specified MARKDOWN format for your summary.

@@ -628,6 +628,7 @@ Id,SalePrice
         df = pd.read_csv(path)
         
         # Check if any column name (case-insensitive) matches 'id'
+        # 这里以后可以搞个id columns的合集 然后用any()函数检查
         id_columns = [col for col in df.columns if (col.lower() == 'id' or col.lower() == 'passengerid')]
         
         if id_columns:

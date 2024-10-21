@@ -45,8 +45,8 @@ class Agent:
             score = reviewer_memory.get("score", {}).get(f"agent {self.role}", 3)
             experience_with_suggestion += PROMPT_EACH_EXPERIENCE_WITH_SUGGESTION.format(index=i, experience=result, suggestion=suggestion, score=score)
             if self.role == 'developer':
-                path_to_error = f'{state.competition_dir}/{state.dir_name}/{state.dir_name}_error.txt'
-                path_to_not_pass_info = f'{state.competition_dir}/{state.dir_name}/{state.dir_name}_not_pass_information.txt'
+                path_to_error = f'{state.restore_dir}/{state.dir_name}_error.txt'
+                path_to_not_pass_info = f'{state.restore_dir}/{state.dir_name}_not_pass_information.txt'
                 if os.path.exists(path_to_error):
                     with open(path_to_error, 'r') as f:
                         error_message = f.read()
@@ -100,7 +100,7 @@ class Agent:
         raw_reply, _ = self.llm.generate(input, [], max_completion_tokens=4096)
         data_preview = self._parse_markdown(raw_reply)
 
-        with open(f'{state.competition_dir}/{state.dir_name}/data_preview.txt', 'w') as f:
+        with open(f'{state.restore_dir}/data_preview.txt', 'w') as f:
             f.write(data_preview)
         return data_preview
 
@@ -126,8 +126,8 @@ class Agent:
         if self.role == 'developer':
             json_reply, _ = self.llm.generate(PROMPT_REORGANIZE_EXTRACT_TOOLS.format(information=raw_reply), history=[], max_completion_tokens=4096)
         else:
-            pdb.set_trace()
-            json_reply, _ = self.llm.generate(PROMPT_REORGANIZE_EXTRACT_TOOLS.format(information=raw_reply), history=[], max_completion_tokens=4096)
+            # pdb.set_trace()
+            json_reply, _ = self.llm.generate(PROMPT_REORGANIZE_JSON.format(information=raw_reply), history=[], max_completion_tokens=4096)
         
         json_match = re.search(r'```json(.*?)```', json_reply, re.DOTALL)
         if json_match:
@@ -202,11 +202,11 @@ class Agent:
 
         if self.role == 'developer' and state.phase in ['Data Cleaning', 'Feature Engineering', 'Model Building, Validation, and Prediction'] and len(all_tool_names) > 0:
             logger.info(f"Extracting tools' description for developer in phase: {state.phase}")
-            with open(f'{state.competition_dir}/{state.dir_name}/markdown_plan.txt', 'r') as file:
+            with open(f'{state.restore_dir}/markdown_plan.txt', 'r') as file:
                 markdown_plan = file.read()
             input = PROMPT_EXTRACT_TOOLS.format(document=markdown_plan, all_tool_names=all_tool_names)
             raw_reply, _ = self.llm.generate(input, history=[], max_completion_tokens=4096)
-            with open(f'{state.competition_dir}/{state.dir_name}/extract_tools_reply.txt', 'w') as file:
+            with open(f'{state.restore_dir}/extract_tools_reply.txt', 'w') as file:
                 file.write(raw_reply)
             tool_names = self._parse_json(raw_reply)['tool_names']
         else:
@@ -218,7 +218,7 @@ class Agent:
             tools.append(conclusion)
 
         if self.role == 'developer' and state.phase in ['Data Cleaning', 'Feature Engineering', 'Model Building, Validation, and Prediction']:  
-            with open(f'{state.competition_dir}/{state.dir_name}/tools_used_in_{state.dir_name}.md', 'w') as file:
+            with open(f'{state.restore_dir}/tools_used_in_{state.dir_name}.md', 'w') as file:
                 file.write(''.join(tools))
         
         tools = ''.join(tools) if len(tool_names) > 0 else "There is no pre-defined tools used in this phase."

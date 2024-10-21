@@ -105,22 +105,22 @@ class APIHandler:
                 f.write(f"Content: {message['content']}\n\n")
         logger.info(f"Long message saved to {filename}")
 
-    def _truncate_messages(self, messages: List[Dict[str, str]], max_length: int = 1000000) -> List[Dict[str, str]]:
-        pdb.set_trace()
-        """Truncate messages to fit within the maximum length."""
-        truncated = []
-        current_length = 0
-        for message in reversed(messages):
-            message_length = len(message['content'])
-            if current_length + message_length <= max_length:
-                truncated.insert(0, message)
-                current_length += message_length
-            else:
-                available_length = max_length - current_length
-                if available_length > 100:  # Ensure we have enough space for a meaningful truncation
-                    truncated_content = message['content'][:available_length-3] + "..."
-                    truncated.insert(0, {"role": message['role'], "content": truncated_content})
-                break
+    def _truncate_messages(self, messages: List[Dict[str, str]], max_length: int = 100000) -> List[Dict[str, str]]:
+        """Truncate the last message to fit within the maximum length."""
+        total_length = sum(len(message['content']) for message in messages)
+        
+        if total_length <= max_length:
+            return messages
+
+        truncated = messages[:-1]  # Keep all messages except the last one
+        last_message = messages[-1]
+        
+        available_length = max_length - sum(len(message['content']) for message in truncated)
+        
+        if available_length > 100:  # Ensure we have enough space for a meaningful truncation
+            truncated_content = last_message['content'][:available_length-3] + "..."
+            truncated.append({"role": last_message['role'], "content": truncated_content})
+        
         return truncated
 
     def get_output(self, messages: List[Dict[str, str]], settings: APISettings, response_type: str = 'text') -> str:
