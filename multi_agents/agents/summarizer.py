@@ -53,7 +53,7 @@ class Summarizer(Agent):
         num_of_chosen_images = min(5, len(images))
         chosen_images = []
         input = PROMPT_SUMMARIZER_IMAGE_CHOOSE.format(phases_in_context=state.context, phase_name=state.phase, num=num_of_chosen_images+3, images=images_str)
-        raw_reply, _ = self.llm.generate(input, [], max_completion_tokens=4096)
+        raw_reply, _ = self.llm.generate(input, [], max_tokens=4096)
         with open(f'{state.restore_dir}/chosen_images_reply.txt', 'w') as f:
             f.write(raw_reply)
         try:
@@ -71,7 +71,7 @@ class Summarizer(Agent):
                     if len(chosen_images) == num_of_chosen_images:
                         break
 
-        image_to_text_tool = ImageToTextTool(model='gpt-4o', type='api')
+        image_to_text_tool = ImageToTextTool(model='gpt-4.1', type='api')
         images_to_descriptions = image_to_text_tool.image_to_text(state, chosen_images)
         insight_from_visualization = ""
         for image, description in images_to_descriptions.items():
@@ -90,8 +90,8 @@ class Summarizer(Agent):
                     report = f.read()
                     previous_report += f"## {dir.replace('_', ' ').upper()} ##\n{report}\n"
 
-        _, research_report_history = self.llm.generate(PROMPT_SUMMARIZER_RESEARCH_REPORT, [], max_completion_tokens=4096)
-        raw_research_report, research_report_history = self.llm.generate(previous_report, research_report_history, max_completion_tokens=4096)
+        _, research_report_history = self.llm.generate(PROMPT_SUMMARIZER_RESEARCH_REPORT, [], max_tokens=4096)
+        raw_research_report, research_report_history = self.llm.generate(previous_report, research_report_history, max_tokens=4096)
         try:
             research_report = self._parse_markdown(raw_research_report)
         except Exception as e:
@@ -117,15 +117,15 @@ class Summarizer(Agent):
         design_questions_history = []
         next_phase_name = state.get_next_phase()
         input = PROMPT_SUMMARIZER_DESIGN_QUESITONS.format(phases_in_context=state.context, phase_name=state.phase, next_phase_name=next_phase_name)
-        _, design_questions_history = self.llm.generate(input, design_questions_history, max_completion_tokens=4096)
+        _, design_questions_history = self.llm.generate(input, design_questions_history, max_tokens=4096)
 
         input = f"# INFO #\n{background_info}\n{state_info}\n#############\n# PLAN #\n{plan}"
-        design_questions_reply, design_questions_history = self.llm.generate(input, design_questions_history, max_completion_tokens=4096)
+        design_questions_reply, design_questions_history = self.llm.generate(input, design_questions_history, max_tokens=4096)
         with open(f'{state.restore_dir}/design_questions_reply.txt', 'w') as f:
             f.write(design_questions_reply)
 
         input = PROMPT_SUMMARIZER_REORGAINZE_QUESTIONS
-        reorganize_questions_reply, design_questions_history = self.llm.generate(input, design_questions_history, max_completion_tokens=4096)
+        reorganize_questions_reply, design_questions_history = self.llm.generate(input, design_questions_history, max_tokens=4096)
         questions = self._parse_markdown(reorganize_questions_reply)
         with open(f'{state.restore_dir}/questions.txt', 'w') as f:
             f.write(questions)
@@ -143,16 +143,16 @@ class Summarizer(Agent):
 
         answer_questions_history = []
         input = PROMPT_SUMMARIZER_ANSWER_QUESTIONS.format(phases_in_context=state.context, phase_name=state.phase, questions=questions)
-        _, answer_questions_history = self.llm.generate(input, answer_questions_history, max_completion_tokens=4096)
+        _, answer_questions_history = self.llm.generate(input, answer_questions_history, max_tokens=4096)
         
         insight_from_visualization = self._get_insight_from_visualization(state)
         input = PROMPT_INFORMATION_FOR_ANSWER.format(background_info=background_info, state_info=state_info, plan=plan, code=code, output=output, insight_from_visualization=insight_from_visualization, review=review)
-        answer_questions_reply, answer_questions_history = self.llm.generate(input, answer_questions_history, max_completion_tokens=4096)
+        answer_questions_reply, answer_questions_history = self.llm.generate(input, answer_questions_history, max_tokens=4096)
         with open(f'{state.restore_dir}/answer_questions_reply.txt', 'w') as f:
             f.write(answer_questions_reply)
 
         input = PROMPT_SUMMARIZER_REORGANIZE_ANSWERS
-        reorganize_answers_reply, answer_questions_history = self.llm.generate(input, answer_questions_history, max_completion_tokens=4096)
+        reorganize_answers_reply, answer_questions_history = self.llm.generate(input, answer_questions_history, max_tokens=4096)
         report = self._parse_markdown(reorganize_answers_reply)
         feature_info = self._get_feature_info(state)
         report = feature_info + report

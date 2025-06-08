@@ -23,7 +23,7 @@ class TestTool:
     def __init__(
         self, 
         memory: Memory = None,
-        model: str = 'gpt-4o-mini',
+        model: str = 'gpt-4.1-mini',
         type: str = 'api'
     ):
         self.llm = LLM(model, type)
@@ -733,8 +733,8 @@ Id,SalePrice
             return False, 39, f"The submission.csv file has {len(submission_df)} rows, but the sample_submission.csv has {len(sample_df)} rows. Please ensure that your submission file includes predictions for all test samples."
 
 if __name__ == '__main__':
-    # llm = LLM('gpt-4o', 'api')
+    # llm = LLM('gpt-4.1', 'api')
     # reply, history = llm.generate('try me a joke', history=None)
     # print(reply)
-    test_tool = TestTool(memory=None, model='gpt-4o', type='api')
+    test_tool = TestTool(memory=None, model='gpt-4.1', type='api')
     test_tool._execute_tests()

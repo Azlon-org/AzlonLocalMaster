@@ -2,9 +2,10 @@
 
 # Default values
 # "titanic" "spaceship_titanic" "ghouls_goblins_and_ghosts_boo" "bank_churn" "house_prices" "classification_with_an_academic_success_dataset" "titanic" "bank_churn"  "classification_with_an_academic_success_dataset"
-competitions=("spaceship_titanic" "bank_churn")
+#competitions=("spaceship_titanic" "bank_churn")
+competitions=("CarWash_Data")
 start_run=1
-end_run=3
+end_run=1
 dest_dir_param="tool_data_cleaning"
 
 # Function to run a single experiment

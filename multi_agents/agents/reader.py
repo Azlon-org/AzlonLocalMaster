@@ -48,7 +48,7 @@ class Reader(Agent):
                     input = PROMPT_READER_ROUND2
                 elif round == 3: 
                     break
-                raw_reply, history = self.llm.generate(input, history, max_completion_tokens=4096)
+                raw_reply, history = self.llm.generate(input, history, max_tokens=4096)
                 round += 1
         else: # 如果之前有memory，拼接之前memory中reader的结果作为experience
             self.description = "You are good at reading document and summarizing information." \
@@ -67,7 +67,7 @@ class Reader(Agent):
                     input = PROMPT_READER_WITH_EXPERIENCE_ROUND2
                 elif round == 3: 
                     break
-                raw_reply, history = self.llm.generate(input, history, max_completion_tokens=4096)
+                raw_reply, history = self.llm.generate(input, history, max_tokens=4096)
                 round += 1
         result = raw_reply
         reply = self._parse_markdown(raw_reply)

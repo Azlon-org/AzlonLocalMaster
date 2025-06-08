@@ -46,8 +46,4 @@ long_message_**.txt
 **tools_*.md
 **.csv
 **.out
-**.sh
 **.bin
-
-framework.py
-config.json

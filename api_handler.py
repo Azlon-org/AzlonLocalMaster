@@ -28,7 +28,7 @@ logging.getLogger("httpx").setLevel(logging.WARNING)
 
 @dataclass
 class APISettings:
-    max_completion_tokens: int
+    max_tokens: int
     temperature: float = 0.7
     top_p: float = 1.0
     frequency_penalty: float = 0.0
@@ -37,7 +37,7 @@ class APISettings:
 
     @property
     def timeout(self) -> int:
-        return (self.max_completion_tokens // 1000 + 1) * 30
+        return (self.max_tokens // 1000 + 1) * 30
 
 def load_api_config() -> Tuple[str, Optional[str]]:
     try:
@@ -60,10 +60,10 @@ def generate_response(client: openai.OpenAI, model: str, messages: List[Dict[str
     try:
         if response_type == 'text':
             response = client.chat.completions.create(
-                messages=messages,
                 model=model,
+                messages=messages,
                 temperature=settings.temperature,
-                max_completion_tokens=settings.max_completion_tokens,
+                max_tokens=settings.max_tokens,
                 top_p=settings.top_p,
                 frequency_penalty=settings.frequency_penalty,
                 presence_penalty=settings.presence_penalty,
@@ -72,15 +72,16 @@ def generate_response(client: openai.OpenAI, model: str, messages: List[Dict[str
             )
         elif response_type == 'image':
             response = client.chat.completions.create(
-                messages=messages,
                 model=model,
+                messages=messages,
                 temperature=settings.temperature,
                 timeout=settings.timeout,
             )
         else:
             raise ValueError(f"Unsupported response type: {response_type}")
     except Exception as e:
-        logging.error(f"Error during API call: {e}")
+        logging.error(f"Error during API call to model '{model}': {str(e)}")
+        logging.error(f"Request details - Model: {model}, Messages length: {len(messages)}")
         raise
     
     logger.info(f"Response generated in {time.time() - start_time:.2f} seconds")
@@ -149,11 +150,11 @@ class APIHandler:
                 return f"Error: Max attempts reached. Last error: {error}"
 
 if __name__ == '__main__':
-    handler = APIHandler('gpt-4o')
+    handler = APIHandler('gpt-4.1')
     messages = [
         {"role": "system", "content": "You are a helpful assistant."},
         {"role": "user", "content": "How are you today?"}
     ]
-    settings = APISettings(max_completion_tokens=50)
+    settings = APISettings(max_tokens=50)
     output_text = handler.get_output(messages=messages, settings=settings)
     print(output_text)

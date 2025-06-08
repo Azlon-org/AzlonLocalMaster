@@ -18,7 +18,7 @@ class ImageToTextTool:
     def __init__(
         self, 
         memory: Memory = None,
-        model: str = 'gpt-4o-mini',
+        model: str = 'gpt-4.1-mini',
         type: str = 'api'
     ):
         self.llm = LLM(model, type)

@@ -89,7 +89,7 @@ class Agent:
             with open(f'{state.competition_dir}/competition_info.txt', 'r') as f:
                 competition_info = f.read()
             prompt_extract_metric = f"# TASK #\nPlease extract the evaluation metric from the competition information: {competition_info}\n#############\n# RESPONSE: MARKDOWN FORMAT #\n```markdown\n# Evaluation Metric\n[evaluation metric for the competition]\n```"
-            raw_reply, _ = self.llm.generate(prompt_extract_metric, history=[], max_completion_tokens=4096)
+            raw_reply, _ = self.llm.generate(prompt_extract_metric, history=[], max_tokens=4096)
             metric = self._parse_markdown(raw_reply)
             result += f"\n#############\n# EVALUATION METRIC #\n{metric}"
         return result
@@ -97,7 +97,7 @@ class Agent:
     def _data_preview(self, state: State, num_lines: int) -> str:
         data_used_in_preview = self._read_data(state, num_lines=num_lines)
         input = PROMPT_DATA_PREVIEW.format(data=data_used_in_preview)
-        raw_reply, _ = self.llm.generate(input, [], max_completion_tokens=4096)
+        raw_reply, _ = self.llm.generate(input, [], max_tokens=4096)
         data_preview = self._parse_markdown(raw_reply)
 
         with open(f'{state.restore_dir}/data_preview.txt', 'w') as f:
@@ -124,10 +124,10 @@ class Agent:
         
         logger.info(f"Failed to parse JSON from raw reply, attempting reorganization.")
         if self.role == 'developer':
-            json_reply, _ = self.llm.generate(PROMPT_REORGANIZE_EXTRACT_TOOLS.format(information=raw_reply), history=[], max_completion_tokens=4096)
+            json_reply, _ = self.llm.generate(PROMPT_REORGANIZE_EXTRACT_TOOLS.format(information=raw_reply), history=[], max_tokens=4096)
         else:
             # pdb.set_trace()
-            json_reply, _ = self.llm.generate(PROMPT_REORGANIZE_JSON.format(information=raw_reply), history=[], max_completion_tokens=4096)
+            json_reply, _ = self.llm.generate(PROMPT_REORGANIZE_JSON.format(information=raw_reply), history=[], max_tokens=4096)
         
         json_match = re.search(r'```json(.*?)```', json_reply, re.DOTALL)
         if json_match:
@@ -205,7 +205,7 @@ class Agent:
             with open(f'{state.restore_dir}/markdown_plan.txt', 'r') as file:
                 markdown_plan = file.read()
             input = PROMPT_EXTRACT_TOOLS.format(document=markdown_plan, all_tool_names=all_tool_names)
-            raw_reply, _ = self.llm.generate(input, history=[], max_completion_tokens=4096)
+            raw_reply, _ = self.llm.generate(input, history=[], max_tokens=4096)
             with open(f'{state.restore_dir}/extract_tools_reply.txt', 'w') as file:
                 file.write(raw_reply)
             tool_names = self._parse_json(raw_reply)['tool_names']

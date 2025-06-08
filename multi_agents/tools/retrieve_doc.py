@@ -98,7 +98,7 @@ text: {content}
 def main():
     # print(load_api_config())
     embeddings = OpenaiEmbeddings(api_key='')
-    llm = LLM('gpt-4o', 'api')
+    llm = LLM('gpt-4.1', 'api')
 
     tool = RetrieveTool(llm, embeddings)
     # tool.create_db_tools()

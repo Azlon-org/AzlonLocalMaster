@@ -94,7 +94,7 @@ class Reviewer(Agent):
                 input = prompt_for_agents[round//3 - 1]
             elif round % 3 == 2:
                 input = PROMPT_REVIEWER_ROUND2
-            raw_reply, history = self.llm.generate(input, history, max_completion_tokens=4096)
+            raw_reply, history = self.llm.generate(input, history, max_tokens=4096)
             if round % 3 == 2:
                 all_raw_reply.append(raw_reply)
             round += 1

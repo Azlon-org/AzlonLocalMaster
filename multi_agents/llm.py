@@ -17,9 +17,9 @@ class LLM:
         elif type == 'local':
             pass
 
-    def generate(self, prompt: str, history: list, max_completion_tokens=4096) -> Tuple[str, list]:
+    def generate(self, prompt: str, history: list, max_tokens=4096) -> Tuple[str, list]:
         # Generate text based on prompt
-        return multi_chat(self.api_handler, prompt, history, max_completion_tokens)
+        return multi_chat(self.api_handler, prompt, history, max_tokens)
     
 class OpenaiEmbeddings:
     def __init__(self, api_key: str, base_url: str = None, model: str = 'text-embedding-3-large'):
