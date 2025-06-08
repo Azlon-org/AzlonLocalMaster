@@ -1,0 +1,16 @@
+2025-06-02 16:32:23,641 - root - INFO - Start SOP for competition: startup_amina
+2025-06-02 16:32:23,641 - root - INFO - Current State: State: Understand Background, Current Step: 0, Current Agent: Reader, Finished: False
+2025-06-02 16:32:23,644 - agent_base - INFO - Agent reader is created with model gpt-4.1-mini.
+2025-06-02 16:32:23,644 - agent_base - INFO - State Understand Background - Agent reader is executing.
+2025-06-02 16:36:38,570 - root - INFO - Start SOP for competition: startup_amina
+2025-06-02 16:36:38,570 - root - INFO - Current State: State: Understand Background, Current Step: 0, Current Agent: Reader, Finished: False
+2025-06-02 16:36:38,572 - agent_base - INFO - Agent reader is created with model gpt-4.1-mini.
+2025-06-02 16:36:38,573 - agent_base - INFO - State Understand Background - Agent reader is executing.
+2025-06-02 16:37:38,954 - root - INFO - Start SOP for competition: startup_amina
+2025-06-02 16:37:38,955 - root - INFO - Current State: State: Understand Background, Current Step: 0, Current Agent: Reader, Finished: False
+2025-06-02 16:37:38,958 - agent_base - INFO - Agent reader is created with model gpt-4.1-mini.
+2025-06-02 16:37:38,958 - agent_base - INFO - State Understand Background - Agent reader is executing.
+2025-06-02 16:38:59,525 - root - INFO - Start SOP for competition: startup_amina
+2025-06-02 16:38:59,526 - root - INFO - Current State: State: Understand Background, Current Step: 0, Current Agent: Reader, Finished: False
+2025-06-02 16:38:59,532 - agent_base - INFO - Agent reader is created with model gpt-4.1-mini.
+2025-06-02 16:38:59,532 - agent_base - INFO - State Understand Background - Agent reader is executing.

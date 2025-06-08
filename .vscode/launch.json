@@ -1,0 +1,19 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Python: Debug Multi-Agent Workflow (startup_amina)",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/framework.py",
+            "args": [
+                "--competition",
+                "obesity_risks",
+                // "--model",
+                // "gpt-4.1-mini"
+            ],
+            "console": "integratedTerminal",
+            "justMyCode": true
+        }
+    ]
+}

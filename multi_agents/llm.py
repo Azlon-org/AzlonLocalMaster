@@ -23,8 +23,9 @@ class LLM:
     
 class OpenaiEmbeddings:
     def __init__(self, api_key: str, base_url: str = None, model: str = 'text-embedding-3-large'):
-        self.client = OpenAI(api_key=api_key, base_url=base_url)
+        # self.client = OpenAI(api_key=api_key, base_url=base_url) # Commented out: No active embedding calls
         self.model = model
+        # print("WARNING: OpenaiEmbeddings client is not initialized due to API key limitations.") # Optional: for debugging
 
         
     def num_tokens_from_string(string: str, encoding_name: str = 'cl100k_base') -> int:
@@ -37,31 +38,34 @@ class OpenaiEmbeddings:
         return num_tokens
         
     def encode(self, input: str):
-        try:
-            response = self.client.embeddings.create(
-                model=self.model, input=input, encoding_format='float'
-            )
-        except:
-            len_embeddings = self.num_tokens_from_string(input)
-            # if one of the inputs exceed the limit, raise error
-            if len_embeddings > 8191:
-                raise Exception(f'Input exceeds the limit of <{self.model}>!')
-            else:
-                raise Exception('Embeddings generation failed!')
+        # try:
+        #     response = self.client.embeddings.create(
+        #         model=self.model, input=input, encoding_format='float'
+        #     )
+        # except:
+        #     len_embeddings = self.num_tokens_from_string(input)
+        #     # if one of the inputs exceed the limit, raise error
+        #     if len_embeddings > 8191:
+        #         raise Exception(f'Input exceeds the limit of <{self.model}>!')
+        #     else:
+        #         raise Exception('Embeddings generation failed!')
             
-        return response.data
+        # return response.data
+        print(f"WARNING: OpenaiEmbeddings.encode called for input '{input[:50]}...', but embedding generation is disabled. Returning empty list.")
+        return [] # Placeholder for disabled functionality
 
 
 def test_openai_embeddings():
-    api_key = 'your_api_key'
-    base_url = None
+    # api_key = 'your_api_key' # Commented out
+    # base_url = None # Commented out
 
-    openai_embeddings = OpenaiEmbeddings(api_key, base_url)
-    inputs = ['Hello, world!', 'How are you?']
-    response = openai_embeddings.encode(inputs)
-    print(response)
+    # openai_embeddings = OpenaiEmbeddings(api_key, base_url) # Commented out
+    # inputs = ['Hello, world!', 'How are you?'] # Commented out
+    # response = openai_embeddings.encode(inputs) # Commented out
+    # print(response) # Commented out
+    print("test_openai_embeddings is currently disabled.")
 
 
 if __name__ == '__main__':
-    test_openai_embeddings()
+    # test_openai_embeddings() # Commented out
     pass

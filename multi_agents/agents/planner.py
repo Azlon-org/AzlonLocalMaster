@@ -1,10 +1,8 @@
 from typing import Dict, Any
 import json
-import re
 import logging
-import sys 
+import sys
 import os
-from builtins import input as builtin_input
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -13,11 +11,12 @@ sys.path.append('../..')
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 from agent_base import Agent
-from utils import read_file, PREFIX_MULTI_AGENTS
+# from utils import read_file # Not directly used by planner anymore
 from llm import LLM
 from state import State
-from prompts.prompt_base import *
-from prompts.prompt_planner import *
+# Prompts will be simplified or redefined
+# from prompts.prompt_base import *
+# from prompts.prompt_planner import *
 
 class Planner(Agent):
     def __init__(self, model: str, type: str):  
@@ -28,128 +27,97 @@ class Planner(Agent):
             type=type
         )
 
-    def _get_previous_plan_and_report(self, state: State):
-        previous_plan = ""
-        previous_phases = state.get_previous_phase(type="plan")
-        for previous_phase in previous_phases:
-            previous_dir_name = state.phase_to_directory[previous_phase]
-            previous_plan += f"## {previous_phase.upper()} ##\n"
-            path_to_previous_plan = f'{state.competition_dir}/{previous_dir_name}/plan.json'
-            if os.path.exists(path_to_previous_plan):
-                with open(path_to_previous_plan, 'r') as f:
-                    previous_plan += f.read()
-                    previous_plan += '\n'
-            else:
-                previous_plan = "There is no plan in this phase.\n"
-        path_to_previous_report = f'{state.competition_dir}/{previous_dir_name}/report.txt'
-        if os.path.exists(path_to_previous_report):
-            previous_report = read_file(path_to_previous_report)
-        else:
-            previous_report = "There is no report in the previous phase.\n"
-        return previous_plan, previous_report
 
     def _execute(self, state: State, role_prompt: str) -> Dict[str, Any]:
-        # 实现规划功能
         history = []
-        data_preview = self._data_preview(state, num_lines=11)
-        background_info = f"Data preview:\n{data_preview}"
-        state.set_background_info(background_info)
-        state_info = state.get_state_info()
+        generated_plan = ""
 
-        if len(state.memory) == 1: # 如果之前没有memory，说明是第一次执行
-            if self.model == 'gpt-4.1':
-                history.append({"role": "system", "content": f"{role_prompt}{self.description}"})
-            elif self.model == 'o1-mini':
-                history.append({"role": "user", "content": f"{role_prompt}{self.description}"})
-            # Round 0
-            task = PROMPT_PLANNER_TASK.format(phase_name=state.phase)
-            user_rules = state.generate_rules()
-            input = PROMPT_PLANNER.format(phases_in_context=state.context, phase_name=state.phase, state_info=state_info, 
-                                          user_rules=user_rules, background_info=background_info, task=task)
-            _, history = self.llm.generate(input, history, max_tokens=4096)
+        # 1. Retrieve Reader's output from state memory
+        reader_output = {}
+        if state.memory and isinstance(state.memory[-1], dict) and "Reader" in state.memory[-1]:
+            reader_output = state.memory[-1]["Reader"]
+        
+        business_context_summary = reader_output.get("parsed_context_summary", "No business context summary found.")
+        data_summary = reader_output.get("parsed_data_summary", "No data summary found.")
+        initial_observations = reader_output.get("parsed_initial_observations", "No initial observations found.")
+        data_files_preview = reader_output.get("data_files_preview", "No data files preview found.")
 
-            # Round 1
-            input = f"# PREVIOUS PLAN #\n{self._get_previous_plan_and_report(state)[0]}\n#############\n# PREVIOUS REPORT #\n{self._get_previous_plan_and_report(state)[1]}\n"
-            input += self._read_data(state, num_lines=1)
-            tools, tool_names = self._get_tools(state)
-            if len(tool_names) > 0:
-                input += PROMPT_PLANNER_TOOLS.format(tools=tools, tool_names=tool_names)
+        # Read insights_log.md
+        insights_log_content = "No insights log found or an error occurred."
+        insights_log_status = "Not read"
+        try:
+            output_subdir = state.config.get('workflow_options', {}).get('output_subdirectory', '_analysis_insights')
+            insights_filename = state.config.get('logging', {}).get('insights_filename', 'insights_log.md')
+            insights_log_path = os.path.join(state.data_dir, output_subdir, insights_filename)
+            if os.path.exists(insights_log_path):
+                with open(insights_log_path, 'r') as f:
+                    insights_log_content = f.read()
+                insights_log_status = "Successfully read"
+                if not insights_log_content.strip():
+                    insights_log_content = "Insights log is empty."
+                    insights_log_status = "Read (empty)"
             else:
-                input += "# AVAILABLE TOOLS #\nThere is no pre-defined tools in this phase. You can use the functions from public libraries such as Pandas, NumPy, Scikit-learn, etc.\n"
-            raw_plan_reply, history = self.llm.generate(input, history, max_tokens=4096)
-            with open(f'{state.restore_dir}/raw_plan_reply.txt', 'w') as f:
-                f.write(raw_plan_reply)
+                insights_log_content = "Insights log does not exist yet."
+                insights_log_status = "Not found"
+        except Exception as e:
+            logger.error(f"Error reading insights_log.md for Planner: {e}")
+            insights_log_content = f"Error reading insights_log.md: {e}"
+            insights_log_status = "Error reading"
 
-            # Round 2
-            input = PROMPT_PLNNAER_REORGANIZE_IN_MARKDOWN
-            organized_markdown_plan, history = self.llm.generate(input, history, max_tokens=4096)
-            markdown_plan = self._parse_markdown(organized_markdown_plan)
-            with open(f'{state.restore_dir}/markdown_plan.txt', 'w') as f:
-                f.write(markdown_plan)
+        # Consolidate information for the planner's prompt
+        input_for_planner = (
+            f"Business Context Summary:\n{business_context_summary}\n\n"
+            f"Data Summary:\n{data_summary}\n\n"
+            f"Initial Observations from Reader:\n{initial_observations}\n\n"
+            f"Current Insights Log:\n{insights_log_content}\n\n"
+            f"Data Files Preview:\n{data_files_preview}"
+        )
 
-            # Round 3
-            input = PROMPT_PLNNAER_REORGANIZE_IN_JSON
-            raw_json_plan, history = self.llm.generate(input, history, max_tokens=4096)
-            try:
-                json_plan = self._parse_json(raw_json_plan)['final_answer']
-            except Exception as e:
-                logger.info(f"Error parsing JSON: {e}")
-                json_plan = self._parse_json(raw_json_plan)
-            with open(f'{state.restore_dir}/json_plan.json', 'w') as f:
-                json.dump(json_plan, f, indent=4)
+        # 2. LLM Interaction (Simplified)
+        history.append({"role": "system", "content": f"{role_prompt} {self.description}"})
+        
+        # Placeholder for a new, more generic planning prompt
+        prompt_template = (
+            "You are an expert data analysis planner. Based on the following information provided by the Reader agent, "
+            "your task is to create a high-level strategic plan for analyzing the data to generate business insights. "
+            "The plan should be a list of key questions to answer, hypotheses to test, or specific analysis tasks to perform. "
+            "Present the plan as a markdown list.\n\n"
+            "READER'S SUMMARY AND OBSERVATIONS:\n{reader_summary}\n\n"
+            "ANALYSIS PLAN (Markdown List):"
+        )
+        
+        llm_input = prompt_template.format(reader_summary=input_for_planner)
+        
+        raw_plan_reply = ""
+        try:
+            raw_plan_reply, history = self.llm.generate(llm_input, history, max_tokens=4096)
+            # Assuming _parse_markdown extracts the main content if LLM returns markdown
+            generated_plan = self._parse_markdown(raw_plan_reply) 
+        except Exception as e:
+            logger.error(f"LLM generation failed for Planner agent: {e}")
+            raw_plan_reply = f"LLM generation failed: {e}"
+            generated_plan = "Failed to generate plan due to LLM error."
 
-        else:
-            last_planner_score = state.memory[-2].get("reviewer", {}).get("score", {}).get("agent planner", 0)
-            if last_planner_score >= 3: # 如果上一轮中planner的评分大于等于3，说明上一个planner的规划结果是可以接受的
-                return {"planner": state.memory[-2]["planner"]}
-            else:
-                return {"planner": state.memory[-2]["planner"]}
-
-        # 保存history
-        with open(f'{state.restore_dir}/{self.role}_history.json', 'w') as f:
+        # 3. Save outputs
+        os.makedirs(state.restore_dir, exist_ok=True)
+        with open(os.path.join(state.restore_dir, f'{self.role}_llm_history.json'), 'w') as f:
             json.dump(history, f, indent=4)
+        with open(os.path.join(state.restore_dir, f'{self.role}_raw_plan_reply.txt'), 'w') as f:
+            f.write(raw_plan_reply)
+        with open(os.path.join(state.restore_dir, 'markdown_plan.txt'), 'w') as f:
+            f.write(generated_plan)
 
-        input_used_in_review = f"   <background_info>\n{background_info}\n    </background_info>"
-
-        print(f"State {state.phase} - Agent {self.role} finishes working.")
-
-        with open(f'{PREFIX_MULTI_AGENTS}/config.json', 'r') as f:
-            config = json.load(f)
-        user_interaction = config['user_interaction']['plan']
-        if user_interaction == "True":
-            # user interaction here
-            print("A plan has been generated and saved to 'markdown_plan.txt'.")
-            print("You can now review and modify the plan if needed.")
-            print("If you want to get some suggestions for modifying the plan, please type 'suggestion'.")
-            user_input = builtin_input("Press Enter to continue with the current plan, or type 'edit' to modify: ")
-            user_input = user_input.strip().lower()
-
-            if user_input == 'edit':
-                print(f"\nPlease edit the file: {state.restore_dir}/markdown_plan.txt")
-                print("Save your changes and press Enter when you're done.")
-                builtin_input("Press Enter to continue...")
-                # Re-read the potentially modified plan
-                with open(f'{state.restore_dir}/markdown_plan.txt', 'r') as f:
-                    markdown_plan = f.read()
-            elif user_input == 'suggest':
-                print(f"\nPlease refer to note section for each function in the file `ml_tools_doc/{state.restore_dir}_tools.md`.")
-            elif user_input:
-                print("Invalid input. Continuing with the current plan.")
-            else:
-                print("Continuing with the current plan.")
-
-        # 保存plan和result
-        plan = markdown_plan
-        result = markdown_plan
-
+        logger.info(f"State {state.phase} - Agent {self.role} finishes working.")
+        
+        # 4. Return results for state memory
         return {
             self.role: {
-                "history": history,
-                "role": self.role,
-                "description": self.description,
-                "task": task,
-                "input": input_used_in_review,
-                "plan": plan,
-                "result": result
+                "status": "success" if not generated_plan.startswith("Failed") else "failure",
+                "input_summary_for_llm": input_for_planner,
+                "llm_raw_reply": raw_plan_reply,
+                "generated_plan": generated_plan,
+            "analysis_plan": generated_plan,  # Add for Developer agent compatibility
+                "insights_log_status_at_planning": insights_log_status,
+                "insights_log_preview_at_planning": insights_log_content[:500] + ('...' if len(insights_log_content) > 500 else '')
             }
         }

@@ -1,0 +1,1 @@
+create a predictive model to predict if a startup is a success or not. also create a file that describes which features matter the most.

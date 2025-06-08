@@ -1,0 +1,23 @@
+# Designed Questions for Transition from IterativeAnalysisLoop to FinalInsightCompilation
+
+1. **What key data quality issues were identified and resolved during the IterativeAnalysisLoop?**  
+   *Purpose:* To summarize the extent and nature of data cleaning, including handling missing values, duplicates, outliers, and linkage validation. This ensures the final insights rest on a reliable data foundation and highlights any remaining limitations to be documented in the next phase.
+
+2. **Which service packages, extra services, and promo codes showed significant patterns in terms of popularity, revenue contribution, and cross-selling opportunities?**  
+   *Purpose:* To capture detailed findings on product and pricing performance, which will be essential for compiling actionable business insights and recommendations in the final report.
+
+3. **What were the main findings regarding operator performance, verification status, and compensation fairness?**  
+   *Purpose:* To consolidate operator-related insights, including any confirmed hypotheses (e.g., verified operators performing better), which will guide the formulation of targeted operational recommendations and KPIs in the final phase.
+
+4. **How did customer payment behaviors and segmentation analyses inform understanding of client profiles and promo code effectiveness?**  
+   *Purpose:* To highlight segmentation outcomes and payment trends that impact marketing and customer engagement strategies, shaping the narrative of customer-centric insights in the final compilation.
+
+5. **What recurring booking issues, communication patterns, and operational bottlenecks were discovered, and what preliminary suggestions emerged for process improvements?**  
+   *Purpose:* To document operational challenges and communication effectiveness, forming the basis for actionable improvement proposals and KPI development in the subsequent phase.
+
+6. **Which KPIs and dashboards were developed or identified as critical to monitor ongoing performance, and what gaps or risks remain to be addressed in the final insights?**  
+   *Purpose:* To ensure that monitoring tools and risk assessments are incorporated into the final deliverables, enabling stakeholders to track progress and mitigate biases or data limitations post-project.
+
+---
+
+These questions collectively summarize the complex analytical work done in the IterativeAnalysisLoop and provide a structured framework to produce a coherent, insightful final report aligned with business goals and data science best practices.

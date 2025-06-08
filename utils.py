@@ -19,16 +19,37 @@ def load_config(file_path: str):
         config = json.load(f)
     return config
 
-def read_file(file_path: str):
+def read_file(file_path: str) -> str:
     """
-    Read the content of a file and return it as a string.
+    Read the content of a text-based file and return it as a single string.
+    If the file cannot be read or is not a text file, returns an empty string or an error message.
     """
-    if file_path.endswith('txt'):
-        with open(file_path, 'r', encoding='utf-8') as f:
-            return f.read()
-    if file_path.endswith('csv'):
-        with open(file_path, 'r', encoding='utf-8') as f:
-            return f.readlines()
+    try:
+        # Common text file extensions. Add more if needed.
+        text_extensions = ['.txt', '.md', '.py', '.json', '.yaml', '.yml', '.html', '.css', '.js', '.sh', '.log']
+        file_ext = os.path.splitext(file_path)[1].lower()
+
+        if file_ext in text_extensions or '.csv' in file_ext: # Treat CSV as text for this generic reader, though pandas is preferred for CSV data
+            with open(file_path, 'r', encoding='utf-8') as f:
+                return f.read()
+        else:
+            # For unknown or binary files, attempt to read a small part as text, or indicate it's not a text file.
+            try:
+                with open(file_path, 'r', encoding='utf-8') as f:
+                    # Try reading, might fail for binary files
+                    return f.read()
+            except UnicodeDecodeError:
+                # logger.warning(f"read_file: File {file_path} is likely not a text file or has an unsupported encoding.")
+                return f"[Warning: File {file_path} could not be decoded as UTF-8 text. It might be a binary file or use a different encoding.]"
+            except Exception as e:
+                # logger.error(f"read_file: Error reading file {file_path} as text: {e}")
+                return f"[Error: Could not read file {file_path} as text: {e}]"
+    except FileNotFoundError:
+        # logger.error(f"read_file: File not found at {file_path}")
+        return f"[Error: File not found at {file_path}]"
+    except Exception as e:
+        # logger.error(f"read_file: An unexpected error occurred while trying to read {file_path}: {e}")
+        return f"[Error: An unexpected error occurred while reading {file_path}: {e}]"
     
 def multi_chat(api_handler: APIHandler, prompt, history=None, max_tokens=4096):
     """

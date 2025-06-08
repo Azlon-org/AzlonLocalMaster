@@ -1,0 +1,18 @@
+## QUESTIONS
+### Question 1
+What files did you process? Which files were generated? Answer with detailed file path.
+
+### Question 2
+Which features were involved in this phase? What changes did they undergo? If any feature types were modified, answer which features are modified and how they are modified. If any features were deleted or created, answer which features are deleted or created and provide detailed explanations. (This is a FIXED question for each phase.)
+
+### Question 3
+How complete and reliable are the linkage keys (e.g., user IDs, booking IDs, operator codes) necessary for cross-dataset joins? Are there any gaps or mismatches that could affect integrated analyses?
+
+### Question 4
+Which data quality issues or feature gaps identified in this phase should be prioritized for cleaning, validation, or enrichment in the IterativeAnalysisLoop? Are there any hypotheses or specific questions that arose from profiling to test next?
+
+### Question 5
+What initial insights emerged regarding customer behavior, service package popularity, operator performance, and payment methods from the profiling? Were there any unexpected patterns or anomalies?
+
+### Question 6
+Based on the profiling outcomes, what initial metrics, visualizations, or dashboards do you recommend developing to monitor key performance indicators (KPIs) through the IterativeAnalysisLoop?

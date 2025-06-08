@@ -1,0 +1,24 @@
+## QUESTIONS
+### Question 1
+What files did you process? Which files were generated? Answer with detailed file path.
+
+### Question 2
+Which features were involved in this phase? What changes did they undergo? If any feature types were modified, answer which features are modified and how they are modified. If any features were deleted or created, answer which features are deleted or created and provide detailed explanations. (This is a FIXED question for each phase.)
+
+### Question 3
+What key data quality issues were identified and resolved during the IterativeAnalysisLoop?
+
+### Question 4
+Which service packages, extra services, and promo codes showed significant patterns in terms of popularity, revenue contribution, and cross-selling opportunities?
+
+### Question 5
+What were the main findings regarding operator performance, verification status, and compensation fairness?
+
+### Question 6
+How did customer payment behaviors and segmentation analyses inform understanding of client profiles and promo code effectiveness?
+
+### Question 7
+What recurring booking issues, communication patterns, and operational bottlenecks were discovered, and what preliminary suggestions emerged for process improvements?
+
+### Question 8
+Which KPIs and dashboards were developed or identified as critical to monitor ongoing performance, and what gaps or risks remain to be addressed in the final insights?

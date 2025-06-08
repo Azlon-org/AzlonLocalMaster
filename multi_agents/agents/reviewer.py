@@ -12,12 +12,16 @@ sys.path.append('..')
 sys.path.append('../..')
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
-from agent_base import Agent
+import json
+import logging
+from agent_base import Agent # Assuming Agent is intended, though AgentBase is defined in agent_base.py
 from utils import read_file, PREFIX_MULTI_AGENTS
 from llm import LLM
 from state import State
 from prompts.prompt_base import *
 from prompts.prompt_reviewer import *
+
+logger = logging.getLogger(__name__)
 
 class Reviewer(Agent):
     def __init__(self, model: str, type: str):  
@@ -27,6 +31,29 @@ class Reviewer(Agent):
             model=model,
             type=type
         )
+
+    # Helper function to get agent description from config
+    def _get_agent_description(self, agent_name_from_memory: str, config: dict) -> str:
+        # Agent names in config are typically capitalized (e.g., "Planner", "Critic")
+        # Agent roles (and thus keys in memory dict) are often lowercase (e.g., "planner", "critic")
+        agent_name_in_config = agent_name_from_memory.capitalize()
+        
+        description = config.get('agent_configurations', {}).get(agent_name_in_config, {}).get('description')
+        if description:
+            return description
+        
+        # Fallback if not in agent_configurations (though it should ideally be there)
+        # This part could be expanded if role_prompts also reliably store descriptions
+        # For example, some prompts in role_prompts might be structured dicts with a 'description' key.
+        # For now, we rely on agent_configurations.
+
+        # Check if the direct agent_name_from_memory (lowercase) exists as a key, 
+        # in case some configs use lowercase keys.
+        description_lc = config.get('agent_configurations', {}).get(agent_name_from_memory, {}).get('description')
+        if description_lc:
+            return description_lc
+            
+        return f"Description for {agent_name_in_config} not found in agent_configurations."
 
     def _merge_dicts(self, dicts: List[Dict[str, Any]], state: State) -> Dict[str, Any]:
         merged_dict = {"final_suggestion": {}, "final_score": {}}
@@ -66,16 +93,66 @@ class Reviewer(Agent):
 
     def _generate_prompt_for_agents(self, state: State) -> List[str]:
         prompt_for_agents = []
-        evaluated_agents = list(state.memory[-1].keys()) # 获取过去state的memory中的所有agent
-        print(f"Evaluating agents: {evaluated_agents}")
-        for each_agent_memory in state.memory[-1].values(): # 取当前state的memory
-            role = each_agent_memory["role"]
-            description = each_agent_memory["description"]
-            task = each_agent_memory["task"]
-            input = each_agent_memory["input"]
-            result = each_agent_memory["result"]
-            prompt_for_agent = PROMPT_REVIEWER_ROUND1_EACH_AGENT.format(role=role.upper(), description=description, task=task, input=input, result=result)
-            prompt_for_agents.append(prompt_for_agent)
+        if not state.memory or not state.memory[-1]:
+            logger.warning("Reviewer: No memory found for the current phase to review.")
+            return []
+
+        phase_memory = state.memory[-1]  # This is the dictionary for the current phase
+        logger.info(f"Reviewer: Processing phase memory keys for review: {list(phase_memory.keys())}")
+
+        for agent_name, agent_data in phase_memory.items():
+            if not isinstance(agent_data, dict):
+                logger.debug(f"Reviewer: Skipping key '{agent_name}' in phase memory as its value is not a dict (type: {type(agent_data)}). This is likely not a structured agent output.")
+                continue
+
+            # agent_name is the role (e.g., "critic") and agent_data is its output dict (e.g., {"status": ..., "critique_generated": ...})
+            role_for_prompt = agent_name.upper()
+            agent_description = self._get_agent_description(agent_name, state.config)
+
+            task_str = f"The {agent_name} agent performed its duties for the phase: {state.phase}."
+            input_str = "Based on the current context, previous outputs, and the insights log."
+            result_str = "No specific primary result identified in agent's output dictionary."
+
+            # Heuristically extract task/result based on common patterns from other agents
+            if agent_name == "planner":
+                task_str = agent_data.get("task_addressed", agent_data.get("task", f"Generate a plan for phase: {state.phase}"))
+                result_str = agent_data.get("generated_plan", agent_data.get("plan_details", "Plan not found in planner's output."))
+            elif agent_name == "developer":
+                task_str = agent_data.get("task_addressed", agent_data.get("task", f"Develop code/solution for phase: {state.phase}"))
+                generated_code_content = agent_data.get("generated_code")
+                if generated_code_content:
+                    result_str = generated_code_content
+                else:
+                    code_path = agent_data.get('code_saved_path', 'Path not specified.')
+                    result_str = f"Code file path: {code_path}"
+                if result_str == f"Code file path: Path not specified." and not generated_code_content:
+                     result_str = "Generated code or path not found in developer's output."
+            elif agent_name == "critic":
+                task_str = f"Critique the output of: {agent_data.get('critique_target', 'previous work')}"
+                result_str = agent_data.get("critique_generated", "Critique not found in critic's output.")
+            elif agent_name == "summarizer":
+                task_str = f"Summarize the activities and findings for phase: {state.phase}"
+                result_str = agent_data.get("report", agent_data.get("summary_text", "Summary not found in summarizer's output."))
+            # Add other agents as needed, ensuring agent_name matches the key used by the agent in its return dict.
+
+            if result_str == "No specific primary result identified in agent's output dictionary." or not result_str:
+                try:
+                    result_str = json.dumps(agent_data, indent=2, default=str)
+                except TypeError:
+                    result_str = str(agent_data)
+            
+            current_prompt = PROMPT_REVIEWER_ROUND1_EACH_AGENT.format(
+                role=role_for_prompt or "UNKNOWN_ROLE",
+                description=agent_description or "No description available.",
+                task=task_str or "Task not specified.",
+                input=input_str or "Input not specified.",
+                result=result_str or "Result not available."
+            )
+            prompt_for_agents.append(current_prompt)
+            
+        if not prompt_for_agents:
+            logger.warning("Reviewer: No agent outputs suitable for review were found in the current phase memory after filtering.")
+            
         return prompt_for_agents
     
     def _execute(self, state: State, role_prompt: str) -> Dict[str, Any]:

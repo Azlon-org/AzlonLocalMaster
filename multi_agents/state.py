@@ -11,37 +11,44 @@ from utils import PREFIX_MULTI_AGENTS, load_config
 from prompts.prompt_base import PHASES_IN_CONTEXT_PREFIX
 
 class State:
-    def __init__(self, phase: str, competition: str, message: str = "There is no message."):
+    def __init__(self, phase: str, data_dir: str, context_file: str, competition_placeholder: str, message: str = "There is no message."):
         self.phase = phase
-        self.competition = competition
+        self.data_dir = data_dir
+        self.context_file = context_file
+        self.competition_placeholder = competition_placeholder # Used for logging or unique identifiers if needed
         self.message = message
         self.memory: List[Dict[str, Any]] = [{}]
         self.current_step = 0
-        self.score = 0
+        self.score = 0  # Score may be deprecated or repurposed for insight quality/confidence
         self.finished = False
         
-        config = load_config(f'{PREFIX_MULTI_AGENTS}/config.json')
-        self.agents = config['phase_to_agents'][self.phase]
-        self.phase_to_directory = config['phase_to_directory']
-        self.phase_to_unit_tests = config['phase_to_unit_tests']
-        self.rulebook_parameters = config['rulebook_parameters']
-        self.phase_to_ml_tools = config['phase_to_ml_tools']
+        self.config = load_config(f'{PREFIX_MULTI_AGENTS}/config.json')
+        self.agents = self.config['phase_to_agents'][self.phase]
         
+        # Function schema is general, not competition/phase specific usually
         self.function_to_schema = load_config(f'{PREFIX_MULTI_AGENTS}/function_to_schema.json')
         
-        self.competition_dir = f'{PREFIX_MULTI_AGENTS}/competition/{self.competition}'
-        self.dir_name = self.phase_to_directory[self.phase]
-        self.restore_dir = f'{self.competition_dir}/{self.dir_name}'
-        self.ml_tools = self.phase_to_ml_tools[self.phase]
-        self.background_info = ""
-        self.context = ""
+        # Define the primary working directory for this state/phase within the data_dir
+        output_subdirectory_name = self.config.get('workflow_options', {}).get('output_subdirectory', '_analysis_insights')
+        self.phase_output_dir = os.path.join(self.data_dir, output_subdirectory_name, self.phase)
+        # self.restore_dir is effectively this new phase_output_dir
+        self.restore_dir = self.phase_output_dir
+
+        # ML tools are now in a general catalog, agents will select them. Not a state property like this.
+        # self.ml_tools = self.phase_to_ml_tools[self.phase] 
+        self.background_info = "" # To be populated by Reader/Planner based on context_file
+        self.context = "" # To be populated by make_context
 
     def __str__(self) -> str:
         return f"State: {self.phase}, Current Step: {self.current_step}, Current Agent: {self.agents[self.current_step]}, Finished: {self.finished}"
 
     def make_context(self) -> None:
-        self.context = PHASES_IN_CONTEXT_PREFIX.replace("# {competition_name}", self.competition)
-        phases = load_config(f'{PREFIX_MULTI_AGENTS}/config.json')['phases']
+        # Context now primarily refers to the business context file and overall workflow phases
+        # The competition_placeholder might be used if some part of PHASES_IN_CONTEXT_PREFIX strictly needs it.
+        # However, the goal is to move away from 'competition' specific templates.
+        # For now, using competition_placeholder for the replacement.
+        self.context = PHASES_IN_CONTEXT_PREFIX.replace("# {competition_name}", self.competition_placeholder)
+        phases = self.config.get('phases', [])
         self.context += "\n".join(f"{i+1}. {phase}" for i, phase in enumerate(phases))
 
     def get_state_info(self) -> str:
@@ -100,15 +107,26 @@ class State:
         return self.agents[self.current_step % len(self.agents)]
 
     def generate_rules(self) -> str:
-        if self.rulebook_parameters[self.phase]['status']:
-            default_rules = self.rulebook_parameters[self.phase]['default_rules_with_parameters']
-            rules = self._format_rules(default_rules)
-        else:
-            rules = "There is no rule for this stage."
-        
-        with open(f'{self.restore_dir}/user_rules.txt', 'w') as f:
-            f.write(rules)
-        return rules
+        # This method is being refactored. Rule generation is likely to be handled by a Planner agent
+        # based on the business context and data profile, rather than a static rulebook in config.
+        # For now, it returns a placeholder message.
+        # The old logic for writing to user_rules.txt is preserved below, commented out, for reference.
+
+        # if self.config.get('rulebook_parameters', {}).get(self.phase, {}).get('status'):
+        #     default_rules = self.config.get('rulebook_parameters', {}).get(self.phase, {}).get('default_rules_with_parameters', {})
+        #     if default_rules:
+        #         rules = self._format_rules(default_rules)
+        #         # Ensure self.restore_dir is valid if we were to write the file
+        #         # os.makedirs(self.restore_dir, exist_ok=True) 
+        #         # with open(os.path.join(self.restore_dir, 'user_rules.txt'), 'w') as f:
+        #         #     f.write(rules)
+        #         return rules
+        #     else:
+        #         rules = "No default rules specified for this phase."
+        # else:
+        #     rules = "Rule generation is not active for this phase."
+        # return rules
+        return "Rules generation is currently refactored/disabled."
 
     def _format_rules(self, default_rules: Dict[str, List[Any]]) -> str:
         formatted_rules = []
@@ -122,14 +140,17 @@ class State:
 
     # 创建当前State的目录
     def make_dir(self) -> None:
-        path_to_dir = f'{self.competition_dir}/{self.dir_name}'
-        os.makedirs(path_to_dir, exist_ok=True)
-        if 'eda' in self.dir_name:
-            os.makedirs(f'{path_to_dir}/images', exist_ok=True)
-        self.restore_dir = path_to_dir
+        # Creates the phase-specific output directory under data_dir/output_subdirectory/phase_name
+        os.makedirs(self.phase_output_dir, exist_ok=True)
+        # Example: if a phase needs an 'images' subdirectory, it can be created here or by the agent.
+        # For now, just ensuring the main phase_output_dir exists.
+        # If specific subdirectories like 'images' for EDA are always needed, they can be added:
+        # if "profiling" in self.phase.lower() or "analysis" in self.phase.lower():
+        #     os.makedirs(os.path.join(self.phase_output_dir, "images"), exist_ok=True)
+        self.restore_dir = self.phase_output_dir # confirm self.restore_dir is correctly assigned
 
     def get_previous_phase(self, type: str = "code") -> Any:
-        phases = load_config(f'{PREFIX_MULTI_AGENTS}/config.json')['phases']
+        phases = self.config.get('phases', [])
         current_phase_index = phases.index(self.phase)
         
         if type == 'code':
@@ -150,7 +171,7 @@ class State:
             return phases[current_phase_index - 1]
 
     def get_next_phase(self) -> Optional[str]:
-        phases = load_config(f'{PREFIX_MULTI_AGENTS}/config.json')['phases']
+        phases = self.config.get('phases', [])
         current_phase_index = phases.index(self.phase)
         return phases[current_phase_index + 1] if current_phase_index < len(phases) - 1 else None
 

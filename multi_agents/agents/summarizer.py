@@ -82,13 +82,21 @@ class Summarizer(Agent):
         return insight_from_visualization
 
     def _generate_research_report(self, state: State) -> str:
-        previous_dirs = ['pre_eda', 'data_cleaning', 'deep_eda', 'feature_engineering', 'model_build_predict']
+        output_subdir_name = state.config.get('workflow_options', {}).get('output_subdirectory', '_analysis_insights')
+        previous_dirs = ['pre_eda', 'data_cleaning', 'deep_eda', 'feature_engineering', 'model_build_predict'] # These are phase names
         previous_report = ""
-        for dir in previous_dirs:
-            if os.path.exists(f'{state.competition_dir}/{dir}/report.txt'):
-                with open(f'{state.competition_dir}/{dir}/report.txt', 'r') as f:
-                    report = f.read()
-                    previous_report += f"## {dir.replace('_', ' ').upper()} ##\n{report}\n"
+        for phase_name_dir in previous_dirs:
+            # Reports from previous phases should ideally be in insights_log.md already.
+            # This function might need to read from insights_log.md or be re-evaluated.
+            # For now, attempting to read from individual phase output directories if they exist.
+            # The path would be data_dir/output_subdir_name/phase_name_dir/report.txt
+            report_path = os.path.join(state.data_dir, output_subdir_name, phase_name_dir, 'report.txt')
+            if os.path.exists(report_path):
+                with open(report_path, 'r') as f:
+                    report_content = f.read()
+                    previous_report += f"## {phase_name_dir.replace('_', ' ').upper()} ##\n{report_content}\n"
+            else:
+                logger.info(f"Previous report not found at {report_path} for phase {phase_name_dir}")
 
         _, research_report_history = self.llm.generate(PROMPT_SUMMARIZER_RESEARCH_REPORT, [], max_tokens=4096)
         raw_research_report, research_report_history = self.llm.generate(previous_report, research_report_history, max_tokens=4096)
@@ -99,6 +107,12 @@ class Summarizer(Agent):
         return research_report
 
     def _execute(self, state: State, role_prompt: str) -> Dict[str, Any]:
+        # Determine insights log path
+        output_subdir = state.config.get('workflow_options', {}).get('output_subdirectory', '_analysis_insights')
+        insights_filename = state.config.get('logging', {}).get('insights_filename', 'insights_log.md')
+        insights_log_path = os.path.join(state.data_dir, output_subdir, insights_filename)
+        os.makedirs(os.path.dirname(insights_log_path), exist_ok=True)
+
         # 实现总结功能 阅读当前state的memory 生成report
         if state.memory[-1].get("developer", {}).get("status", True) == False:
             print(f"State {state.phase} - Agent {self.role} gives up summarizing because the code execution failed.")
@@ -132,21 +146,42 @@ class Summarizer(Agent):
         history.append(design_questions_history)
 
         # Answer questions
-        with open(f'{state.restore_dir}/single_phase_code.txt', 'r') as f:
+        with open(f'{state.restore_dir}/single_phase_code.py', 'r') as f:
             code = f.read()
-        with open(f'{state.restore_dir}/{state.dir_name}_output.txt', 'r') as f:
-            output = f.read()
-            if len(output) > 1000: # 如果output太长，则截断
-                output = output[:1000]
-        with open(f'{state.restore_dir}/review.json', 'r') as f:
-            review = json.load(f)
+        output_file_path = os.path.join(state.restore_dir, f'{state.phase}_output.txt')
+        # Check if output file exists, provide placeholder if not
+        if not os.path.exists(output_file_path):
+            logger.warning(f"Output file not found: {output_file_path}. Using empty string for output.")
+            output = "Output file not found or not generated for this phase."
+        else:
+            with open(output_file_path, 'r') as f:
+                output = f.read()
+                if len(output) > 1000: # 如果output太长，则截断
+                    output = output[:1000]
+
+        review_content = "No review available for this phase."
+        review_file_path = os.path.join(state.restore_dir, 'review.json')
+        if os.path.exists(review_file_path):
+            try:
+                with open(review_file_path, 'r', encoding='utf-8') as f:
+                    review_data = json.load(f)
+                review_content = review_data.get('critique', "Critique section missing in review.json.")
+                logger.info(f"Successfully read and parsed {review_file_path}.")
+            except json.JSONDecodeError:
+                logger.warning(f"Could not decode JSON from {review_file_path}. Using default review content.")
+                review_content = f"Review file {review_file_path} found but contained invalid JSON."
+            except Exception as e:
+                logger.warning(f"Error reading {review_file_path}: {e}. Using default review content.")
+                review_content = f"Error reading review file {review_file_path}: {e}."
+        else:
+            logger.info(f"{review_file_path} not found. Proceeding without review content for this phase.")
 
         answer_questions_history = []
         input = PROMPT_SUMMARIZER_ANSWER_QUESTIONS.format(phases_in_context=state.context, phase_name=state.phase, questions=questions)
         _, answer_questions_history = self.llm.generate(input, answer_questions_history, max_tokens=4096)
         
         insight_from_visualization = self._get_insight_from_visualization(state)
-        input = PROMPT_INFORMATION_FOR_ANSWER.format(background_info=background_info, state_info=state_info, plan=plan, code=code, output=output, insight_from_visualization=insight_from_visualization, review=review)
+        input = PROMPT_INFORMATION_FOR_ANSWER.format(background_info=background_info, state_info=state_info, plan=plan, code=code, output=output, insight_from_visualization=insight_from_visualization, review=review_content)
         answer_questions_reply, answer_questions_history = self.llm.generate(input, answer_questions_history, max_tokens=4096)
         with open(f'{state.restore_dir}/answer_questions_reply.txt', 'w') as f:
             f.write(answer_questions_reply)
@@ -160,10 +195,30 @@ class Summarizer(Agent):
             f.write(report)
         history.append(answer_questions_history)
 
+        # Append the generated report to insights_log.md
+        try:
+            with open(insights_log_path, 'a') as f_insights:
+                f_insights.write(f"\n\n## Summary Report for Phase: {state.phase} (by Summarizer)\n\n")
+                f_insights.write(report)
+                f_insights.write("\n\n---\n")
+            logger.info(f"Appended Summarizer report for phase '{state.phase}' to {insights_log_path}")
+        except Exception as e:
+            logger.error(f"Failed to append Summarizer report to {insights_log_path}: {e}")
+
         if state.phase == 'Model Building, Validation, and Prediction':
             research_report = self._generate_research_report(state)
-            with open(f'{state.competition_dir}/research_report.md', 'w') as f:
-                f.write(research_report)
+            # Append research_report to insights_log.md as well
+            try:
+                with open(insights_log_path, 'a') as f_insights:
+                    f_insights.write(f"\n\n## Research Report (by Summarizer for phase {state.phase})\n\n")
+                    f_insights.write(research_report)
+                    f_insights.write("\n\n---\n")
+                logger.info(f"Appended research report to {insights_log_path}")
+                # Optionally, still save it to its own file in restore_dir if needed for other purposes
+                with open(os.path.join(state.restore_dir, 'research_report.md'), 'w') as f_research:
+                    f_research.write(research_report)
+            except Exception as e:
+                logger.error(f"Failed to append or write research report: {e}")
 
         # 保存history
         with open(f'{state.restore_dir}/{self.role}_history.json', 'w') as f:
