@@ -1,23 +1,23 @@
 # Designed Questions for Transition from IterativeAnalysisLoop to FinalInsightCompilation
 
-1. **Which files and datasets were processed during the IterativeAnalysisLoop phase, and what were the key outputs or intermediate files generated? Please provide detailed file paths and descriptions.**  
-   *Purpose:* This question ensures a clear record of all data inputs and outputs during this phase, enabling traceability and reproducibility in the FinalInsightCompilation phase.
+1. **What were the key data quality issues identified during the iterative analysis, and how were they addressed or flagged?**  
+   *Purpose:* Summarizes efforts on data cleaning and quality assurance, which is critical to ensure that final insights are based on reliable data. This will guide how to document limitations and assumptions in the final phase.
 
-2. **What were the main data cleaning and validation steps applied, specifically regarding corrupted files, missing critical IDs, date/time standardization, duplicate removal, and outlier handling? How did these steps affect data completeness and quality?**  
-   *Purpose:* To summarize the data preparation rigor, quantify data loss or corrections, and provide transparency on data quality for downstream interpretation and reporting.
+2. **Which service packages and extra services demonstrated the most significant impact on transaction volume, revenue, and customer satisfaction?**  
+   *Purpose:* Captures the core business insights related to offerings, helping prioritize which findings to highlight and expand upon in the final insights report.
 
-3. **What types of biases and uncertainties were identified as a result of data cleaning and imputation strategies? How were these biases quantified and mitigated, and what recommendations exist for incorporating uncertainty in final analyses?**  
-   *Purpose:* To capture the bias assessment outcomes and guide how uncertainty should be documented and communicated in the final insights.
+3. **How did operator characteristics—such as document verification status, availability, and compensation—relate to booking success, cancellations, and performance metrics?**  
+   *Purpose:* Summarizes operator-related findings essential for operational recommendations and helps focus final insights on actionable operator management strategies.
 
-4. **Which key exploratory data analysis findings—such as customer segmentation, operator performance patterns, booking behaviors, and marketing campaign effectiveness—emerged during this phase? What are the strongest actionable insights discovered?**  
-   *Purpose:* To highlight the most relevant analytical findings that should be emphasized or further refined in the final report.
+4. **What patterns and correlations were found regarding booking issues, their resolution times, and effects on customer retention and repeat bookings?**  
+   *Purpose:* Provides a detailed understanding of problem areas and their customer impact, which is vital for framing improvement opportunities in the final deliverable.
 
-5. **How stable and robust were the customer and operator segmentations, predictive models, and hypothesis tests under different data cleaning and imputation scenarios? What validation or sensitivity analyses were conducted?**  
-   *Purpose:* To ensure the final insights are grounded in validated and resilient analyses, and to identify any caveats or limitations to be communicated.
+5. **What customer segmentation insights and behavior patterns emerged, especially concerning promotion usage, booking frequency, and retention?**  
+   *Purpose:* Helps define customer personas and loyalty drivers, which are key for marketing and retention strategies emphasized in the final insights.
 
-6. **What operational bottlenecks, quality assurance issues, and marketing ROI findings were uncovered? How should these be prioritized or contextualized in the FinalInsightCompilation to align with QuickWash’s strategic goals?**  
-   *Purpose:* To frame the operational and strategic implications of the analysis and guide the emphasis of final recommendations for stakeholders.
+6. **How effective were promotions, discounts, and Quick Bucks in influencing transaction volume, revenue, and repeat usage? What potential cannibalization or unintended effects were observed?**  
+   *Purpose:* Focuses on promotional strategy effectiveness and financial incentives, informing recommendations for future promotional planning and incentive design.
 
 ---
 
-These questions collectively summarize the comprehensive work done during the IterativeAnalysisLoop phase and provide clear guidance on synthesizing, validating, and prioritizing findings for the FinalInsightCompilation phase.
+These questions together comprehensively summarize the key findings from the iterative analysis while directing attention to the most impactful insights and recommendations that should be developed and clearly presented in the FinalInsightCompilation phase.

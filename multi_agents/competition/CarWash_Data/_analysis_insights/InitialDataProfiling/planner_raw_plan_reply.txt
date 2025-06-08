@@ -1,49 +1,53 @@
-- **Data Quality and Integrity Assessment**  
-  - Complete robust parsing and cleaning of corrupted files (`clients.csv`, `orders.csv`, `operators.csv`), including delimiter normalization and extraction of embedded JSON fields.  
-  - Quantify missingness and malformed data in critical ID fields (`client_id`, `operator_id`, `order_id`) and evaluate the impact of dropping vs. imputing these records.  
-  - Implement and document bias assessments and sensitivity analyses to understand data cleaning impacts on representativeness.
+# QuickWash Data Analysis Strategic Plan
 
-- **Operator Compliance and Performance Analysis**  
-  - Analyze operator verification status and documentation completeness against booking outcomes, cancellation rates, and penalty applications.  
-  - Evaluate operator availability, job completion counts, compensation patterns, and cancellation penalties to identify workforce utilization and incentive effectiveness.  
-  - Investigate operator settings (e.g., max daily jobs, commission rates) and their correlation with performance and customer satisfaction.
+- **Service Package and Extra Services Analysis**
+  - What are the most popular service packages and extra services by volume and revenue?
+  - Is there a pattern in add-on purchases linked to specific service packages?
+  - How do pricing tiers affect customer choice and revenue contribution?
 
-- **Revenue and Service Usage Profiling**  
-  - Examine booking frequency and revenue contribution by service package tier and extra service uptake.  
-  - Analyze pricing anomalies, refund patterns, and their effects on overall profitability.  
-  - Assess customer uptake of promotional codes linked to specific service packages.
+- **Operator Performance & Availability**
+  - How does operator availability correlate with completed versus canceled jobs?
+  - What are the trends in operator compensation, penalties, and their relation to performance metrics?
+  - Are there operators consistently underperforming or generating booking issues?
 
-- **Customer Financial Behavior and Segmentation**  
-  - Integrate `quick_bucks` credit ledger data with booking histories to segment customers by spending behavior, credit usage, and retention risk.  
-  - Parse and analyze payment card data for payment method preferences and fraud risk indicators.  
-  - Develop customer segments considering data completeness and uncertainty, applying imputation-aware clustering or classification methods.
+- **Booking Issues and Resolutions**
+  - What are the most common types of booking issues, and how frequently do they occur?
+  - Are booking issues associated with particular operators, clients, service packages, or times of day?
+  - What resolution actions are most effective in mitigating booking issues?
 
-- **Booking Quality and Issue Resolution**  
-  - Correlate booking issues and compensation claims with operator and customer attributes.  
-  - Leverage pre-wash checklist data, including images and signatures, to evaluate quality assurance effectiveness and dispute mitigation.  
-  - Identify operational bottlenecks and propose interventions to reduce booking-related issues.
+- **Customer Behavior & Retention**
+  - What are the booking frequency patterns among different client segments?
+  - How do promocode usage and quick bucks influence repeat bookings and customer loyalty?
+  - Which lead sources are driving the highest quality and repeat customers?
 
-- **Marketing Effectiveness and Communication Analysis**  
-  - Assess promo code usage patterns and push notification campaign effectiveness across customer segments.  
-  - Analyze chat logs and notification responses to measure support responsiveness and its impact on issue resolution and customer satisfaction.  
-  - Identify customer segments most responsive to marketing efforts for targeted campaigns.
+- **Promotions & Discounts Impact**
+  - How effective are promocodes in increasing sales volume and customer retention?
+  - Do discounts on extra services lead to increased uptake of those services?
+  - What is the ROI of promotion campaigns when considering operator compensation and platform costs?
 
-- **Advanced Analytical Modeling and Hypothesis Testing**  
-  - Formulate and test hypotheses linking operator verification, penalties, and compensation to cancellations and booking outcomes.  
-  - Develop predictive models for booking cancellations, operator no-shows, and customer churn incorporating data quality uncertainty.  
-  - Use iterative validation loops with stakeholder feedback to refine models and incorporate bias mitigation strategies.
+- **Communication & Support Analysis**
+  - What are the common themes and frequencies in customer support chats and messages?
+  - Does the volume or nature of communication correlate with booking issues or cancellations?
+  - Can communication data help identify opportunities to proactively reduce issues?
 
-- **Bias Mitigation and Uncertainty Quantification**  
-  - Explicitly quantify bias introduced by data cleaning decisions (e.g., dropping missing IDs, imputing 'Unknown' categories).  
-  - Implement uncertainty quantification methods (e.g., multiple imputations, sensitivity analyses) to support robust segmentation and modeling.  
-  - Transparently document data limitations, cleaning steps, and their impacts in all reporting and stakeholder communications.
+- **Compliance and Verification**
+  - What is the status distribution of operator document verification?
+  - Does verification status impact booking completion rates or customer satisfaction?
+  - Are there compliance gaps that correlate with operational problems?
 
-- **Operational and Data Governance Recommendations**  
-  - Conduct root cause analyses (e.g., data lineage audits) to identify sources of data corruption and missingness.  
-  - Collaborate with data engineering to improve upstream data capture, validation, and ingestion processes.  
-  - Establish automated data quality monitoring frameworks and maintain iterative validation loops to ensure ongoing data integrity and analytical reliability.
+- **Operational Constraints**
+  - How do max jobs per day and cancellation penalty policies affect operator behavior and job completion?
+  - Are there patterns indicating operators hitting limits or frequently penalized?
+  - What adjustments to operational constraints could improve efficiency and satisfaction?
 
-- **Stakeholder Engagement and Reporting**  
-  - Develop interim visualizations and dashboards to communicate data quality status, cleaning impacts, and preliminary insights.  
-  - Incorporate clear documentation of assumptions, biases, and uncertainty in all analytical outputs.  
-  - Prioritize actionable insights with clear business implications to guide operational and strategic decision-making.
+- **Financial Flows**
+  - What are the trends in quick bucks credit/debit activity among clients?
+  - How do operator compensation patterns align with booked services and performance metrics?
+  - Are there anomalies or areas for optimization in financial transactions?
+
+- **Data Quality and Preparation**
+  - Identify and resolve parsing errors and incomplete data in critical tables (orders, clients, operators).
+  - Assess data completeness and consistency across datasets to ensure robust analysis.
+  - Implement data validation steps to maintain integrity throughout the analysis pipeline.
+
+This plan focuses on actionable analyses that build on initial observations and existing insights to drive operational improvements, enhance customer experience, and optimize financial outcomes for QuickWash.

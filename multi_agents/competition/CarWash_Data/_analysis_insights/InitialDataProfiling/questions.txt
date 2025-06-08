@@ -1,21 +1,18 @@
 ## QUESTIONS
 ### Question 1
-What files did you process? Which files were generated? Answer with detailed file path.
+What files and datasets did you profile in this phase? Were there any data quality issues such as missing values, parsing errors, or inconsistent records that need to be addressed before deeper analysis?
 
 ### Question 2
 Which features were involved in this phase? What changes did they undergo? If any feature types were modified, answer which features are modified and how they are modified. If any features were deleted or created, answer which features are deleted or created and provide detailed explanations. (This is a FIXED question for each phase.)
 
 ### Question 3
-Which key features (e.g., `client_id`, `operator_id`, `order_id`, booking details, payment info) were identified as having missing or unreliable values? How were these handled (e.g., dropped, imputed, flagged), and what are the estimated impacts of these decisions on data representativeness and bias?
+What patterns or anomalies emerged in terms of missing data, outliers, or unusual distributions across core dimensions such as operator performance, booking issues, and customer behavior?
 
 ### Question 4
-What patterns or insights emerged regarding operator compliance and performance metrics, including verification status, job completion rates, cancellations, and penalties? How might these insights guide the selection of features and hypotheses for iterative modeling?
+Based on initial profiling, which operational or customer behavior metrics appear most promising for further detailed exploration (e.g., popular service packages, booking cancellation trends, promocode usage)?
 
 ### Question 5
-What customer segmentation approaches were explored using financial behavior and booking data? What challenges related to data uncertainty or missingness were encountered, and how could these be addressed in iterative analyses?
+Are there preliminary indications of relationships or correlations (e.g., between operator availability and booking success, promotion usage and repeat bookings) that should be validated or modeled iteratively?
 
 ### Question 6
-Which booking quality issues, compensation claims, and marketing effectiveness insights were identified? How can these findings prioritize operational interventions or feature engineering in the upcoming iterative analysis?
-
-### Question 7
-What bias assessments, sensitivity analyses, or uncertainty quantification methods were implemented or planned? How will these be integrated into the iterative modeling process to ensure robust and trustworthy insights?
+What data preparation or enhancement steps (e.g., handling missing values, outlier treatment, feature encoding) are recommended before starting the iterative analysis to ensure robust and scalable modeling?

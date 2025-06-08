@@ -3,16 +3,22 @@
 What files did you process? Which files were generated? Answer with detailed file path.
 
 ### Question 2
-Which features were involved in this phase? What changes did they undergo? If any feature types were modified, answer which features are modified and how they are modified. If any features were deleted or created, answer which features are deleted or created and provide detailed explanations.
+Which features were involved in this phase? What changes did they undergo? If any feature types were modified, answer which features are modified and how they are modified. If any features were deleted or created, answer which features are deleted or created and provide detailed explanations. (This is a FIXED question for each phase.)
 
 ### Question 3
-What are the consolidated key insights and actionable recommendations derived from the entire analysis workflow, including business operations, customer behavior, operator performance, and marketing effectiveness?
+What are the key insights and strategic recommendations identified across the main domains (service packages, operator performance, booking issues, customer behavior, promotions, and data quality)?
 
 ### Question 4
-How have data quality challenges been addressed throughout the project, and what residual risks or limitations remain that could impact the interpretation or application of the findings?
+How were data quality issues (e.g., missing values, temporal anomalies, parsing errors) addressed in the data preparation, and what residual limitations or biases remain?
 
 ### Question 5
-Which customer segments and behavioral patterns were identified as most significant, and how can these insights be leveraged for targeted marketing, retention, and service optimization?
+What patterns and trends were identified in service package sales, extra services uptake, and their temporal dynamics? How do these insights inform pricing and bundling strategies?
 
 ### Question 6
-What limitations, risks, and future recommendations did the analysis reveal, and what are the suggested next steps for sustaining or building upon this project’s outcomes, considering there is no further competition phase?
+What were the main findings regarding operator availability, performance, and impact on booking outcomes? What operational improvements or incentive adjustments are suggested?
+
+### Question 7
+How did booking issues manifest across different dimensions (operators, clients, packages), and what resolution patterns or communication factors were observed? What recommendations arise to reduce such issues?
+
+### Question 8
+What are the overarching data integration insights and bias mitigation strategies proposed to ensure robust, ongoing analysis and decision-making?

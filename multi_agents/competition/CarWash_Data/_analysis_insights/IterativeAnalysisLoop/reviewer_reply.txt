@@ -2,10 +2,10 @@
 {
     "final_answer": {
         "final_suggestion": {
-            "execution_details": "1. Provide a clear and detailed description of the agent's role and responsibilities to improve transparency and assessment. 2. Include a summary or highlights of the key findings or analyses performed within the execution output. 3. Enhance the output with more informative logs or intermediate results to demonstrate depth of analysis and iterative improvements."
+            "execution_details": "1. Add a clear and detailed description of the agent's role and responsibilities in the configuration. 2. Include qualitative summaries or evaluations of the output to better assess its content and value. 3. Incorporate validation checks or quality metrics to demonstrate meaningful contributions in the output."
         },
         "final_score": {
-            "execution_details": 3
+            "execution_details": 4
         }
     }
 }
@@ -16,10 +16,10 @@
 {
     "final_answer": {
         "final_suggestion": {
-            "Planner": ""
+            "planner": "1. Provide a concise summary or key milestones in the plan to enhance clarity and focus. 2. Include estimated timelines or resource requirements to aid in project management and coordination. 3. Add explicit links between planned analyses and previously identified data issues or hypotheses to show continuity and data-driven prioritization."
         },
         "final_score": {
-            "Planner": 5
+            "planner": 4
         }
     }
 }
@@ -30,10 +30,10 @@
 {
     "final_answer": {
         "final_suggestion": {
-            "Critic": "1. Enhance the critique by including specific examples or references from the plan to support the points raised. 2. Suggest prioritization or phased incorporation of improvements to help guide the planning agent on actionable next steps. 3. Consider proposing metrics or checkpoints to quantitatively assess the effectiveness of the recommended enhancements."
+            "critic": "1. Provide a more structured critique with clear sections highlighting strengths and weaknesses for easier comprehension. 2. Suggest specific actionable recommendations or examples on how to improve prioritization and bias mitigation. 3. Include evaluation of how well the critique aligns with the overall project goals and timeline to add context."
         },
         "final_score": {
-            "Critic": 4
+            "critic": 4
         }
     }
 }

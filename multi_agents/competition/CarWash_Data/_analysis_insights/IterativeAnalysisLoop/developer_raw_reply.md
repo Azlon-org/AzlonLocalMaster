@@ -1,110 +1,87 @@
 ```python
 import os
 import pandas as pd
-import numpy as np
+from datetime import datetime
 
-def clean_and_validate_data(data_directory_path):
-    # Helper function to load a CSV with error handling
-    def load_csv_safe(filename):
-        filepath = os.path.join(data_directory_path, filename)
-        try:
-            df = pd.read_csv(filepath)
-            print(f"Loaded '{filename}' successfully with shape {df.shape}.")
-            return df
-        except FileNotFoundError:
-            print(f"Error: File '{filename}' not found in directory '{data_directory_path}'.")
-        except pd.errors.ParserError:
-            print(f"Error: Parsing error encountered while reading '{filename}'.")
-        except Exception as e:
-            print(f"Error: Unexpected error reading '{filename}': {e}")
-        return None
-
-    # Load all relevant data files (assuming typical filenames)
-    orders = load_csv_safe('orders.csv')
-    operators = load_csv_safe('operators.csv')
-    customers = load_csv_safe('customers.csv')
-    services = load_csv_safe('services.csv')
-    extras = load_csv_safe('extras.csv')
-
-    # Store loaded dataframes in a dict for easy iteration and checks
-    data_frames = {
-        'orders': orders,
-        'operators': operators,
-        'customers': customers,
-        'services': services,
-        'extras': extras
+def analyze_and_flag_future_dates(data_directory_path):
+    # Filenames to check for future-dated timestamps
+    # Assuming bookings and transactions tables have timestamps to check
+    filenames = {
+        'bookings': 'bookings.csv',
+        'transactions': 'transactions.csv'
     }
-
-    # Basic data cleaning and validation
-    for name, df in data_frames.items():
-        if df is None:
-            print(f"Skipping validation for '{name}' as it failed to load.")
+    
+    # Columns suspected to hold timestamps - these might vary by dataset; 
+    # we will try common timestamp columns, else print a warning.
+    timestamp_columns_candidates = {
+        'bookings': ['booking_datetime', 'booking_date', 'created_at', 'timestamp'],
+        'transactions': ['transaction_datetime', 'transaction_date', 'created_at', 'timestamp']
+    }
+    
+    now = pd.Timestamp.now()
+    
+    for table_name, filename in filenames.items():
+        file_path = os.path.join(data_directory_path, filename)
+        print(f"\nProcessing table '{table_name}' from file: {filename}")
+        try:
+            df = pd.read_csv(file_path)
+        except FileNotFoundError:
+            print(f"  ERROR: File not found: {file_path}")
             continue
-
-        print(f"\n--- Data Validation for '{name}' ---")
-        # Check for duplicates
-        dup_count = df.duplicated().sum()
-        print(f"Duplicate rows: {dup_count}")
-        if dup_count > 0:
-            print(f"Removing duplicates from '{name}'.")
-            df.drop_duplicates(inplace=True)
-
-        # Check for missing values summary
-        missing = df.isna().sum()
-        missing_total = missing.sum()
-        print(f"Total missing values: {missing_total}")
-        if missing_total > 0:
-            print("Missing values per column:")
-            print(missing[missing > 0])
-
-        # Check for columns with zero variance (constant columns)
-        nunique = df.nunique(dropna=False)
-        const_cols = nunique[nunique <= 1].index.tolist()
-        if const_cols:
-            print(f"Columns with zero or one unique value (constant columns): {const_cols}")
-
-        # Example specific checks per file
-        if name == 'orders':
-            # Check for expected columns
-            expected_cols = ['order_id', 'customer_id', 'operator_id', 'service_id', 'order_date', 'price', 'status']
-            missing_cols = [c for c in expected_cols if c not in df.columns]
-            if missing_cols:
-                print(f"Warning: Missing expected columns in orders: {missing_cols}")
-
-            # Validate date columns
-            if 'order_date' in df.columns:
-                try:
-                    df['order_date'] = pd.to_datetime(df['order_date'], errors='coerce')
-                    null_dates = df['order_date'].isna().sum()
-                    if null_dates > 0:
-                        print(f"Warning: {null_dates} invalid/missing dates in 'order_date' column.")
-                except Exception as e:
-                    print(f"Error parsing 'order_date': {e}")
-
-            # Validate price - should be non-negative
-            if 'price' in df.columns:
-                negative_prices = (df['price'] < 0).sum()
-                if negative_prices > 0:
-                    print(f"Warning: {negative_prices} orders have negative price values.")
-
-        if name == 'operators':
-            # Check for unique operator_id
-            if 'operator_id' in df.columns:
-                dup_ops = df['operator_id'].duplicated().sum()
-                if dup_ops > 0:
-                    print(f"Warning: {dup_ops} duplicated operator_id values.")
-
-        if name == 'customers':
-            if 'customer_id' in df.columns:
-                dup_cust = df['customer_id'].duplicated().sum()
-                if dup_cust > 0:
-                    print(f"Warning: {dup_cust} duplicated customer_id values.")
-
-        # Replace original df with cleaned df in dict
-        data_frames[name] = df
-
-    print("\nData cleaning and validation completed.")
-
-    # Return cleaned dataframes dictionary for downstream use if needed
-    return data_frames
+        except Exception as e:
+            print(f"  ERROR: Failed to load {filename}: {e}")
+            continue
+        
+        # Identify timestamp columns present in the dataframe
+        available_ts_cols = [col for col in timestamp_columns_candidates[table_name] if col in df.columns]
+        if not available_ts_cols:
+            print("  WARNING: No recognized timestamp columns found in this dataset.")
+            continue
+        
+        for ts_col in available_ts_cols:
+            # Attempt to parse column to datetime, coerce errors to NaT
+            df[ts_col + '_parsed'] = pd.to_datetime(df[ts_col], errors='coerce', utc=True)
+            
+            # Count how many could not be parsed
+            unparsable_count = df[ts_col + '_parsed'].isna().sum()
+            total_count = len(df)
+            
+            print(f"  Timestamp column '{ts_col}':")
+            print(f"    Total records: {total_count}")
+            print(f"    Unparsable date entries: {unparsable_count} ({unparsable_count / total_count * 100:.2f}%)")
+            
+            # Identify future dates relative to now (considering UTC)
+            future_mask = df[ts_col + '_parsed'] > now
+            future_count = future_mask.sum()
+            if future_count > 0:
+                print(f"    Future-dated timestamps found: {future_count} ({future_count / total_count * 100:.2f}%)")
+                
+                # Show earliest and latest future timestamps for context
+                future_dates = df.loc[future_mask, ts_col + '_parsed']
+                earliest_future = future_dates.min()
+                latest_future = future_dates.max()
+                print(f"      Earliest future date: {earliest_future}")
+                print(f"      Latest future date: {latest_future}")
+                
+                # Flag these rows by adding a boolean column
+                flag_column = ts_col + '_is_future'
+                df[flag_column] = future_mask
+                
+                # Optionally: output summary counts of flagged rows by another grouping column if exists
+                # For example, grouping by a user_id or booking_id if present
+                grouping_cols = ['user_id', 'booking_id', 'transaction_id']
+                grouping_col = next((c for c in grouping_cols if c in df.columns), None)
+                if grouping_col:
+                    flagged_counts = df.loc[future_mask].groupby(grouping_col).size().sort_values(ascending=False).head(5)
+                    print(f"      Top 5 {grouping_col}s with future timestamps and their counts:")
+                    for idx, cnt in flagged_counts.items():
+                        print(f"        {grouping_col}={idx}: {cnt}")
+                
+                # Save flagged data or summary could be implemented here if needed
+                
+            else:
+                print(f"    No future-dated timestamps found in this column.")
+            
+            # Drop the parsed column to clean up df (unless needed later)
+            df.drop(columns=[ts_col + '_parsed'], inplace=True)
 ```

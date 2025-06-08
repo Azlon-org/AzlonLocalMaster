@@ -251,21 +251,92 @@ class Developer(Agent):
         except Exception as e:
             logger.error(f"Error reading insights_log.md: {e}")
 
-        prompt = (
-            f"You are a Python coding assistant. Your task is to generate Python code for the following data analysis task.\n"
-            f"Ensure your code is self-contained, uses common libraries like pandas and numpy, and is ready to run.\n"
-            f"The code will be executed within a function wrapper, so avoid top-level `if __name__ == '__main__':` blocks in your direct output.\n"
-            f"Prioritize generating actionable business insights, such as identifying trends, patterns, correlations, or anomalies in the data. While basic data cleaning might be necessary if data quality issues impede analysis, the primary goal is to uncover valuable information that can inform business decisions. If the 'Analysis Plan Task to Implement' is specifically about data cleaning or preparation, focus on that. Otherwise, aim for insightful analysis.\n"
-        f"Produce outputs that clearly communicate these insights. This includes printing statistical summaries and key observations to standard output, and generating informative visualizations (e.g., bar charts, line plots, scatter plots, heatmaps as appropriate for the data and task). Save all generated plots to files in the `data_directory_path` (which will be provided as a variable) and print a confirmation message to standard output stating the filename of the saved plot.\n\n"
-            f"**Business Context:**\n{business_context}\n\n"
-            f"**Data Summary/Available Data:**\n{data_summary}\n\n"
-            f"**Data Directory Path:**\n{state.data_dir}\n\n"
-            f"**Analysis Plan Task to Implement:**\n{task_to_perform}\n\n"
-            f"When loading data files (e.g., CSVs), assume a variable `data_directory_path` is predefined in the execution scope and contains the 'Data Directory Path' shown above. "
-            f"Construct full paths to data files using this variable and `os.path.join()`. For example, to load `orders.csv`, use `pd.read_csv(os.path.join(data_directory_path, 'orders.csv'))`.\n"
-            f"Please include basic error handling, such as try-except blocks around file I/O operations and critical data processing steps.\n"
-            f"Please provide ONLY the Python code block for this task, without any surrounding explanations unless they are comments within the code."
-        )
+        # Collect previous analyses and developer outputs
+        previous_outputs = {}
+        # Check if we are in IterativeAnalysisLoop or FinalInsightCompilation phase
+        is_final_phase = state.phase == "FinalInsightCompilation"
+        
+        # Collect previous developer outputs from memory
+        for mem_dict in state.memory:
+            if isinstance(mem_dict, dict):
+                for agent_role, agent_output in mem_dict.items():
+                    if agent_role in ["developer", "DataAnalyst", "DataProfiler"] and isinstance(agent_output, dict):
+                        # Keep track of all developer outputs
+                        if agent_role not in previous_outputs:
+                            previous_outputs[agent_role] = []
+                        previous_outputs[agent_role].append(agent_output)
+        
+        # Extract previous analyses from insights log
+        previous_analyses_summary = ""
+        try:
+            output_subdir = state.config.get('workflow_options', {}).get('output_subdirectory', '_analysis_insights')
+            insights_filename = state.config.get('logging', {}).get('insights_filename', 'insights_log.md')
+            insights_log_path = os.path.join(state.data_dir, output_subdir, insights_filename)
+            if os.path.exists(insights_log_path):
+                with open(insights_log_path, 'r', encoding='utf-8') as f_insights:
+                    insights_log_content = f_insights.read()
+                    previous_analyses_summary = f"### Previous Analyses Summary\n{insights_log_content}\n"
+        except Exception as e:
+            logger.error(f"Error collecting previous analyses: {e}")
+            previous_analyses_summary = "No previous analyses could be collected."
+
+        # Based on the phase, create a different prompt
+        if is_final_phase:
+            prompt = (
+                f"You are a Python coding assistant focusing on SYNTHESIZING previous analyses into final business insights.\n\n"
+                f"IMPORTANT: This is the FinalInsightCompilation phase. DO NOT perform new raw calculations or analyses from scratch.\n"
+                f"Instead, your task is to SYNTHESIZE and INTEGRATE insights from previous phases into cohesive, actionable business recommendations.\n\n"
+                f"Your code should:\n"
+                f"1. Reference existing analyses and calculations from previous phases\n"
+                f"2. Identify the most important patterns and insights across all analyses\n"
+                f"3. Quantify business impact where possible using existing calculated values\n"
+                f"4. Convert technical findings into clear business recommendations\n\n"
+                f"CRITICAL: DO NOT GENERATE ANY VISUALIZATIONS OR PLOTS. Other agents cannot see these.\n"
+                f"Instead, focus EXCLUSIVELY on calculating and PRINTING concrete numerical statistics and insights as text.\n"
+                f"Print all key findings with clear labels and explanations in the console output.\n\n"
+                f"**Business Context:**\n{business_context}\n\n"
+                f"**Data Summary/Available Data:**\n{data_summary}\n\n"
+                f"**Data Directory Path:**\n{state.data_dir}\n\n"
+                f"**Analysis Plan Task to Implement:**\n{task_to_perform}\n\n"
+                f"**Previous Analyses to Synthesize:**\n{previous_analyses_summary}\n\n"
+                f"When loading data files (e.g., CSVs), assume a variable `data_directory_path` is predefined in the execution scope.\n"
+                f"Construct full paths using `os.path.join(data_directory_path, 'filename')`.\n"
+                f"Please provide ONLY the Python code block for this task, with comments explaining your synthesis approach."
+            )
+        else:
+            # For IterativeAnalysisLoop, check if we have previous iterations
+            has_previous_iterations = any(previous_outputs)
+            iteration_guidance = ""
+            if has_previous_iterations:
+                iteration_guidance = (
+                    f"NOTE: This is part of an iterative analysis. Previous analyses have been performed.\n"
+                    f"Build upon previous work rather than repeating analyses. Focus on discovering NEW insights\n"
+                    f"or refining existing ones based on the current analysis plan.\n\n"
+                )
+
+            prompt = (
+                f"You are a Python coding assistant. Your task is to generate Python code for the following data analysis task.\n"
+                f"Ensure your code is self-contained, uses common libraries like pandas and numpy, and is ready to run.\n"
+                f"The code will be executed within a function wrapper, so avoid top-level `if __name__ == '__main__':` blocks.\n"
+                f"{iteration_guidance}"
+                f"CRITICAL INSTRUCTION: DO NOT GENERATE VISUALIZATIONS OR PLOTS. Other agents cannot interpret them.\n"
+                f"Instead, focus EXCLUSIVELY on calculating and PRINTING concrete numerical statistics, percentages, counts and insights as text.\n"
+                f"Print all key findings with clear labels and formatting in the console output.\n\n"
+                f"Prioritize generating actionable business insights, such as:\n"
+                f"- Summary statistics (mean, median, percentiles) for key metrics\n"
+                f"- Distribution analyses with concrete percentages\n"
+                f"- Top/bottom N items with exact counts and percentages\n"
+                f"- Growth rates and changes over time expressed numerically\n"
+                f"- Correlations between variables with coefficient values\n\n"
+                f"**Business Context:**\n{business_context}\n\n"
+                f"**Data Summary/Available Data:**\n{data_summary}\n\n"
+                f"**Data Directory Path:**\n{state.data_dir}\n\n"
+                f"**Analysis Plan Task to Implement:**\n{task_to_perform}\n\n"
+                f"When loading data files (e.g., CSVs), assume a variable `data_directory_path` is predefined in the execution scope.\n"
+                f"Construct full paths using `os.path.join(data_directory_path, 'filename')`.\n"
+                f"Please include basic error handling, such as try-except blocks around critical operations.\n"
+                f"Please provide ONLY the Python code block for this task, without surrounding explanations unless they are comments."
+            )
 
         result: Dict[str, Any] = {
             "status": "pending",

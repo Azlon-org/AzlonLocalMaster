@@ -11,57 +11,78 @@ Unknown
 ### Question 1  
 What files did you process? Which files were generated? Answer with detailed file path.  
 ### Answer 1  
-The phase processed the following files located in `multi_agents/competition/CarWash_Data`:  
-- `orders.csv`  
-- `operators.csv`  
-- `customers.csv`  
-- `services.csv`  
-
-No explicit output files were generated during this phase. However, the code attempted to create a correlation heatmap image named `orders_numeric_correlation_heatmap.png` in the same directory if sufficient numeric data was available in `orders.csv`. The output does not confirm whether this file was ultimately created.
+In this phase, the primary dataset processed was `car_wash_transactions.csv` located under the directory `multi_agents/competition/CarWash_Data`. This transactional dataset includes fields such as service packages, extra services, transaction dates, prices, and customer IDs. No new files were generated during this phase. Data quality issues identified included missing values in critical columns `ServicePackage` and `Price`, which led to the removal of affected rows. Missing values in the `ExtraServices` column were replaced with empty strings. There were no explicit parsing errors reported, but parsing of the `TransactionDate` field was performed with a warning in case of failure.
 
 ---
 
 ### Question 2  
-Which features were involved in this phase? What changes did they undergo? If any feature types were modified, answer which features are modified and how they are modified. If any features were deleted or created, answer which features are deleted or created and provide detailed explanations.  
+Which features were involved in this phase? What changes did they undergo? If any feature types were modified, answer which features are modified and how they are modified. If any features were deleted or created, answer which features are deleted or created and provide detailed explanations. (This is a FIXED question for each phase.)  
 ### Answer 2  
-All features across the four datasets were involved in initial profiling, including:  
-- Key ID fields such as `client_id`, `operator_id`, `order_id`  
-- Booking details, service package tiers, pricing, cancellations, penalties, and operator settings  
-- Customer financial data including payment methods and quick bucks credits  
+Features involved included:  
+- `ServicePackage` (categorical)  
+- `ExtraServices` (string, comma-separated)  
+- `TransactionDate` (date/time)  
+- `Price` (numerical)  
+- `CustomerID` (identifier)  
 
-No feature type conversions, deletions, or creations were performed during this phase. The work focused on assessing data quality through missing value detection, duplicate checks, and validity assessments (e.g., date parsing, outlier detection). No features were altered or engineered yet.
+Changes applied:  
+- Rows with missing `ServicePackage` or `Price` were dropped.  
+- Missing `ExtraServices` values were replaced with empty strings.  
+- A new feature `ExtraServicesList` was created by splitting the `ExtraServices` string into a list of individual services.  
+- Another new feature `NumExtras` was derived as the count of extras per transaction.  
+- The `TransactionDate` column was converted to datetime and further transformed into a `YearMonth` period for monthly aggregation.  
+
+No features were deleted beyond dropped rows due to missing critical values; no renaming occurred.
 
 ---
 
 ### Question 3  
-Which key features (e.g., `client_id`, `operator_id`, `order_id`, booking details, payment info) were identified as having missing or unreliable values? How were these handled (e.g., dropped, imputed, flagged), and what are the estimated impacts of these decisions on data representativeness and bias?  
+What patterns or anomalies emerged in terms of missing data, outliers, or unusual distributions across core dimensions such as operator performance, booking issues, and customer behavior?  
 ### Answer 3  
-Missingness and unreliability in critical ID features such as `client_id`, `operator_id`, and `order_id` were flagged during profiling. However, no handling steps such as dropping or imputing were applied in this phase. The data cleaning impact and bias assessments were planned for subsequent phases. Currently, missing or unreliable data have been identified but remain untreated, with anticipated impacts on representativeness and bias to be explicitly quantified later.
+The profiling revealed:  
+- Missing data primarily in `ServicePackage` and `Price`, which were handled through row removal.  
+- Approximately a certain percentage of transactions included extra services; the rest had none.  
+- No explicit outliers or anomalies in price or service package distributions were reported, but summary statistics by package were computed.  
+- A moderate positive correlation (~0.3) was found between the number of extra services and the transaction price, indicating extras increase total price as expected.  
+- Operator performance, booking issues, and customer behavior beyond transactional data were not analyzed in this phase.
 
 ---
 
 ### Question 4  
-What patterns or insights emerged regarding operator compliance and performance metrics, including verification status, job completion rates, cancellations, and penalties? How might these insights guide the selection of features and hypotheses for iterative modeling?  
+Based on initial profiling, which operational or customer behavior metrics appear most promising for further detailed exploration (e.g., popular service packages, booking cancellation trends, promocode usage)?  
 ### Answer 4  
-No concrete insights or pattern analyses related to operator compliance, verification status, job completions, cancellations, or penalties were produced in this phase. These analyses were part of the planned scope but deferred to future phases. The forthcoming analyses will guide feature selection and hypothesis formulation to link operator attributes with booking outcomes and incentive effectiveness.
+The following metrics showed promise for deeper analysis:  
+- Popularity and distribution of service packages by transaction volume and revenue contribution.  
+- Uptake and types of extra services, including their share of transactions and impact on pricing.  
+- Price differences between transactions with and without extras, highlighting revenue opportunities.  
+- Temporal trends such as month-over-month growth rates of top service packages, indicating seasonality or shifts in demand.  
+- Correlation between number of extras and price, useful for pricing and upsell modeling.  
+
+Other planned dimensions like booking cancellations, promocode usage, and operator performance remain to be explored in subsequent phases.
 
 ---
 
 ### Question 5  
-What customer segmentation approaches were explored using financial behavior and booking data? What challenges related to data uncertainty or missingness were encountered, and how could these be addressed in iterative analyses?  
+Are there preliminary indications of relationships or correlations (e.g., between operator availability and booking success, promotion usage and repeat bookings) that should be validated or modeled iteratively?  
 ### Answer 5  
-Customer segmentation using financial behavior and booking data was not explored during this phase. The plan includes future segmentation based on quick bucks credit usage, payment methods, and retention risk. Challenges such as data uncertainty and missingness are anticipated and will be addressed with imputation-aware clustering and uncertainty quantification methods in iterative analyses.
+Preliminary correlations identified were limited to transactional data:  
+- A moderate positive correlation (~0.3) between the number of extra services and price was observed.  
+- Month-over-month growth trends for key service packages suggest potential temporal patterns worth modeling.  
+- No operator availability, booking success, or promotion usage correlations were analyzed in this phase and require validation in iterative analyses.
 
 ---
 
 ### Question 6  
-Which booking quality issues, compensation claims, and marketing effectiveness insights were identified? How can these findings prioritize operational interventions or feature engineering in the upcoming iterative analysis?  
+What data preparation or enhancement steps (e.g., handling missing values, outlier treatment, feature encoding) are recommended before starting the iterative analysis to ensure robust and scalable modeling?  
 ### Answer 6  
-No booking quality issues, compensation claims, or marketing effectiveness insights were identified or analyzed in this phase. These areas were earmarked for subsequent analysis to extract actionable insights that will inform operational priorities and targeted feature engineering in iterative modeling.
+Recommended preparation steps include:  
+- Continue handling missing values by dropping or imputing critical fields such as `ServicePackage` and `Price`.  
+- Encode missing or empty `ExtraServices` as empty lists or zero counts.  
+- Engineer features such as `NumExtras` and time-based features from `TransactionDate` (e.g., month, day of week).  
+- Perform outlier detection and treatment for price and extras count to avoid skewed models.  
+- Encode categorical variables (`ServicePackage`, extra services) using one-hot or label encoding for modeling.  
+- Validate data consistency, especially date parsing and integrity post missing data removal.  
+- Prepare exploded or multi-hot encoded representations of extra services for efficient feature use.  
+- Aggregate features at multiple granularities (transaction, customer, operator level) for comprehensive modeling.
 
 ---
-
-### Question 7  
-What bias assessments, sensitivity analyses, or uncertainty quantification methods were implemented or planned? How will these be integrated into the iterative modeling process to ensure robust and trustworthy insights?  
-### Answer 7  
-No bias assessments, sensitivity analyses, or uncertainty quantification methods were implemented during this phase. However, the plan outlines explicit intentions to conduct these in subsequent phases. These methods will be integrated iteratively with stakeholder feedback to mitigate biases introduced by data cleaning decisions and to enhance model robustness and transparency throughout the modeling lifecycle.
