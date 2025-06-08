@@ -1,0 +1,24 @@
+## QUESTIONS
+### Question 1
+What files did you process? Which files were generated? Answer with detailed file path.
+
+### Question 2
+Which features were involved in this phase? What changes did they undergo? If any feature types were modified, answer which features are modified and how they are modified. If any features were deleted or created, answer which features are deleted or created and provide detailed explanations. (This is a FIXED question for each phase.)
+
+### Question 3
+What are the critical business and operational insights derived from the compiled report, and how do they align with QuickWash’s strategic objectives?
+
+### Question 4
+How do the different analytical components (operator performance, customer segmentation, booking quality, marketing effectiveness) interrelate to paint a cohesive picture of QuickWash’s operations?
+
+### Question 5
+Which data quality issues and limitations were identified throughout the analysis, and how might these have influenced the reliability or scope of the insights?
+
+### Question 6
+What prioritized recommendations are proposed based on the insights, and what measurable KPIs or evaluation criteria are suggested to track their implementation and impact?
+
+### Question 7
+What methodological assumptions and uncertainty factors were accounted for in the analysis, and how should these be considered when interpreting the report’s conclusions?
+
+### Question 8
+Given the comprehensive final report and no subsequent phases planned, what documentation, knowledge transfer, or presentation materials are needed to ensure effective stakeholder communication and sustainability of insights?
