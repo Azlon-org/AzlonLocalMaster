@@ -1,68 +1,42 @@
-# QuickWash Data Analysis Strategic Plan
+- **Data Quality and Integrity Validation**  
+  - Complete root cause analysis for corrupted or missing critical datasets (`clients.csv`, `orders.csv`, `operators.csv`) by engaging with data engineering or source system teams.  
+  - Quantify and document bias introduced by dropping rows with missing critical IDs and imputing categorical variables as `'Unknown'`. Explore alternative imputation or data augmentation strategies.  
+  - Implement iterative validation loops to monitor data quality improvements and impact on downstream analyses.  
 
-1. **Data Quality and Preparation**
-   - Identify and resolve data ingestion issues with critical datasets (`orders.csv`, `clients.csv`, `operators.csv`).
-   - Clean and standardize categorical variables (promo codes, payment methods, operator codes).
-   - Impute or handle missing values thoughtfully, especially in linkage keys and verification fields.
-   - Remove or reconcile duplicate records to ensure data integrity.
-   - Investigate numeric outliers in revenue, booking counts, and compensation figures to determine validity.
-   - Validate linkage keys across datasets to enable accurate joins and integrated analysis.
-   - Document data limitations and potential biases arising from incomplete or inconsistent data (e.g., operator verification gaps).
+- **Exploratory Data Analysis (EDA)**  
+  - Conduct detailed EDA on cleaned datasets focusing on:  
+    - Booking frequency trends over time, including seasonality and growth patterns.  
+    - Revenue breakdown by service package and extra services uptake, identifying top contributors and pricing anomalies (e.g., refunds or zero/negative prices).  
+    - Operator availability, job completion rates, cancellation patterns, and compensation distribution.  
+    - Client payment behavior, including Quick Bucks credit usage and card payment methods.  
+  - Visualize missing data patterns and outlier distributions to guide further cleaning or modeling decisions.
 
-2. **Service Package and Pricing Analysis**
-   - Analyze popularity and revenue contribution of each service package and extra service.
-   - Evaluate pricing tiers relative to service duration and customer uptake patterns.
-   - Assess promo code usage rates and their impact on sales volume and revenue.
-   - Test hypothesis: Promo codes significantly increase uptake of specific packages or extras.
-   - Explore cross-selling opportunities by analyzing combinations of packages and extra services purchased.
+- **Operator Performance and Workforce Utilization Analysis**  
+  - Analyze operator utilization metrics relative to availability and compensation schemes.  
+  - Evaluate the impact of operator verification status, penalties, and cancellations on performance outcomes and customer satisfaction.  
+  - Assess fairness and effectiveness of compensation adjustments and bonuses.
 
-3. **Operator Performance and Efficiency**
-   - Assess operator availability vs. actual bookings and completed jobs to identify under- or over-utilization.
-   - Analyze operator compensation, penalties, and cancellations to evaluate fairness and efficiency.
-   - Correlate operator document verification status with service quality indicators and complaint rates.
-   - Test hypothesis: Verified operators have lower cancellation rates and higher customer satisfaction.
-   - Study the impact of operator scheduling and payout settings on job completion and revenue.
+- **Customer Segmentation and Behavior Profiling**  
+  - Develop customer segments based on transactional behavior, service usage, and booking frequency.  
+  - Incorporate data completeness and imputation uncertainty into segmentation robustness checks.  
+  - Identify high-value and at-risk customer groups to inform targeted marketing or retention strategies.
 
-4. **Customer Payment Behavior and Segmentation**
-   - Investigate usage patterns of client wallets (`QuickBucks`) versus card payments.
-   - Analyze promo code adoption across customer segments.
-   - Segment customers by booking frequency, payment method preference, and promo code usage.
-   - Test hypothesis: Frequent customers rely more on wallet credits and promo codes than infrequent users.
+- **Booking Quality and Issue Resolution**  
+  - Leverage pre-wash checklist data (including images) to assess service quality compliance and identify common quality issues.  
+  - Analyze booking issues and compensation logs to detect operational bottlenecks and areas for process improvement.  
+  - Evaluate customer-operator communication effectiveness via chat and notification logs, focusing on responsiveness and resolution rates.
 
-5. **Booking Operations and Issue Management**
-   - Explore common booking issues, their frequency, and resolution times.
-   - Analyze booking notes qualitatively to identify recurring themes affecting service quality.
-   - Examine pre-wash checklist adherence and its relationship with booking issues and customer complaints.
-   - Identify operational bottlenecks and propose process improvements based on issue patterns.
+- **Marketing and Promotion Effectiveness**  
+  - Measure the uptake and revenue impact of promo codes and extra services linked to promotions.  
+  - Analyze push notification campaign reach, engagement, and conversion by customer segment.  
+  - Test hypotheses on promotional effectiveness and refine marketing targeting accordingly.
 
-6. **Communication and Notification Effectiveness**
-   - Analyze volume and content of chats between clients, operators, and admins to assess communication quality.
-   - Evaluate the effectiveness of push and system notifications on customer engagement and booking rates.
-   - Study operators’ notification preferences and responsiveness.
-   - Test hypothesis: Enhanced communication correlates with higher booking completion and customer satisfaction.
+- **Advanced Analytics and Predictive Modeling**  
+  - Build predictive models for booking cancellations, no-shows, and customer churn using enriched and cleaned datasets.  
+  - Apply clustering or classification techniques to refine customer and operator segments.  
+  - Incorporate uncertainty quantification and bias adjustment in modeling to enhance robustness.
 
-7. **KPI and Dashboard Development**
-   - Develop data quality KPIs: missing value rates, duplicate counts, outlier summaries.
-   - Create dashboards to monitor:
-     - Service package performance and revenue trends.
-     - Operator efficiency metrics and compensation reports.
-     - Customer segments and payment behaviors.
-     - Booking issue frequencies and resolution statuses.
-     - Communication volumes and response times.
-   - Include filters for time periods, operator segments, customer demographics, and service types.
-
-8. **Risk Assessment and Bias Mitigation**
-   - Explicitly assess risks related to data incompleteness, especially missing operator verifications and incomplete bookings.
-   - Evaluate potential biases introduced by data gaps in performance and customer behavior analyses.
-   - Incorporate sensitivity analyses to measure robustness of findings.
-   - Document limitations clearly for informed decision-making.
-
-9. **Quick-Win Analyses**
-   - Identify and perform early analyses on clean, reliable subsets of data to generate initial business insights.
-   - Present preliminary findings to stakeholders to build momentum and guide iterative analysis.
-   - Use quick wins to refine hypotheses and prioritize deeper, more complex analyses.
-
-10. **Iterative Review and Refinement**
-    - Continuously revisit data quality and completeness as deeper analyses proceed.
-    - Update hypotheses and analysis priorities based on emerging insights.
-    - Engage stakeholders regularly to align analysis focus with business objectives and operational needs.
+- **Documentation and Communication**  
+  - Maintain clear documentation of data cleaning decisions, biases, and assumptions for transparency.  
+  - Prepare interim reports with visualizations and preliminary findings to engage stakeholders and guide iterative analysis.  
+  - Establish data lineage and quality monitoring frameworks for ongoing operational analytics support.

@@ -18,80 +18,110 @@ def generated_code_function():
     data_directory_path = r'multi_agents/competition/CarWash_Data'
     import os
     import pandas as pd
+    import numpy as np
     
-    def analyze_and_fix_data_ingestion(data_directory_path):
-        # Helper function to load a CSV with error handling
-        def load_csv(filename):
-            filepath = os.path.join(data_directory_path, filename)
+    def analyze_data_quality_and_integrity(data_directory_path):
+        files_to_check = ['orders.csv', 'operators.csv', 'customers.csv', 'services.csv', 'transactions.csv']
+        dataframes = {}
+    
+        # Load datasets with error handling
+        for file in files_to_check:
+            file_path = os.path.join(data_directory_path, file)
             try:
-                df = pd.read_csv(filepath)
-                print(f"Loaded '{filename}' successfully. Shape: {df.shape}")
-                return df
+                df = pd.read_csv(file_path)
+                dataframes[file] = df
+                print(f"Loaded '{file}' successfully: {df.shape[0]} rows, {df.shape[1]} columns.")
             except FileNotFoundError:
-                print(f"Error: File '{filename}' not found in directory '{data_directory_path}'.")
-            except pd.errors.ParserError as e:
-                print(f"Parsing error while reading '{filename}': {e}")
+                print(f"ERROR: File '{file}' not found in directory '{data_directory_path}'. Skipping.")
+            except pd.errors.ParserError:
+                print(f"ERROR: Parsing error encountered while reading '{file}'. Skipping.")
             except Exception as e:
-                print(f"Unexpected error while loading '{filename}': {e}")
-            return None
+                print(f"ERROR: Unexpected error loading '{file}': {e}")
     
-        # Load datasets
-        orders = load_csv('orders.csv')
-        clients = load_csv('clients.csv')
-        operators = load_csv('operators.csv')
+        # If no data loaded, exit
+        if not dataframes:
+            print("No data files loaded. Exiting data quality validation.")
+            return
     
-        # Validate and report ingestion issues for each dataset
-        for name, df in [('orders', orders), ('clients', clients), ('operators', operators)]:
-            if df is None:
-                print(f"Skipping further checks for '{name}' due to loading failure.")
-                continue
+        # Function to check nulls and duplicates and print summary
+        def check_df_quality(df, df_name):
+            print(f"\nData Quality Report for '{df_name}':")
+            # Basic info
+            print(f" - Shape: {df.shape}")
+            print(f" - Columns: {list(df.columns)}")
     
-            print(f"\n--- {name.upper()} DATASET SUMMARY ---")
-            print(df.info())
+            # Null values
+            null_counts = df.isnull().sum()
+            null_percent = (null_counts / len(df)) * 100
+            null_summary = pd.DataFrame({'null_count': null_counts, 'null_percent': null_percent})
+            print(" - Null values per column:")
+            print(null_summary[null_summary['null_count'] > 0])
     
-            # Check for duplicated rows
+            # Duplicate rows
             dup_count = df.duplicated().sum()
-            print(f"Duplicated rows in '{name}': {dup_count}")
+            print(f" - Duplicate rows: {dup_count}")
     
-            # Check for missing values
-            missing = df.isnull().sum()
-            total_missing = missing.sum()
-            print(f"Total missing values in '{name}': {total_missing}")
-            if total_missing > 0:
-                print("Missing values by column:")
-                print(missing[missing > 0])
+            # Unique values per column (for categorical or ID columns)
+            unique_counts = df.nunique(dropna=False)
+            print(" - Unique values per column:")
+            print(unique_counts)
     
-            # Check for unexpected datatypes or parsing issues
-            # For example, ensure IDs are consistent types (strings or ints)
-            # Check if any columns with supposed categorical data have many unique values (possible data issues)
-            for col in df.columns:
-                nunique = df[col].nunique(dropna=True)
-                if nunique == 0:
-                    print(f"Warning: Column '{col}' in '{name}' has no unique values.")
-                if df[col].dtype == 'object' and nunique > 1000:
-                    print(f"Note: Column '{col}' in '{name}' has a high cardinality ({nunique}) for an object column.")
+            # Data types
+            print(" - Data types:")
+            print(df.dtypes)
     
-        # Attempt basic fixes for ingestion issues if possible (e.g., remove duplicates, fill missing keys)
-        # For demonstration, remove duplicate rows and report effect
-        def clean_dataset(name, df):
-            orig_shape = df.shape
-            df_clean = df.drop_duplicates()
-            print(f"\n{name}: Removed {orig_shape[0] - df_clean.shape[0]} duplicate rows.")
-            # For missing IDs or critical columns, print rows to inspect
-            if 'id' in df_clean.columns:
-                missing_id_rows = df_clean[df_clean['id'].isnull()]
-                if not missing_id_rows.empty:
-                    print(f"{name}: Found {missing_id_rows.shape[0]} rows with missing 'id' values.")
-            return df_clean
+        # Run quality checks on each loaded dataframe
+        for file, df in dataframes.items():
+            check_df_quality(df, file)
     
-        if orders is not None:
-            orders = clean_dataset('orders', orders)
-        if clients is not None:
-            clients = clean_dataset('clients', clients)
-        if operators is not None:
-            operators = clean_dataset('operators', operators)
+        # Cross-file basic integrity checks if relevant files exist
+        print("\nCross-file Integrity Checks:")
     
-        print("\nData ingestion check and basic cleaning complete.")
+        # Example: Check if all operator_ids in orders exist in operators
+        if 'orders.csv' in dataframes and 'operators.csv' in dataframes:
+            orders = dataframes['orders.csv']
+            operators = dataframes['operators.csv']
+            missing_ops = set(orders['operator_id'].dropna().unique()) - set(operators['operator_id'].dropna().unique())
+            print(f" - Operators referenced in orders but missing in operators.csv: {len(missing_ops)}")
+            if len(missing_ops) > 0:
+                print(f"   Missing operator_ids sample: {list(missing_ops)[:5]}")
+    
+        # Check if all customer_ids in orders exist in customers
+        if 'orders.csv' in dataframes and 'customers.csv' in dataframes:
+            customers = dataframes['customers.csv']
+            missing_custs = set(orders['customer_id'].dropna().unique()) - set(customers['customer_id'].dropna().unique())
+            print(f" - Customers referenced in orders but missing in customers.csv: {len(missing_custs)}")
+            if len(missing_custs) > 0:
+                print(f"   Missing customer_ids sample: {list(missing_custs)[:5]}")
+    
+        # Check for date/time inconsistencies in orders (e.g., order_date before today, or invalid dates)
+        if 'orders.csv' in dataframes:
+            try:
+                orders = dataframes['orders.csv']
+                if 'order_date' in orders.columns:
+                    orders['order_date_parsed'] = pd.to_datetime(orders['order_date'], errors='coerce')
+                    invalid_dates = orders['order_date_parsed'].isna().sum()
+                    print(f" - Orders with invalid or missing 'order_date': {invalid_dates}")
+    
+                    future_dates = (orders['order_date_parsed'] > pd.Timestamp.now()).sum()
+                    print(f" - Orders with 'order_date' in the future: {future_dates}")
+            except Exception as e:
+                print(f"ERROR: Failed datetime validation on orders: {e}")
+    
+        # Check for negative or zero values in numeric columns where not logical
+        for file, df in dataframes.items():
+            numeric_cols = df.select_dtypes(include=[np.number]).columns.tolist()
+            if numeric_cols:
+                for col in numeric_cols:
+                    neg_vals = (df[col] < 0).sum()
+                    zeros = (df[col] == 0).sum()
+                    if neg_vals > 0:
+                        print(f" - Negative values found in '{col}' column of '{file}': {neg_vals}")
+                    # For zero values, only flag if column likely should not have zeros (e.g., price, duration)
+                    if zeros > 0 and any(x in col.lower() for x in ['price','amount','duration','cost']):
+                        print(f" - Zero values found in '{col}' column of '{file}': {zeros}")
+    
+        print("\nData Quality and Integrity Validation Completed.")
 
 if __name__ == "__main__":
     try:

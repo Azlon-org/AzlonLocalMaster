@@ -1,4 +1,4 @@
- # FEATURE INFO
+# FEATURE INFO
 ## TARGET VARIABLE
 Unknown
 ## FEATURES BEFORE THIS PHASE
@@ -9,85 +9,69 @@ Unknown
 ## QUESTIONS AND ANSWERS  
 
 ### Question 1  
-What files did you process? Which files were generated? Answer with detailed file path.
-
+What files did you process? Which files were generated? Answer with detailed file path.  
 ### Answer 1  
-The phase processed three primary CSV datasets located in the directory `multi_agents/competition/CarWash_Data`:  
+The following raw datasets were processed from the directory `multi_agents/competition/CarWash_Data/`:  
 - `orders.csv`  
-- `clients.csv`  
 - `operators.csv`  
+- `customers.csv` (equivalent to `clients.csv`)  
+- `services.csv`  
+- `transactions.csv`  
 
-No new data files or output files were generated in this phase. The phase focused on data ingestion, validation, and cleaning without producing new output files.
+No new files were generated or saved during this phase; all outputs were console-based data quality reports.
 
 ---
 
 ### Question 2  
-Which features were involved in this phase? What changes did they undergo? If any feature types were modified, answer which features are modified and how they are modified. If any features were deleted or created, answer which features are deleted or created and provide detailed explanations.
-
+Which features were involved in this phase? What changes did they undergo? If any feature types were modified, answer which features are modified and how they are modified. If any features were deleted or created, answer which features are deleted or created and provide detailed explanations.  
 ### Answer 2  
-Features involved spanned across the three datasets:  
-- From `orders.csv`: service package details, promo codes, revenue, booking counts, operator codes, payment methods (implied).  
-- From `clients.csv`: booking frequency, payment preferences including wallet usage (`QuickBucks`), promo code adoption.  
-- From `operators.csv`: operator IDs, verification status, compensation, penalties, cancellations.
+Key features involved spanned across the datasets including:  
+- From `orders.csv`: `order_date`, `operator_id`, `customer_id` and others.  
+- From `operators.csv`: `operator_id` and related performance indicators.  
+- From `customers.csv`: `customer_id` and client profile attributes.  
+- From `services.csv` and `transactions.csv`: service and payment-related fields.
 
-Changes included:  
-- Removal of duplicate rows across all datasets to ensure data integrity.  
-- Identification and flagging of missing values, particularly in critical linkage keys such as IDs and verification fields.  
-- Notes and checks around categorical variable cardinality and data type consistency, although no explicit type conversions were performed.  
-- No features were deleted or newly created during this phase; the focus was on cleaning existing data.
+The only feature type modification was parsing `order_date` from string to datetime for validation. No features were deleted or newly created. Although missing values and inconsistencies were identified, no imputations or deletions were applied at this stage.
 
 ---
 
 ### Question 3  
-What key data quality issues were identified and resolved during the IterativeAnalysisLoop?
-
+What are the key data quality issues identified (e.g., missing values, corruption, bias) in critical datasets such as `clients.csv`, `orders.csv`, and `operators.csv`? How were these issues addressed, and what residual impacts might remain for final analysis?  
 ### Answer 3  
-Key data quality issues addressed:  
-- Duplicate records identified and removed from all three datasets.  
-- Missing values especially in critical ID columns were detected and flagged for further investigation.  
-- High cardinality in certain categorical columns was noted as a potential issue.  
-- Robust handling of data ingestion errors including missing files or parsing problems ensured stable loading.  
-- While duplicates were removed and issues flagged, missing values were not yet imputed or fully resolved in this phase.
+Key data quality issues identified include:  
+- Missing values in multiple columns across datasets.  
+- Referential integrity problems where some `operator_id`s and `customer_id`s referenced in `orders.csv` do not exist in `operators.csv` or `customers.csv`.  
+- Invalid or missing `order_date` entries, including some dates set in the future.  
+- Presence of negative values and zero values in numeric fields related to pricing and durations, which may be illogical or indicate refunds.
+
+These issues were documented and quantified but not corrected or imputed in this phase. The residual impacts could bias subsequent analyses, especially time series and revenue calculations, unless properly handled in later phases.
 
 ---
 
 ### Question 4  
-Which service packages, extra services, and promo codes showed significant patterns in terms of popularity, revenue contribution, and cross-selling opportunities?
-
+What major patterns or trends emerged from exploratory data analyses related to booking frequency, revenue streams, operator performance, and customer payment behaviors? Which findings are most relevant for strategic decision-making?  
 ### Answer 4  
-No explicit analyses or findings regarding service packages, extra services, or promo codes were conducted or reported during this phase. The strategic plan includes these analyses as goals, but the current phase focused mainly on data quality and preparation.
+No exploratory data analyses or visualizations were generated in this phase. Therefore, no patterns, trends, or strategic insights were extracted yet. The focus remained on data quality validation as a prerequisite for reliable analysis.
 
 ---
 
 ### Question 5  
-What were the main findings regarding operator performance, verification status, and compensation fairness?
-
+How were operator performance and workforce utilization characterized, particularly regarding verification status, penalties, cancellations, and compensation? What implications do these findings have for operational improvements?  
 ### Answer 5  
-No direct analysis or results related to operator performance, verification status, or compensation fairness were produced in this phase. This aspect remains planned for future work beyond the current data cleaning stage.
+Operator performance and workforce utilization analyses were planned but not executed during this phase. No characterizations or findings related to verification status, penalties, cancellations, or compensation were produced.
 
 ---
 
 ### Question 6  
-How did customer payment behaviors and segmentation analyses inform understanding of client profiles and promo code effectiveness?
-
+What customer segments were identified based on behavior and transactional profiles? How was data completeness and imputation uncertainty incorporated into these segments, and which segments warrant focused attention for retention or marketing?  
 ### Answer 6  
-Customer segmentation and payment behavior analyses were not performed in this phase. These analyses are part of the planned future work following data preparation.
+Customer segmentation based on behavior and transactional data was planned but not performed in this phase. While data completeness was quantified, no imputations or uncertainty assessments were incorporated, and no specific customer segments were defined or prioritized.
 
 ---
 
 ### Question 7  
-What recurring booking issues, communication patterns, and operational bottlenecks were discovered, and what preliminary suggestions emerged for process improvements?
-
+Which advanced analytics or predictive models were developed (e.g., for cancellations, churn), and how were bias adjustments and uncertainty quantification integrated? What are the key modeling outcomes that should be highlighted?  
 ### Answer 7  
-No analyses or insights into booking issues, communication patterns, or operational bottlenecks were conducted or reported during this phase.
-
----
-
-### Question 8  
-Which KPIs and dashboards were developed or identified as critical to monitor ongoing performance, and what gaps or risks remain to be addressed in the final insights?
-
-### Answer 8  
-No KPIs or dashboards were developed during this phase. The strategic plan identifies KPI and dashboard development as critical next steps.  
-Key data gaps and risks identified include missing operator verification data, incomplete bookings, and potential biases due to data incompleteness. These will require attention in subsequent phases.
+No advanced analytics or predictive modeling was conducted in this phase. Model building and bias or uncertainty integration were planned for future phases.
 
 ---

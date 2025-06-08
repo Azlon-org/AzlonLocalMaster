@@ -13,7 +13,7 @@
         "ContextualSetupAndScan": ["Reader"],
         "InitialDataProfiling": ["Planner", "DataProfiler", "Summarizer"], 
         "IterativeAnalysisLoop": ["Planner", "Critic", "DataAnalyst", "Reviewer", "Summarizer", "Critic"], 
-        "FinalInsightCompilation": ["Summarizer", "Critic"]
+        "FinalInsightCompilation": ["Planner", "Summarizer", "Critic"]
     },
     "agent_configurations": {
         "Reader": {

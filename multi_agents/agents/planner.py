@@ -76,17 +76,28 @@ class Planner(Agent):
         # 2. LLM Interaction (Simplified)
         history.append({"role": "system", "content": f"{role_prompt} {self.description}"})
         
-        # Placeholder for a new, more generic planning prompt
-        prompt_template = (
-            "You are an expert data analysis planner. Based on the following information provided by the Reader agent, "
-            "your task is to create a high-level strategic plan for analyzing the data to generate business insights. "
-            "The plan should be a list of key questions to answer, hypotheses to test, or specific analysis tasks to perform. "
-            "Present the plan as a markdown list.\n\n"
-            "READER'S SUMMARY AND OBSERVATIONS:\n{reader_summary}\n\n"
-            "ANALYSIS PLAN (Markdown List):"
-        )
+        if state.phase == "FinalInsightCompilation":
+            current_prompt_template = (
+                "You are an expert data analysis planner. Your task is to create a strategic plan for compiling a final insights report. "
+                "The 'Current Insights Log' (provided below within the broader context) contains all findings and analyses performed in previous phases. "
+                "Your plan should outline the key sections and structure for the final report, ensuring all significant insights are highlighted and synthesized coherently. "
+                "The goal is to produce a comprehensive and actionable final document. "
+                "Present the plan as a markdown list, detailing the steps or sections for the Summarizer agent to follow.\n\n"
+                "CONTEXT (INCLUDING BUSINESS SUMMARY, DATA SUMMARY, READER OBSERVATIONS, AND CURRENT INSIGHTS LOG):\n{consolidated_context}\n\n"
+                "FINAL REPORT COMPILATION PLAN (Markdown List):"
+            )
+        else:
+            current_prompt_template = (
+                "You are an expert data analysis planner. Based on the provided context (which includes business and data summaries, initial observations, and the current insights log), "
+                "your task is to create a high-level strategic plan for the current analysis phase. "
+                "The plan should be a list of key questions to answer, hypotheses to test, or specific analysis tasks to perform to generate new business insights. "
+                "Focus on actionable steps that will build upon existing knowledge from the insights log. "
+                "Present the plan as a markdown list.\n\n"
+                "CONTEXT (INCLUDING BUSINESS SUMMARY, DATA SUMMARY, READER OBSERVATIONS, AND CURRENT INSIGHTS LOG):\n{consolidated_context}\n\n"
+                "ANALYSIS PLAN (Markdown List):"
+            )
         
-        llm_input = prompt_template.format(reader_summary=input_for_planner)
+        llm_input = current_prompt_template.format(consolidated_context=input_for_planner)
         
         raw_plan_reply = ""
         try:
