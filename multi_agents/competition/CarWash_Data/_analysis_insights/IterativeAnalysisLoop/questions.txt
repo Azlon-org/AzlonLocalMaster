@@ -1,21 +1,21 @@
 ## QUESTIONS
-### Question 1
+### Question 1  
 What files did you process? Which files were generated? Answer with detailed file path.
 
-### Question 2
-Which features were involved in this phase? What changes did they undergo? If any feature types were modified, answer which features are modified and how they are modified. If any features were deleted or created, answer which features are deleted or created and provide detailed explanations. (This is a FIXED question for each phase.)
+### Question 2  
+Which features were involved in this phase? What changes did they undergo? If any feature types were modified, answer which features are modified and how they are modified. If any features were deleted or created, answer which features are deleted or created and provide detailed explanations.
 
-### Question 3
-What are the key data quality issues identified (e.g., missing values, corruption, bias) in critical datasets such as `clients.csv`, `orders.csv`, and `operators.csv`? How were these issues addressed, and what residual impacts might remain for final analysis?
+### Question 3  
+What were the main data cleaning and validation steps applied, specifically regarding corrupted files, missing critical IDs, date/time standardization, duplicate removal, and outlier handling? How did these steps affect data completeness and quality?
 
-### Question 4
-What major patterns or trends emerged from exploratory data analyses related to booking frequency, revenue streams, operator performance, and customer payment behaviors? Which findings are most relevant for strategic decision-making?
+### Question 4  
+What types of biases and uncertainties were identified as a result of data cleaning and imputation strategies? How were these biases quantified and mitigated, and what recommendations exist for incorporating uncertainty in final analyses?
 
-### Question 5
-How were operator performance and workforce utilization characterized, particularly regarding verification status, penalties, cancellations, and compensation? What implications do these findings have for operational improvements?
+### Question 5  
+Which key exploratory data analysis findings—such as customer segmentation, operator performance patterns, booking behaviors, and marketing campaign effectiveness—emerged during this phase? What are the strongest actionable insights discovered?
 
-### Question 6
-What customer segments were identified based on behavior and transactional profiles? How was data completeness and imputation uncertainty incorporated into these segments, and which segments warrant focused attention for retention or marketing?
+### Question 6  
+How stable and robust were the customer and operator segmentations, predictive models, and hypothesis tests under different data cleaning and imputation scenarios? What validation or sensitivity analyses were conducted?
 
-### Question 7
-Which advanced analytics or predictive models were developed (e.g., for cancellations, churn), and how were bias adjustments and uncertainty quantification integrated? What are the key modeling outcomes that should be highlighted?
+### Question 7  
+What operational bottlenecks, quality assurance issues, and marketing ROI findings were uncovered? How should these be prioritized or contextualized in the FinalInsightCompilation to align with QuickWash’s strategic goals?

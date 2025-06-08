@@ -19,220 +19,113 @@ def generated_code_function():
     import os
     import pandas as pd
     import numpy as np
+    import matplotlib.pyplot as plt
+    import seaborn as sns
     
-    def repair_and_validate_datasets(data_directory_path):
-        # Helper function to load CSV with error handling
-        def load_csv(file_name):
-            path = os.path.join(data_directory_path, file_name)
+    def assess_data_quality_and_integrity(data_directory_path):
+        # List of expected data files - adjust if more files are known
+        expected_files = ['orders.csv', 'operators.csv', 'customers.csv', 'services.csv']
+        loaded_data = {}
+    
+        print("Starting data quality and integrity assessment...\n")
+    
+        # Load datasets with error handling
+        for file in expected_files:
+            file_path = os.path.join(data_directory_path, file)
             try:
-                df = pd.read_csv(path)
-                print(f"Loaded {file_name} with shape {df.shape}")
-                return df
+                df = pd.read_csv(file_path)
+                loaded_data[file] = df
+                print(f"Loaded '{file}' successfully. Shape: {df.shape}")
             except FileNotFoundError:
-                print(f"Error: {file_name} not found in {data_directory_path}")
-                return None
-            except pd.errors.ParserError:
-                print(f"Error: Parsing {file_name} failed - possible corruption or malformed CSV.")
-                return None
+                print(f"ERROR: File '{file}' not found in directory '{data_directory_path}'. Skipping.")
+            except pd.errors.EmptyDataError:
+                print(f"ERROR: File '{file}' is empty. Skipping.")
             except Exception as e:
-                print(f"Error loading {file_name}: {e}")
-                return None
+                print(f"ERROR: Could not load '{file}': {e}")
     
-        # Helper function to detect and report missing values and duplicates
-        def data_overview(df, name):
-            if df is None:
-                print(f"Skipping overview for {name} - dataframe not loaded.")
-                return
-            print(f"\n--- Data Overview: {name} ---")
-            print(f"Columns: {df.columns.tolist()}")
-            print(f"Shape: {df.shape}")
-            missing = df.isnull().sum()
-            if missing.sum() > 0:
-                print(f"Missing values per column:\n{missing[missing > 0]}")
+        print("\n--- Data Quality Reports ---\n")
+        for fname, df in loaded_data.items():
+            print(f"File: {fname}")
+            print("-" * (6 + len(fname)))
+    
+            # Basic info
+            print("Basic info:")
+            buffer = []
+            df.info(buf=buffer)
+            for line in buffer:
+                print(line)
+            
+            # Summary statistics for numeric columns
+            print("\nSummary statistics (numeric columns):")
+            print(df.describe().T)
+    
+            # Missing values
+            missing_counts = df.isnull().sum()
+            missing_percent = 100 * missing_counts / len(df)
+            missing_df = pd.DataFrame({'missing_count': missing_counts, 'missing_percent': missing_percent})
+            missing_df = missing_df[missing_df['missing_count'] > 0].sort_values(by='missing_percent', ascending=False)
+            if not missing_df.empty:
+                print("\nColumns with missing values:")
+                print(missing_df)
             else:
-                print("No missing values detected.")
-            dup_count = df.duplicated().sum()
-            print(f"Duplicate rows: {dup_count}")
+                print("\nNo missing values detected.")
     
-        # Helper function to attempt basic repairs
-        def repair_df(df, name):
-            if df is None:
-                return None
+            # Check for duplicated rows
+            duplicated_count = df.duplicated().sum()
+            print(f"\nDuplicated rows: {duplicated_count}")
+            if duplicated_count > 0:
+                print("Consider investigating or removing duplicates.")
     
-            # Remove fully duplicate rows
-            before = df.shape[0]
-            df = df.drop_duplicates()
-            after = df.shape[0]
-            if before != after:
-                print(f"{name}: Removed {before - after} duplicate rows.")
+            # Check for possible anomalies in key columns (if known)
+            # For example, dates, IDs, numeric ranges
+            # Here we try to guess some columns by name heuristics
+            for col in df.columns:
+                if 'date' in col.lower() or 'time' in col.lower():
+                    # Try parsing datetime, count parsing failures
+                    try:
+                        parsed_dates = pd.to_datetime(df[col], errors='coerce')
+                        invalid_dates = parsed_dates.isna().sum()
+                        if invalid_dates > 0:
+                            print(f"Warning: Column '{col}' has {invalid_dates} invalid/missing date entries.")
+                    except Exception:
+                        pass
+                if col.lower().endswith('id'):
+                    # Check uniqueness of IDs
+                    unique_ids = df[col].nunique(dropna=True)
+                    total = len(df[col].dropna())
+                    if unique_ids != total:
+                        print(f"Note: Column '{col}' has {unique_ids} unique IDs but {total} total non-null entries.")
+                if df[col].dtype in [np.float64, np.int64]:
+                    # Check for outliers using IQR method
+                    q1 = df[col].quantile(0.25)
+                    q3 = df[col].quantile(0.75)
+                    iqr = q3 - q1
+                    lower_bound = q1 - 1.5 * iqr
+                    upper_bound = q3 + 1.5 * iqr
+                    outliers = df[(df[col] < lower_bound) | (df[col] > upper_bound)]
+                    if not outliers.empty:
+                        print(f"Column '{col}' has {len(outliers)} potential outliers based on IQR.")
     
-            # For critical columns, we try to fix types and fill missing if possible
-            # We'll define some common fixes per dataset below
+            print("\n")
     
-            # Repair based on dataset name
-            if name == 'clients.csv':
-                # Expect client_id as primary key - drop rows missing it
-                if 'client_id' in df.columns:
-                    before = df.shape[0]
-                    df = df.dropna(subset=['client_id'])
-                    after = df.shape[0]
-                    if before != after:
-                        print(f"{name}: Dropped {before - after} rows with missing client_id.")
-                    # Try to convert client_id to int if not already
-                    df['client_id'] = pd.to_numeric(df['client_id'], errors='coerce')
-                    before = df.shape[0]
-                    df = df.dropna(subset=['client_id'])
-                    df['client_id'] = df['client_id'].astype(int)
-                    after = df.shape[0]
-                    if before != after:
-                        print(f"{name}: Dropped {before - after} rows with non-numeric client_id.")
-                # Fill missing categorical info with 'Unknown' if any
-                for col in df.select_dtypes(include='object').columns:
-                    if df[col].isnull().any():
-                        df[col] = df[col].fillna('Unknown')
+        # Correlation heatmap for numeric data in 'orders.csv' if loaded
+        if 'orders.csv' in loaded_data:
+            orders_df = loaded_data['orders.csv']
+            numeric_cols = orders_df.select_dtypes(include=[np.number]).columns.tolist()
+            if len(numeric_cols) > 1:
+                plt.figure(figsize=(10, 8))
+                corr = orders_df[numeric_cols].corr()
+                sns.heatmap(corr, annot=True, cmap='coolwarm', fmt=".2f")
+                plt.title("Correlation Heatmap of Numeric Features in orders.csv")
+                heatmap_path = os.path.join(data_directory_path, 'orders_numeric_correlation_heatmap.png')
+                plt.tight_layout()
+                plt.savefig(heatmap_path)
+                plt.close()
+                print(f"Correlation heatmap saved to '{heatmap_path}'")
+            else:
+                print("Not enough numeric columns in 'orders.csv' to generate correlation heatmap.")
     
-            elif name == 'orders.csv':
-                # Expect order_id, client_id, operator_id, order_date, status, price etc.
-                # Drop rows missing order_id or client_id or operator_id
-                critical_cols = ['order_id', 'client_id', 'operator_id']
-                for c in critical_cols:
-                    if c in df.columns:
-                        before = df.shape[0]
-                        df = df.dropna(subset=[c])
-                        after = df.shape[0]
-                        if before != after:
-                            print(f"{name}: Dropped {before - after} rows with missing {c}.")
-                        # Convert IDs to int
-                        df[c] = pd.to_numeric(df[c], errors='coerce')
-                        before = df.shape[0]
-                        df = df.dropna(subset=[c])
-                        df[c] = df[c].astype(int)
-                        after = df.shape[0]
-                        if before != after:
-                            print(f"{name}: Dropped {before - after} rows with non-numeric {c}.")
-                # Parse order_date to datetime if exists
-                if 'order_date' in df.columns:
-                    df['order_date'] = pd.to_datetime(df['order_date'], errors='coerce')
-                    missing_dates = df['order_date'].isnull().sum()
-                    if missing_dates > 0:
-                        print(f"{name}: Found {missing_dates} invalid order_date entries, dropping those rows.")
-                        df = df.dropna(subset=['order_date'])
-                # Price column: convert to numeric and fill missing or invalid with 0
-                if 'price' in df.columns:
-                    df['price'] = pd.to_numeric(df['price'], errors='coerce').fillna(0)
-                    # Replace negative prices with 0 (invalid)
-                    neg_prices = (df['price'] < 0).sum()
-                    if neg_prices > 0:
-                        print(f"{name}: Found {neg_prices} negative prices, setting to 0.")
-                        df.loc[df['price'] < 0, 'price'] = 0
-    
-            elif name == 'operators.csv':
-                # Expect operator_id as primary key
-                if 'operator_id' in df.columns:
-                    before = df.shape[0]
-                    df = df.dropna(subset=['operator_id'])
-                    after = df.shape[0]
-                    if before != after:
-                        print(f"{name}: Dropped {before - after} rows with missing operator_id.")
-                    df['operator_id'] = pd.to_numeric(df['operator_id'], errors='coerce')
-                    before = df.shape[0]
-                    df = df.dropna(subset=['operator_id'])
-                    df['operator_id'] = df['operator_id'].astype(int)
-                    after = df.shape[0]
-                    if before != after:
-                        print(f"{name}: Dropped {before - after} rows with non-numeric operator_id.")
-                # Fill missing categorical with 'Unknown'
-                for col in df.select_dtypes(include='object').columns:
-                    if df[col].isnull().any():
-                        df[col] = df[col].fillna('Unknown')
-    
-            elif name == 'operator_balance.csv':
-                # Expect operator_id, balance, last_update_date
-                if 'operator_id' in df.columns:
-                    df['operator_id'] = pd.to_numeric(df['operator_id'], errors='coerce')
-                    before = df.shape[0]
-                    df = df.dropna(subset=['operator_id'])
-                    df['operator_id'] = df['operator_id'].astype(int)
-                    after = df.shape[0]
-                    if before != after:
-                        print(f"{name}: Dropped {before - after} rows with invalid operator_id.")
-                if 'balance' in df.columns:
-                    df['balance'] = pd.to_numeric(df['balance'], errors='coerce').fillna(0)
-                if 'last_update_date' in df.columns:
-                    df['last_update_date'] = pd.to_datetime(df['last_update_date'], errors='coerce')
-                    missing_dates = df['last_update_date'].isnull().sum()
-                    if missing_dates > 0:
-                        print(f"{name}: Found {missing_dates} invalid last_update_date entries, dropping those rows.")
-                        df = df.dropna(subset=['last_update_date'])
-    
-            elif name == 'activity_logs.csv':
-                # Expect activity_id, operator_id, activity_type, timestamp, details
-                if 'activity_id' in df.columns:
-                    before = df.shape[0]
-                    df = df.dropna(subset=['activity_id'])
-                    after = df.shape[0]
-                    if before != after:
-                        print(f"{name}: Dropped {before - after} rows with missing activity_id.")
-                    df['activity_id'] = pd.to_numeric(df['activity_id'], errors='coerce')
-                    before = df.shape[0]
-                    df = df.dropna(subset=['activity_id'])
-                    df['activity_id'] = df['activity_id'].astype(int)
-                    after = df.shape[0]
-                    if before != after:
-                        print(f"{name}: Dropped {before - after} rows with non-numeric activity_id.")
-                if 'operator_id' in df.columns:
-                    df['operator_id'] = pd.to_numeric(df['operator_id'], errors='coerce')
-                    before = df.shape[0]
-                    df = df.dropna(subset=['operator_id'])
-                    df['operator_id'] = df['operator_id'].astype(int)
-                    after = df.shape[0]
-                    if before != after:
-                        print(f"{name}: Dropped {before - after} rows with invalid operator_id.")
-                if 'timestamp' in df.columns:
-                    df['timestamp'] = pd.to_datetime(df['timestamp'], errors='coerce')
-                    missing_ts = df['timestamp'].isnull().sum()
-                    if missing_ts > 0:
-                        print(f"{name}: Found {missing_ts} invalid timestamp entries, dropping those rows.")
-                        df = df.dropna(subset=['timestamp'])
-                # Fill missing activity_type with 'Unknown'
-                if 'activity_type' in df.columns:
-                    df['activity_type'] = df['activity_type'].fillna('Unknown')
-    
-            return df
-    
-        # Load all datasets
-        clients = load_csv('clients.csv')
-        orders = load_csv('orders.csv')
-        operators = load_csv('operators.csv')
-        operator_balance = load_csv('operator_balance.csv')
-        activity_logs = load_csv('activity_logs.csv')
-    
-        # Show overview before repair
-        for df, name in zip([clients, orders, operators, operator_balance, activity_logs],
-                            ['clients.csv', 'orders.csv', 'operators.csv', 'operator_balance.csv', 'activity_logs.csv']):
-            data_overview(df, name)
-    
-        # Repair datasets
-        clients = repair_df(clients, 'clients.csv')
-        orders = repair_df(orders, 'orders.csv')
-        operators = repair_df(operators, 'operators.csv')
-        operator_balance = repair_df(operator_balance, 'operator_balance.csv')
-        activity_logs = repair_df(activity_logs, 'activity_logs.csv')
-    
-        # Show overview after repair
-        print("\n=== After Repair & Validation ===")
-        for df, name in zip([clients, orders, operators, operator_balance, activity_logs],
-                            ['clients.csv', 'orders.csv', 'operators.csv', 'operator_balance.csv', 'activity_logs.csv']):
-            data_overview(df, name)
-    
-        # Return repaired dataframes for further analysis if needed
-        return {
-            'clients': clients,
-            'orders': orders,
-            'operators': operators,
-            'operator_balance': operator_balance,
-            'activity_logs': activity_logs
-        }
+        print("\nData quality and integrity assessment completed.")
 
 if __name__ == "__main__":
     try:

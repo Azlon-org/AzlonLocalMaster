@@ -1,42 +1,46 @@
-- **Data Quality and Integrity Validation**  
-  - Complete root cause analysis for corrupted or missing critical datasets (`clients.csv`, `orders.csv`, `operators.csv`) by engaging with data engineering or source system teams.  
-  - Quantify and document bias introduced by dropping rows with missing critical IDs and imputing categorical variables as `'Unknown'`. Explore alternative imputation or data augmentation strategies.  
-  - Implement iterative validation loops to monitor data quality improvements and impact on downstream analyses.  
+- **Data Cleaning and Validation**  
+  - Develop robust parsers to repair corrupted files (`clients.csv`, `orders.csv`, `operators.csv`), handling delimiter inconsistencies, malformed lines, and embedded JSON extraction.  
+  - Validate and clean critical identifier fields (`client_id`, `operator_id`, `order_id`), quantifying missingness and assessing impact of dropping or imputing missing IDs.  
+  - Standardize and parse date/time fields, coercing invalid entries to missing and documenting their prevalence.  
+  - Remove duplicate records and flag potential outliers (e.g., negative pricing) for correction or exclusion.  
+  - Document all cleaning steps, data loss, and potential biases introduced for transparency.
+
+- **Bias Assessment and Mitigation**  
+  - Quantify bias risks from dropping records with missing critical IDs and imputing categorical missing values as `'Unknown'`.  
+  - Conduct sensitivity analyses comparing dropped vs. retained records to detect systematic differences.  
+  - Explore alternative imputation strategies or partial record usage to preserve representativeness.  
+  - Incorporate uncertainty quantification to account for data quality limitations in downstream analyses.  
+  - Transparently report these biases and uncertainties in all analytical outputs.
 
 - **Exploratory Data Analysis (EDA)**  
-  - Conduct detailed EDA on cleaned datasets focusing on:  
-    - Booking frequency trends over time, including seasonality and growth patterns.  
-    - Revenue breakdown by service package and extra services uptake, identifying top contributors and pricing anomalies (e.g., refunds or zero/negative prices).  
-    - Operator availability, job completion rates, cancellation patterns, and compensation distribution.  
-    - Client payment behavior, including Quick Bucks credit usage and card payment methods.  
-  - Visualize missing data patterns and outlier distributions to guide further cleaning or modeling decisions.
+  - Profile booking frequency, service package popularity, and revenue contribution, including extra services uptake.  
+  - Analyze operator performance metrics: availability, job completion rates, cancellations, penalties, and compensation fairness.  
+  - Examine customer financial behavior: credit usage (`quick_bucks`), payment method preferences, and spending patterns.  
+  - Investigate booking issues and compensation claims, linking to pre-wash checklist adherence for quality control insights.  
+  - Evaluate promo code usage and push notification effectiveness across customer segments.  
+  - Analyze communication logs (chat, notifications) to assess support responsiveness and correlate with booking outcomes.
 
-- **Operator Performance and Workforce Utilization Analysis**  
-  - Analyze operator utilization metrics relative to availability and compensation schemes.  
-  - Evaluate the impact of operator verification status, penalties, and cancellations on performance outcomes and customer satisfaction.  
-  - Assess fairness and effectiveness of compensation adjustments and bonuses.
+- **Segmentation and Profiling**  
+  - Perform customer segmentation based on transactional behavior, booking patterns, credit usage, and promotion responsiveness, integrating uncertainty from missing or imputed data.  
+  - Segment operators by verification status, performance metrics, and compliance with penalty policies.  
+  - Validate segments for stability under different data cleaning and imputation scenarios.
 
-- **Customer Segmentation and Behavior Profiling**  
-  - Develop customer segments based on transactional behavior, service usage, and booking frequency.  
-  - Incorporate data completeness and imputation uncertainty into segmentation robustness checks.  
-  - Identify high-value and at-risk customer groups to inform targeted marketing or retention strategies.
+- **Hypothesis Testing and Modeling**  
+  - Test hypotheses linking operator verification and penalties to cancellation rates and booking outcomes.  
+  - Develop predictive models for booking cancellations, operator no-shows, and customer churn, incorporating bias and uncertainty considerations.  
+  - Evaluate model robustness via sensitivity analyses and iterative validation using cleaned and imputed datasets.
 
-- **Booking Quality and Issue Resolution**  
-  - Leverage pre-wash checklist data (including images) to assess service quality compliance and identify common quality issues.  
-  - Analyze booking issues and compensation logs to detect operational bottlenecks and areas for process improvement.  
-  - Evaluate customer-operator communication effectiveness via chat and notification logs, focusing on responsiveness and resolution rates.
+- **Operational and Marketing Insights**  
+  - Identify operational bottlenecks and workforce utilization inefficiencies from performance and issue tracking analyses.  
+  - Assess marketing campaign ROI through promo code redemption and push notification engagement analyses.  
+  - Correlate quality assurance adherence (pre-wash checklists) with dispute rates and customer satisfaction.
 
-- **Marketing and Promotion Effectiveness**  
-  - Measure the uptake and revenue impact of promo codes and extra services linked to promotions.  
-  - Analyze push notification campaign reach, engagement, and conversion by customer segment.  
-  - Test hypotheses on promotional effectiveness and refine marketing targeting accordingly.
+- **Root Cause Analysis and Governance**  
+  - Collaborate with data engineering teams to investigate root causes of data corruption and missing values (e.g., data lineage audits).  
+  - Establish automated data quality monitoring and alerting frameworks for ongoing operational reliability.  
+  - Embed iterative validation loops in the analysis workflow to continually refine data quality and analytical models.
 
-- **Advanced Analytics and Predictive Modeling**  
-  - Build predictive models for booking cancellations, no-shows, and customer churn using enriched and cleaned datasets.  
-  - Apply clustering or classification techniques to refine customer and operator segments.  
-  - Incorporate uncertainty quantification and bias adjustment in modeling to enhance robustness.
-
-- **Documentation and Communication**  
-  - Maintain clear documentation of data cleaning decisions, biases, and assumptions for transparency.  
-  - Prepare interim reports with visualizations and preliminary findings to engage stakeholders and guide iterative analysis.  
-  - Establish data lineage and quality monitoring frameworks for ongoing operational analytics support.
+- **Reporting and Communication**  
+  - Produce interim visualizations and summaries to engage stakeholders early and facilitate feedback.  
+  - Clearly document data limitations, cleaning impacts, bias assessments, and uncertainty quantification to contextualize findings.  
+  - Prioritize actionable insights aligned with QuickWash’s strategic goals, emphasizing transparency and operational relevance.

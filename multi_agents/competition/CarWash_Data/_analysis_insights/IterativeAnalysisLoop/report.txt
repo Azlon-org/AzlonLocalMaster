@@ -11,67 +11,81 @@ Unknown
 ### Question 1  
 What files did you process? Which files were generated? Answer with detailed file path.  
 ### Answer 1  
-The following raw datasets were processed from the directory `multi_agents/competition/CarWash_Data/`:  
+The following input files were processed, all located in the directory:  
+`multi_agents/competition/CarWash_Data/`  
 - `orders.csv`  
 - `operators.csv`  
-- `customers.csv` (equivalent to `clients.csv`)  
+- `customers.csv`  
 - `services.csv`  
-- `transactions.csv`  
+- `extras.csv`  
 
-No new files were generated or saved during this phase; all outputs were console-based data quality reports.
+No output or intermediate files were generated or saved during this phase.
 
 ---
 
 ### Question 2  
-Which features were involved in this phase? What changes did they undergo? If any feature types were modified, answer which features are modified and how they are modified. If any features were deleted or created, answer which features are deleted or created and provide detailed explanations.  
+Which features were involved in this phase? What changes did they undergo? If any feature types were modified, answer which features are modified and how they are modified. If any features were deleted or created, answer which features are deleted or created and provide detailed explanations. (This is a FIXED question for each phase.)  
 ### Answer 2  
-Key features involved spanned across the datasets including:  
-- From `orders.csv`: `order_date`, `operator_id`, `customer_id` and others.  
-- From `operators.csv`: `operator_id` and related performance indicators.  
-- From `customers.csv`: `customer_id` and client profile attributes.  
-- From `services.csv` and `transactions.csv`: service and payment-related fields.
+Key features involved include:  
+- In `orders.csv`: `order_id`, `customer_id`, `operator_id`, `service_id`, `order_date`, `price`, `status`  
+- In `operators.csv`: `operator_id` and related performance/verification features  
+- In `customers.csv`: `customer_id` and related behavioral/financial features  
+- Features from `services.csv` and `extras.csv` were loaded but not specifically modified or analyzed yet.
 
-The only feature type modification was parsing `order_date` from string to datetime for validation. No features were deleted or newly created. Although missing values and inconsistencies were identified, no imputations or deletions were applied at this stage.
+Feature changes applied:  
+- `order_date` was converted from string to datetime format, with invalid dates coerced to missing (`NaT`).  
+- Duplicate rows were identified and removed across all datasets.  
+- Missing values were detected and reported but not imputed or dropped at this stage.  
+- Negative values in `price` were flagged as outliers but not corrected or removed.  
+- No features were deleted or newly created during this phase.
 
 ---
 
 ### Question 3  
-What are the key data quality issues identified (e.g., missing values, corruption, bias) in critical datasets such as `clients.csv`, `orders.csv`, and `operators.csv`? How were these issues addressed, and what residual impacts might remain for final analysis?  
+What were the main data cleaning and validation steps applied, specifically regarding corrupted files, missing critical IDs, date/time standardization, duplicate removal, and outlier handling? How did these steps affect data completeness and quality?  
 ### Answer 3  
-Key data quality issues identified include:  
-- Missing values in multiple columns across datasets.  
-- Referential integrity problems where some `operator_id`s and `customer_id`s referenced in `orders.csv` do not exist in `operators.csv` or `customers.csv`.  
-- Invalid or missing `order_date` entries, including some dates set in the future.  
-- Presence of negative values and zero values in numeric fields related to pricing and durations, which may be illogical or indicate refunds.
-
-These issues were documented and quantified but not corrected or imputed in this phase. The residual impacts could bias subsequent analyses, especially time series and revenue calculations, unless properly handled in later phases.
+- Robust CSV loading was implemented to handle corrupted files, with error handling for missing files and parsing errors.  
+- Missingness in critical ID columns (`customer_id`, `operator_id`, `order_id`) was checked and reported, though no records were dropped or imputed yet.  
+- Date/time standardization converted `order_date` to datetime, coercing invalid entries to missing values and reporting counts.  
+- Duplicate rows were detected and removed from all datasets, improving data quality by eliminating redundancies.  
+- Negative prices were identified as outliers and flagged with warnings but not addressed further in this phase.  
+- These cleaning steps improved data consistency and quality, but some data completeness issues (missing IDs, invalid dates, outliers) remain unresolved pending further action.
 
 ---
 
 ### Question 4  
-What major patterns or trends emerged from exploratory data analyses related to booking frequency, revenue streams, operator performance, and customer payment behaviors? Which findings are most relevant for strategic decision-making?  
+What types of biases and uncertainties were identified as a result of data cleaning and imputation strategies? How were these biases quantified and mitigated, and what recommendations exist for incorporating uncertainty in final analyses?  
 ### Answer 4  
-No exploratory data analyses or visualizations were generated in this phase. Therefore, no patterns, trends, or strategic insights were extracted yet. The focus remained on data quality validation as a prerequisite for reliable analysis.
+- The plan recognized potential biases arising from dropping records with missing critical IDs and imputing missing categorical values as `'Unknown'`.  
+- Bias quantification and mitigation strategies, including sensitivity analyses comparing dropped vs. retained records and exploring alternative imputation methods, were planned but not yet executed.  
+- Uncertainty quantification to account for data quality limitations was recommended to be integrated into downstream analyses and reporting.  
+- Transparency in documenting the impact of cleaning steps on bias and uncertainty was emphasized to contextualize results and support robust decision-making.
 
 ---
 
 ### Question 5  
-How were operator performance and workforce utilization characterized, particularly regarding verification status, penalties, cancellations, and compensation? What implications do these findings have for operational improvements?  
+Which key exploratory data analysis findings—such as customer segmentation, operator performance patterns, booking behaviors, and marketing campaign effectiveness—emerged during this phase? What are the strongest actionable insights discovered?  
 ### Answer 5  
-Operator performance and workforce utilization analyses were planned but not executed during this phase. No characterizations or findings related to verification status, penalties, cancellations, or compensation were produced.
+- No exploratory data analysis findings or visualizations were produced in this phase.  
+- The phase focused on foundational data cleaning and validation to prepare for subsequent EDA and segmentation.  
+- As such, no actionable insights were discovered yet; these are expected in future phases once cleaner data is available.
 
 ---
 
 ### Question 6  
-What customer segments were identified based on behavior and transactional profiles? How was data completeness and imputation uncertainty incorporated into these segments, and which segments warrant focused attention for retention or marketing?  
+How stable and robust were the customer and operator segmentations, predictive models, and hypothesis tests under different data cleaning and imputation scenarios? What validation or sensitivity analyses were conducted?  
 ### Answer 6  
-Customer segmentation based on behavior and transactional data was planned but not performed in this phase. While data completeness was quantified, no imputations or uncertainty assessments were incorporated, and no specific customer segments were defined or prioritized.
+- Stability and robustness analyses of segmentations, predictive models, and hypothesis tests were planned per the phase plan but not yet conducted.  
+- No sensitivity analyses or validations under different cleaning or imputation scenarios were performed in this phase.  
+- These analyses are scheduled for later stages after initial cleaning and data preparation.
 
 ---
 
 ### Question 7  
-Which advanced analytics or predictive models were developed (e.g., for cancellations, churn), and how were bias adjustments and uncertainty quantification integrated? What are the key modeling outcomes that should be highlighted?  
+What operational bottlenecks, quality assurance issues, and marketing ROI findings were uncovered? How should these be prioritized or contextualized in the FinalInsightCompilation to align with QuickWash’s strategic goals?  
 ### Answer 7  
-No advanced analytics or predictive modeling was conducted in this phase. Model building and bias or uncertainty integration were planned for future phases.
+- No operational, quality assurance, or marketing ROI findings were uncovered during this phase.  
+- The groundwork laid here enables such analyses in future phases.  
+- For the final compilation, these insights should be prioritized based on alignment with QuickWash’s strategic goals such as workforce efficiency, customer satisfaction, and campaign effectiveness, while accounting for data quality limitations documented here.
 
 ---

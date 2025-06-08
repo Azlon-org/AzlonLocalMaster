@@ -146,8 +146,15 @@ class Summarizer(Agent):
         history.append(design_questions_history)
 
         # Answer questions
-        with open(f'{state.restore_dir}/single_phase_code.py', 'r') as f:
-            code = f.read()
+        # Check for single_phase_code.py - it might not exist in FinalInsightCompilation phase
+        code_file_path = os.path.join(state.restore_dir, 'single_phase_code.py')
+        if os.path.exists(code_file_path):
+            with open(code_file_path, 'r') as f:
+                code = f.read()
+        else:
+            # For FinalInsightCompilation which doesn't have a Developer agent
+            logger.info(f"No single_phase_code.py found in {state.restore_dir}. This is normal for FinalInsightCompilation phase.")
+            code = "No code was generated in this phase as it focuses on compiling insights rather than performing new analysis."
         output_file_path = os.path.join(state.restore_dir, f'{state.phase}_output.txt')
         # Check if output file exists, provide placeholder if not
         if not os.path.exists(output_file_path):

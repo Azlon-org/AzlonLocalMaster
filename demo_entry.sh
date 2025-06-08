@@ -41,7 +41,7 @@ echo "Model         : $MODEL_NAME"
 echo "-------------------------------------------------"
 
 # Run framework.py
-python framework.py --data_dir "$DATA_DIR" --context_file "$CONTEXT_FILE" --model "$MODEL_NAME"
+python3 framework.py --data_dir "$DATA_DIR" --context_file "$CONTEXT_FILE" --model "$MODEL_NAME"
 
 EXIT_CODE=$?
 

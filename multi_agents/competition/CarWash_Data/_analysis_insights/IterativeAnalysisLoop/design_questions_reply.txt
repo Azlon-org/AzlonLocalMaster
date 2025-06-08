@@ -1,23 +1,23 @@
 # Designed Questions for Transition from IterativeAnalysisLoop to FinalInsightCompilation
 
-1. **What datasets and files were processed or generated during the IterativeAnalysisLoop phase? Please include detailed file paths and note any newly created datasets or intermediate outputs.**  
-*Purpose:* This fixed question ensures clear traceability of data flow and artifacts, which is essential for compiling final insights and for reproducibility in the next phase.
+1. **Which files and datasets were processed during the IterativeAnalysisLoop phase, and what were the key outputs or intermediate files generated? Please provide detailed file paths and descriptions.**  
+   *Purpose:* This question ensures a clear record of all data inputs and outputs during this phase, enabling traceability and reproducibility in the FinalInsightCompilation phase.
 
-2. **What are the key data quality issues identified (e.g., missing values, corruption, bias) in critical datasets such as `clients.csv`, `orders.csv`, and `operators.csv`? How were these issues addressed, and what residual impacts might remain for final analysis?**  
-*Purpose:* Summarizes root cause analyses and data quality validation efforts, highlighting limitations or assumptions that must be transparently communicated in the final insights.
+2. **What were the main data cleaning and validation steps applied, specifically regarding corrupted files, missing critical IDs, date/time standardization, duplicate removal, and outlier handling? How did these steps affect data completeness and quality?**  
+   *Purpose:* To summarize the data preparation rigor, quantify data loss or corrections, and provide transparency on data quality for downstream interpretation and reporting.
 
-3. **What major patterns or trends emerged from exploratory data analyses related to booking frequency, revenue streams, operator performance, and customer payment behaviors? Which findings are most relevant for strategic decision-making?**  
-*Purpose:* Captures the core EDA outcomes, focusing on actionable insights that will form the backbone of the final report and recommendations.
+3. **What types of biases and uncertainties were identified as a result of data cleaning and imputation strategies? How were these biases quantified and mitigated, and what recommendations exist for incorporating uncertainty in final analyses?**  
+   *Purpose:* To capture the bias assessment outcomes and guide how uncertainty should be documented and communicated in the final insights.
 
-4. **How were operator performance and workforce utilization characterized, particularly regarding verification status, penalties, cancellations, and compensation? What implications do these findings have for operational improvements?**  
-*Purpose:* Summarizes workforce analytics to guide targeted recommendations on operator management and compensation fairness in the final insights.
+4. **Which key exploratory data analysis findings—such as customer segmentation, operator performance patterns, booking behaviors, and marketing campaign effectiveness—emerged during this phase? What are the strongest actionable insights discovered?**  
+   *Purpose:* To highlight the most relevant analytical findings that should be emphasized or further refined in the final report.
 
-5. **What customer segments were identified based on behavior and transactional profiles? How was data completeness and imputation uncertainty incorporated into these segments, and which segments warrant focused attention for retention or marketing?**  
-*Purpose:* Ensures customer profiling is comprehensive and nuanced, providing a foundation for tailored marketing or retention strategies in the final phase.
+5. **How stable and robust were the customer and operator segmentations, predictive models, and hypothesis tests under different data cleaning and imputation scenarios? What validation or sensitivity analyses were conducted?**  
+   *Purpose:* To ensure the final insights are grounded in validated and resilient analyses, and to identify any caveats or limitations to be communicated.
 
-6. **Which advanced analytics or predictive models were developed (e.g., for cancellations, churn), and how were bias adjustments and uncertainty quantification integrated? What are the key modeling outcomes that should be highlighted?**  
-*Purpose:* Summarizes modeling efforts and their robustness, guiding how predictive insights should be framed and presented in the final deliverables.
+6. **What operational bottlenecks, quality assurance issues, and marketing ROI findings were uncovered? How should these be prioritized or contextualized in the FinalInsightCompilation to align with QuickWash’s strategic goals?**  
+   *Purpose:* To frame the operational and strategic implications of the analysis and guide the emphasis of final recommendations for stakeholders.
 
 ---
 
-These six questions collectively cover data provenance, quality, exploratory findings, workforce and customer analytics, and advanced modeling. They are designed to encapsulate the comprehensive work done during the IterativeAnalysisLoop and to provide clear direction and focal points for the FinalInsightCompilation phase.
+These questions collectively summarize the comprehensive work done during the IterativeAnalysisLoop phase and provide clear guidance on synthesizing, validating, and prioritizing findings for the FinalInsightCompilation phase.

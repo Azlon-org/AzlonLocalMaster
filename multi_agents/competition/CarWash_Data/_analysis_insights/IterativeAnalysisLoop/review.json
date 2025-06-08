@@ -1,12 +1,12 @@
 {
     "final_suggestion": {
-        "execution_details": "1. Add a detailed description of the agent's role and responsibilities. 2. Provide qualitative or quantitative evaluation of the output generated. 3. Include sample summaries or key insights to assess the meaningfulness of the analysis.",
-        "agent planner": "1. Add a detailed description of the agent's role and responsibilities. 2. Optionally include estimated timelines or resource allocation in the plan.",
-        "critic": "Add a detailed description of the agent's role and responsibilities."
+        "execution_details": "1. Provide a clear and detailed description of the agent's role and responsibilities to improve transparency and assessment. 2. Include a summary or highlights of the key findings or analyses performed within the execution output. 3. Enhance the output with more informative logs or intermediate results to demonstrate depth of analysis and iterative improvements.",
+        "agent planner": "",
+        "critic": "1. Enhance the critique by including specific examples or references from the plan to support the points raised. 2. Suggest prioritization or phased incorporation of improvements to help guide the planning agent on actionable next steps. 3. Consider proposing metrics or checkpoints to quantitatively assess the effectiveness of the recommended enhancements."
     },
     "final_score": {
         "execution_details": 3,
         "agent planner": 5,
-        "critic": 5
+        "critic": 4
     }
 }

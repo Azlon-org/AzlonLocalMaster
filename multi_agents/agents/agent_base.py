@@ -280,7 +280,8 @@ class Agent:
             "Feature Engineering": ("cleaned_train.csv", "cleaned_test.csv", "processed_train.csv", "processed_test.csv"),
             "Model Building, Validation, and Prediction": ("processed_train.csv", "processed_test.csv", "processed_train.csv", "processed_test.csv"),
             "InitialDataProfiling": ("placeholder_data.csv", None, "placeholder_processed.csv", None),  # Added to handle this phase
-            "IterativeAnalysisLoop": ("placeholder_data.csv", None, "placeholder_processed.csv", None) # Added to handle this phase
+            "IterativeAnalysisLoop": ("placeholder_data.csv", None, "placeholder_processed.csv", None), # Added to handle this phase
+            "FinalInsightCompilation": ("placeholder_data.csv", None, "placeholder_processed.csv", None) # Added to handle final phase
         }
 
         before_train, before_test, after_train, after_test = phase_files.get(state.phase, (None, None, None, None))
